@@ -87,6 +87,9 @@ function content.start_test(given_map)
 
 	--log.debug(printGlobalVariables())
 	hero:unfreeze()
+	local hero_x, hero_y, hero_layer = hero:get_position()
+	map.small_keys_savegame_variable = "small_key_map"..map:get_id()
+	map:create_pickable{layer=hero_layer, x=hero_x+16, y=hero_y, treasure_name="small_key", treasure_variant = 1}
 end
 
 function content.makeSingleFight(area, layer) 
@@ -331,28 +334,15 @@ function content.create_forest_map(existing_areas, area_details)
 	return exit_areas, exclusion_areas
 end
 
-
 function content.create_dungeon_map(existing_areas, area_details)
 	-- start filling in
 	local wall_width = area_details.wall_width
 	local tileset = area_details.tileset_id
-	local walkable_walls = {}
-	local inner_corners = {}
-	local outer_corners = {}
 	for k,v in pairs(existing_areas["walkable"]) do
     	log.debug("walkable " .. k)
     	log.debug(v)
     	content.place_tile(v, lookup.tiles["dungeon_floor"][tileset], "floor", 0)
-    	walkable_walls[k]=v.walls
-    	inner_corners[k]=v.corners
-    	for dir,area_list in pairs(v.walls) do
-    		for _,area in ipairs(area_list) do
-    			content.place_tile(area, lookup.wall_tiling["dungeon"]["wall"][dir], "wall", 0)
-    		end
-    	end
-    	for dir,area in pairs(v.corners) do
-    		content.place_tile(area, lookup.wall_tiling["dungeon"]["wall_inward_corner"][dir], "wall_corner", 0)
-    	end
+    	content.place_walls(v, wall_width)
     	content.show_corners(v, tileset, 0)
     end
     for k,v in pairs(existing_areas["boundary"]) do
@@ -384,16 +374,8 @@ function content.create_dungeon_map(existing_areas, area_details)
 					-- first place part of the transition
 			    	log.debug("transition area:".. areanumber .. ", connection: ".. connection_nr .. ", part: ".. i)
 			    	content.place_tile(v.transitions[i], lookup.tiles["dungeon_floor"][tileset], "transition", 0)
+			    	content.place_walls(v.transitions[i], wall_width)
 			    	content.show_corners(v.transitions[i], tileset, 2)
-			    	local walls, corners = area_util.create_walls( v.transitions[i], wall_width )
-			    	for dir,area_list in pairs(walls) do
-			    		for _,area in ipairs(area_list) do
-			    			content.place_tile(area, lookup.wall_tiling["dungeon"]["wall"][dir], "wall", 0)
-			    		end
-			    	end
-			    	for dir,area in pairs(corners) do
-			    		content.place_tile(area, lookup.wall_tiling["dungeon"]["wall_inward_corner"][dir], "wall_corner", 0)
-			    	end
 			    	log.debug("links "..areanumber..";"..connection_nr)
 			    	log.debug(v.links)
 			    	-- now for the links in between
@@ -411,9 +393,9 @@ function content.create_dungeon_map(existing_areas, area_details)
 			    for _,opening in ipairs(v.openings) do
 			    	if opening.direction == 1 or opening.direction == 3 then
 		    			-- create the ground to walk on
-		    			content.place_tile(area_util.resize_area(opening, {wall_width, 0, -wall_width, 0}), lookup.tiles["dungeon_floor"][tileset], "floor", 0)
+		    			content.place_prop("edge_doors_1", area_util.from_center(opening, 32, opening.y2-opening.y1), 0, tileset, lookup.transitions)
 		    		else
-		    			content.place_tile(area_util.resize_area(opening, {0, wall_width, 0, -wall_width}), lookup.tiles["dungeon_floor"][tileset], "floor", 0)
+		    			content.place_prop("edge_doors_0", area_util.from_center(opening, opening.x2-opening.x1 ,32 ), 0, tileset, lookup.transitions)
 		    		end
 			    end
 			elseif v.transition_type == "indirect" then -- we do a lookup, TODO eventually all transitions will use the lookup
@@ -434,6 +416,18 @@ function content.create_dungeon_map(existing_areas, area_details)
 	return exit_areas, exclusion_areas
 end
 
+function content.place_walls(area, wall_width)
+	local walls, corners = area_util.create_walls(area, wall_width)
+	for dir,area_list in pairs(walls) do
+		for _,a in ipairs(area_list) do
+			content.place_tile(a, lookup.wall_tiling["dungeon"]["wall"][dir], "wall", 0)
+		end
+	end
+	for dir,a in pairs(corners) do
+		content.place_tile(a, lookup.wall_tiling["dungeon"]["wall_inward_corner"][dir], "wall_corner", 0)
+	end
+end
+
 -- barrier type is already concluded when the mission grammar is formed
 -- so we need to create a table of destructables and doors to place at specific spots along the area
 function content.create_barriers( area_details, existing_areas, areanumber, connection_nr )
@@ -445,27 +439,41 @@ function content.create_barriers( area_details, existing_areas, areanumber, conn
 	 	return false 
 	end
 	local transition_details = existing_areas["transition"][areanumber][connection_nr]
+	local openings = transition_details.openings
 	local ww = area_details.wall_width
 	for _,barrier in pairs(barriers) do
 		local split = table_util.split(barrier, ":")
+		local barrier_type
+		local object_details
+		if lookup.destructible[split[2]] then 
+			barrier_type = "destructible" 
+			object_details = lookup.destructible[split[2]]
+		else
+			barrier_type = "door" 
+			object_details = lookup.doors[split[2]]
+		end
+		local obj_size = object_details.required_size
 		if split[1] == "L" then
-			local direction 
-			local area
+			local dir = openings[1].direction
+			local position
+			local temp_area
+			if dir == 1 or dir == 3 then 		
+				temp_area = area_util.from_center(openings[1], 16, openings[1].y2-openings[1].y1)
+    		elseif dir == 0 or dir == 2 then 	
+    			temp_area = area_util.from_center(openings[1], openings[1].x2-openings[1].x1, 16)
+    		end
+    		if dir == 1 or dir == 0 then 		
+				position = {x1=temp_area.x1, x2=temp_area.x1+16, y1=temp_area.y1, y2=temp_area.y1+16 }
+    		elseif dir == 2 or dir == 3 then 	
+    			position = {x1=temp_area.x2-16, x2=temp_area.x2, y1=temp_area.y2-16, y2=temp_area.y2 }
+    		end
+    		local optional = {opening_condition="small_key_map"..map:get_id()}
+    		content.place_lock( object_details, dir, position, optional )
 			-- create lock (placed upon the entry of the transition)
 			-- determine direction
 			-- place door in beginning of transition at connected_at
 		else
-			local openings = transition_details.openings
-			local barrier_type
-			local object_details
-			if lookup.destructible[split[2]] then 
-				barrier_type = "destructible" 
-				object_details = lookup.destructible[split[2]]
-			else
-				barrier_type = "door" 
-				object_details = lookup.doors[split[2]]
-			end
-			local obj_size = object_details.required_size
+			
 			-- create destructible and doors (weak_blocks)
 			-- determine direction and the area
 			local available_areas = {}
@@ -553,8 +561,18 @@ function content.tile_destructible( details, area, barrier_type, optional )
 	end
 end
 
-function content.place_door( door_name, direction, area, optional )
-
+function content.place_lock( details, direction, area, optional )
+	local layer = optional.layer or 0
+	local details = details
+	details.layer = details.layer+layer
+	for k,v in pairs(optional) do
+		details[k] = v
+	end
+	details.direction = direction
+	details.x, details.y = area.x1, area.y1
+	log.debug("creating lock")
+	log.debug(details)
+	map:create_door(details)
 end
 
 function content.place_prop(name, area, layer, tileset_id, use_this_lookup, custom_name)

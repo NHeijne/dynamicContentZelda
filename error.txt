@@ -1,1 +1,2 @@
 Error: In timer callback: [string "dungeons.lua"]:123: attempt to index local 'world' (a nil value)
+Error: In on_obtaining: [string "dungeons.lua"]:123: attempt to index local 'world' (a nil value)

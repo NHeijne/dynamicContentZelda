@@ -98,12 +98,11 @@ mission_grammar.grammar = {
 		   rhs={ nodes={[1]="P"}, edges={} } },
 	[12]={ lhs={ nodes={[1]="T"}, edges={} }, 
 		   rhs={ nodes={[1]="PF"}, edges={} } },
-	[13]={ lhs={ nodes={[1]="OB"}, edges={} }, 
-		   rhs={ nodes={[1]="OB:?"}, edges={} } },
-    [14]={ lhs={ nodes={[1]="T"}, edges={} }, 
-		   rhs={ nodes={[1]="P"}, edges={} } },
-	[15]={ lhs={ nodes={[1]="T"}, edges={} }, 
-		   rhs={ nodes={[1]="PF"}, edges={} } },
+    [13]={ lhs={ nodes={[1]="E", [2]="T",		}, edges={ [1]={ [2]="undir_fw" } } }, 
+		   rhs={ nodes={[1]="E", [2]="T", [3]="K:dungeon_key", [4]="L:door_small_key"}, 
+			     edges={ [1]={ [3]="undir_fw", [4]="undir_fw"}, [3]={[4]="dir_fw"}, [4]={[2]="undir_fw"} } } },	
+
+
 	-------------------------------------------------------------------------------------------------
 	-- rules that add to the example rules
 }
@@ -142,7 +141,7 @@ function mission_grammar.update_keys_and_barriers( game )
 	mission_grammar.available_keys = {}
 	mission_grammar.available_barriers = {}
 	local k = 0
-	for item,data in pairs(lookup.items) do
+	for item,data in pairs(lookup.equipment) do
 		if game:get_value(item) then 
 			k = k + 1
 			mission_grammar.available_keys[k]=item
@@ -158,6 +157,9 @@ function mission_grammar.produce_graph( map_type, length, branches, puzzles, fig
 	if map_type == "dungeon" then
 
 	elseif map_type == "outside_normal" then
+		-- adding single key and lock at the beginning for testing
+		local matches = mission_grammar.match( 13 )
+		if next(matches) ~= nil then mission_grammar.apply_rule( matches[math.random(#matches)], 13 ) end
 		-- lets start off simple using nothing but tasks and branches
 		for i=1, branches do
 			local matches = mission_grammar.match( 1 )

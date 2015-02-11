@@ -158,23 +158,23 @@ function space_gen.create_area_separators_with_sensors( connected_at, path_type,
 			if dir == 0 then -- east
 				map:create_sensor({name=name_exit, layer=0, x=use_area.x1-24, y=use_area.y1, width=24, height=use_area.y2-use_area.y1})
 				map:create_sensor({name=name_entry, layer=0, x=use_area.x1, y=use_area.y1, width=24, height=use_area.y2-use_area.y1})
-				map:create_separator({layer=0, x=use_area.x1-8, y=use_area.y1, width=16, height=use_area.y2-use_area.y1})
-				map:create_dynamic_tile({layer=2, x=use_area.x1-8, y=use_area.y1, width=16, height=use_area.y2-use_area.y1, pattern=261, enabled_at_start=true})
+				--map:create_separator({layer=0, x=use_area.x1-8, y=use_area.y1, width=16, height=use_area.y2-use_area.y1})
+				--map:create_dynamic_tile({layer=2, x=use_area.x1-8, y=use_area.y1, width=16, height=use_area.y2-use_area.y1, pattern=261, enabled_at_start=true})
 			elseif dir == 1 then -- north
 				map:create_sensor({name=name_exit, layer=0, x=use_area.x1, y=use_area.y2, width=use_area.x2-use_area.x1, height=24})
 				map:create_sensor({name=name_entry, layer=0, x=use_area.x1, y=use_area.y2-24, width=use_area.x2-use_area.x1, height=24})
-				map:create_separator({layer=0, x=use_area.x1, y=use_area.y2-8, width=use_area.x2-use_area.x1, height=16})
-				map:create_dynamic_tile({layer=2, x=use_area.x1, y=use_area.y2-8, width=use_area.x2-use_area.x1, height=16, pattern=259, enabled_at_start=true})
+				--map:create_separator({layer=0, x=use_area.x1, y=use_area.y2-8, width=use_area.x2-use_area.x1, height=16})
+				--map:create_dynamic_tile({layer=2, x=use_area.x1, y=use_area.y2-8, width=use_area.x2-use_area.x1, height=16, pattern=259, enabled_at_start=true})
 			elseif dir == 2 then --west
 				map:create_sensor({name=name_exit, layer=0, x=use_area.x2, y=use_area.y1, width=24, height=use_area.y2-use_area.y1})
 				map:create_sensor({name=name_entry, layer=0, x=use_area.x2-24, y=use_area.y1, width=24, height=use_area.y2-use_area.y1})
-				map:create_separator({layer=0, x=use_area.x2-8, y=use_area.y1, width=16, height=use_area.y2-use_area.y1})
-				map:create_dynamic_tile({layer=2, x=use_area.x2-8, y=use_area.y1, width=16, height=use_area.y2-use_area.y1, pattern=260, enabled_at_start=true})
+				--map:create_separator({layer=0, x=use_area.x2-8, y=use_area.y1, width=16, height=use_area.y2-use_area.y1})
+				--map:create_dynamic_tile({layer=2, x=use_area.x2-8, y=use_area.y1, width=16, height=use_area.y2-use_area.y1, pattern=260, enabled_at_start=true})
 			elseif dir == 3 then -- south
 				map:create_sensor({name=name_exit, layer=0, x=use_area.x1, y=use_area.y1-24, width=use_area.x2-use_area.x1, height=24})
 				map:create_sensor({name=name_entry, layer=0, x=use_area.x1, y=use_area.y1, width=use_area.x2-use_area.x1, height=24})
-				map:create_separator({layer=0, x=use_area.x1, y=use_area.y1-8, width=use_area.x2-use_area.x1, height=16})
-				map:create_dynamic_tile({layer=2, x=use_area.x1, y=use_area.y1-8, width=use_area.x2-use_area.x1, height=16, pattern=262, enabled_at_start=true})
+				--map:create_separator({layer=0, x=use_area.x1, y=use_area.y1-8, width=use_area.x2-use_area.x1, height=16})
+				--map:create_dynamic_tile({layer=2, x=use_area.x1, y=use_area.y1-8, width=use_area.x2-use_area.x1, height=16, pattern=262, enabled_at_start=true})
 			end
 			dir = (t_area.direction+2)%4
 			name_exit, name_entry = name_bkw.."_exitarea", name_bkw.."_intoarea"

@@ -408,5 +408,10 @@ function area_util.get_side(area, direction, pluslength, pluswidth)
 	return false
 end
 
+function area_util.from_center( area, x, y )
+	local center_x = math.floor(((area.x2+area.x1)/2)/8)*8
+	local center_y = math.floor(((area.y2+area.y1)/2)/8)*8
+	return {x1=center_x-x/2, x2=center_x+x/2, y1=center_y-y/2, y2=center_y+y/2}
+end
 
 return area_util
