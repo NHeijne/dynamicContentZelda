@@ -9,24 +9,20 @@ function fight_generator.add_effects_to_sensors (map)
 	for sensor in map:get_entities("sensor_pathway_") do
 		sensor.on_activated = 	
 				function() 
-			
-			
+					
+					
 					-- sensor_pathway_<path_type: direct / indirect>_<direction: fwd / bkw >
 					--		 _f_<from areanumber>_t_<to areanumber>
 					--		 _con_<connection_nr for specific transition>_<exitarea / intoarea>
 					local split_table = table_util.split(sensor:get_name(), "_")
 					if split_table[11] == "intoarea" then 
-						log.debug("goIntoArea")
+						for enemy in map:get_entities("pregenEnemy") do
+							enemy:remove()
+						end
+						--split_table[8] -- I need this room's size
 					else 
-						log.debug("goOutOfArea")
+						--log.debug("goOutOfArea")
 					end
-					
-					log.debug("List of Enemies:")
-					for enemy in map:get_entities("pregenEnemy") do
-						log.debug(enemy:get_name())
-						enemy:remove()
-					end
-					--log.debug(split_table)
 					
 					
 				end
