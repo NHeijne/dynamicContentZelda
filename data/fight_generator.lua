@@ -11,15 +11,22 @@ function fight_generator.add_effects_to_sensors (map)
 				function() 
 			
 			
+					-- sensor_pathway_<path_type: direct / indirect>_<direction: fwd / bkw >
+					--		 _f_<from areanumber>_t_<to areanumber>
+					--		 _con_<connection_nr for specific transition>_<exitarea / intoarea>
 					local split_table = table_util.split(sensor:get_name(), "_")
 					if split_table[11] == "intoarea" then 
-						sol.audio.play_sound("jump")
 						log.debug("goIntoArea")
 					else 
-						sol.audio.play_sound("secret")
 						log.debug("goOutOfArea")
 					end
-					log.debug(split_table)
+					
+					log.debug("List of Enemies:")
+					for enemy in map:get_entities("pregenEnemy") do
+						log.debug(enemy:get_name())
+						enemy:remove()
+					end
+					--log.debug(split_table)
 					
 					
 				end
@@ -44,7 +51,7 @@ function fight_generator.make(area, diff)
 			chosenBreed = breedOptions[math.random(1,#breedOptions)] 
 		end
 		-- monster = {name, layer, x,y, direction, breed,rank,savegame_variable, treasure_name,treasure_variant,treasure_savegame_variable}
-		table.insert(enemiesInFight,{layer=0, x=xPos, y=yPos, direction=0, breed=chosenBreed})
+		table.insert(enemiesInFight,{name="pregenEnemy_thisOne", layer=0, x=xPos, y=yPos, direction=0, breed=chosenBreed})
 		difficulty = difficulty - breedDifficulties[chosenBreed]
 	end
 	return enemiesInFight
