@@ -1,2 +1,2 @@
+Error: In on_started: [string "content_generator.lua"]:481: bad argument #2 to 'insert' (number expected, got table)
 Error: In timer callback: [string "dungeons.lua"]:123: attempt to index local 'world' (a nil value)
-Error: In on_obtaining: [string "dungeons.lua"]:123: attempt to index local 'world' (a nil value)

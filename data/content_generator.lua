@@ -23,7 +23,7 @@ function content.start_test(given_map)
 	hero:freeze()
 	if not game:get_value("sword__1") then hero:start_treasure("sword", 1, "sword__1") end
 	-- Initialize the pseudo random number generator
-	local seed = 679875 -- small transitions
+	local seed = 
 			tonumber(tostring(os.time()):reverse():sub(1,6)) -- good random seeds
 	log.debug("random seed = " .. seed)
 	math.randomseed( seed )
@@ -32,7 +32,7 @@ function content.start_test(given_map)
 	-- testing area below
 	log.debug("test_area")
 	mission_grammar.update_keys_and_barriers(game)
-	mission_grammar.produce_graph( "outside_normal", 7, 3, 4, 3)
+	mission_grammar.produce_graph( "outside_normal", 7, 3, 0, 7)
 	log.debug(mission_grammar.produced_graph)
 	log.debug("area_details")
 	local tileset_id = tonumber(map:get_tileset())
@@ -78,9 +78,9 @@ function content.start_test(given_map)
 		log.debug("filling in area "..k)
 		log.debug("creating area_type " .. area_details[k].area_type)
 		if area_details[k].area_type == "F" then content.makeSingleFight(v.open[math.random(#v.open)], layer)
-		elseif area_details[k].area_type == "P" then content.makeSingleMaze(area_util.resize_area(v,{wall_width, wall_width, -wall_width, -wall_width}), exit_areas[k], area_details, v.used, layer)
+		elseif area_details[k].area_type == "P" then --content.makeSingleMaze(area_util.resize_area(v,{wall_width, wall_width, -wall_width, -wall_width}), exit_areas[k], area_details, v.used, layer)
 		elseif area_details[k].area_type == "PF" then 
-			content.makeSingleMaze(area_util.resize_area(v,{wall_width, wall_width, -wall_width, -wall_width}), exit_areas[k], area_details, v.used, layer)
+			--content.makeSingleMaze(area_util.resize_area(v,{wall_width, wall_width, -wall_width, -wall_width}), exit_areas[k], area_details, v.used, layer)
 			content.makeSingleFight(v.open[math.random(#v.open)], layer)
 		end
     end
@@ -462,9 +462,9 @@ function content.create_barriers( area_details, existing_areas, areanumber, conn
     		elseif dir == 0 or dir == 2 then 	
     			temp_area = area_util.from_center(openings[1], openings[1].x2-openings[1].x1, 16)
     		end
-    		if dir == 1 or dir == 0 then 		
+    		if dir == 3 or dir == 0 then 		
 				position = {x1=temp_area.x1, x2=temp_area.x1+16, y1=temp_area.y1, y2=temp_area.y1+16 }
-    		elseif dir == 2 or dir == 3 then 	
+    		elseif dir == 2 or dir == 1 then 	
     			position = {x1=temp_area.x2-16, x2=temp_area.x2, y1=temp_area.y2-16, y2=temp_area.y2 }
     		end
     		local optional = {opening_condition="small_key_map"..map:get_id()}
@@ -478,7 +478,7 @@ function content.create_barriers( area_details, existing_areas, areanumber, conn
 			-- determine direction and the area
 			local available_areas = {}
 
-			table.insert(available_areas, area_util.get_side(openings[1], (openings[1].direction+2)%4, math.max(obj_size.x, obj_size.y)))
+			table.insert(available_areas, area_util.get_side(openings[1], (openings[1].direction+2)%4, math.max(obj_size.x, obj_size.y), -ww))
 			for _,t in pairs(transition_details.transitions) do
 				local new_t = area_util.resize_area(t, {ww, ww, -ww, -ww})
 				local new_t_size = area_util.get_area_size(new_t)
