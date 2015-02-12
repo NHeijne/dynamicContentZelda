@@ -5,12 +5,12 @@ local num_util 			= require("num_util")
 
 local fight_generator = {}
 
-function fight_generator.add_effects_to_sensors (map)
+function fight_generator.add_effects_to_sensors (map, areas)
 	for sensor in map:get_entities("sensor_pathway_") do
 		sensor.on_activated = 	
+				
+				
 				function() 
-					
-					
 					-- sensor_pathway_<path_type: direct / indirect>_<direction: fwd / bkw >
 					--		 _f_<from areanumber>_t_<to areanumber>
 					--		 _con_<connection_nr for specific transition>_<exitarea / intoarea>
@@ -19,13 +19,18 @@ function fight_generator.add_effects_to_sensors (map)
 						for enemy in map:get_entities("pregenEnemy") do
 							enemy:remove()
 						end
-						--split_table[8] -- I need this room's size
+						local spawnArea = areas["walkable"][tonumber(split_table[8])]
+						local enemiesInEncounter = fight_generator.make(spawnArea, 5) 
+						for _,enemy in pairs(enemiesInEncounter) do
+							enemy.layer = 0
+							map:create_enemy(enemy)
+						end
 					else 
-						--log.debug("goOutOfArea")
+						log.debug("goOutOfArea")
 					end
-					
-					
 				end
+				
+				
 	end
 end
 

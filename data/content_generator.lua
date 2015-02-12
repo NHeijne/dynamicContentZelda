@@ -68,7 +68,7 @@ function content.start_test(given_map)
 		layer = 0
 	end
 	-- adding effects
-	fight_generator.add_effects_to_sensors(map)
+	fight_generator.add_effects_to_sensors(map, content.areas)
 
 	log.debug("filling in area types")
 	log.debug("exclusion_areas")
