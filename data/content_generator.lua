@@ -23,7 +23,7 @@ function content.start_test(given_map)
 	hero:freeze()
 	if not game:get_value("sword__1") then hero:start_treasure("sword", 1, "sword__1") end
 	-- Initialize the pseudo random number generator
-	local seed = 
+	local seed = --783166 -- transition bug
 			tonumber(tostring(os.time()):reverse():sub(1,6)) -- good random seeds
 	log.debug("random seed = " .. seed)
 	math.randomseed( seed )
@@ -38,7 +38,7 @@ function content.start_test(given_map)
 	local tileset_id = tonumber(map:get_tileset())
 	local outside = false
 	if tileset_id == 1 or tileset_id == 2 then outside = true end
-	local area_details = mission_grammar.transform_to_space( {	tileset_id=tileset_id, 
+	content.area_details = mission_grammar.transform_to_space( {tileset_id=tileset_id, 
 																outside=outside, 
 																from_direction="west", 
 																to_direction="east", 
@@ -54,17 +54,17 @@ function content.start_test(given_map)
     game:set_pause_allowed(true)
     game:set_dialog_style("box")
     --map:set_tileset("1") needs to be set before the map loads
-    local areas = space_gen.generate_space(area_details, map)
+    content.areas = space_gen.generate_space(content.area_details, map)
     log.debug("done with generation")
 	
 	local exit_areas={}
     local exclusion_areas={}
     local layer
-	if area_details.outside then -- forest
-    	exit_areas, exclusion_areas = content.create_forest_map(areas, area_details)
+	if content.area_details.outside then -- forest
+    	exit_areas, exclusion_areas = content.create_forest_map(content.areas, content.area_details)
     	layer = 0
 	else -- dungeon
-		exit_areas, exclusion_areas = content.create_dungeon_map(areas, area_details)
+		exit_areas, exclusion_areas = content.create_dungeon_map(content.areas, content.area_details)
 		layer = 0
 	end
 	-- adding effects
@@ -73,14 +73,14 @@ function content.start_test(given_map)
 	log.debug("filling in area types")
 	log.debug("exclusion_areas")
 	log.debug(exclusion_areas)
-	local wall_width = area_details.wall_width
-	for k,v in pairs(areas["walkable"]) do
+	local wall_width = content.area_details.wall_width
+	for k,v in pairs(content.areas["walkable"]) do
 		log.debug("filling in area "..k)
-		log.debug("creating area_type " .. area_details[k].area_type)
-		if area_details[k].area_type == "F" then content.makeSingleFight(v.open[math.random(#v.open)], layer)
-		elseif area_details[k].area_type == "P" then --content.makeSingleMaze(area_util.resize_area(v,{wall_width, wall_width, -wall_width, -wall_width}), exit_areas[k], area_details, v.used, layer)
-		elseif area_details[k].area_type == "PF" then 
-			--content.makeSingleMaze(area_util.resize_area(v,{wall_width, wall_width, -wall_width, -wall_width}), exit_areas[k], area_details, v.used, layer)
+		log.debug("creating area_type " .. content.area_details[k].area_type)
+		if content.area_details[k].area_type == "F" then content.makeSingleFight(v.open[math.random(#v.open)], layer)
+		elseif content.area_details[k].area_type == "P" then --content.makeSingleMaze(area_util.resize_area(v,{wall_width, wall_width, -wall_width, -wall_width}), exit_areas[k], content.area_details, v.used, layer)
+		elseif content.area_details[k].area_type == "PF" then 
+			--content.makeSingleMaze(area_util.resize_area(v,{wall_width, wall_width, -wall_width, -wall_width}), exit_areas[k], content.area_details, v.used, layer)
 			content.makeSingleFight(v.open[math.random(#v.open)], layer)
 		end
     end
@@ -192,7 +192,7 @@ function content.create_forest_map(existing_areas, area_details)
 			    	content.place_tile(v.transitions[i], 49, "transition", 0)
 			    	content.show_corners(v.transitions[i], tileset)
 			    end
-			elseif v.transition_type == "indirect" then -- we do a lookup, TODO eventually all transitions will use the lookup
+			elseif #v.openings~= 0 then -- we do a lookup, TODO eventually all transitions will use the lookup
 				local t_details = lookup.transitions[v.transition_type]
 				for i=1, #v.openings do
 					table.insert(exclusion_areas[areanumber], {area=v.openings[i], sides_open={"south"}})
@@ -398,7 +398,7 @@ function content.create_dungeon_map(existing_areas, area_details)
 		    			content.place_prop("edge_doors_0", area_util.from_center(opening, opening.x2-opening.x1 ,32 ), 0, tileset, lookup.transitions)
 		    		end
 			    end
-			elseif v.transition_type == "indirect" then -- we do a lookup, TODO eventually all transitions will use the lookup
+			elseif v.openings ~= nil then -- we do a lookup, TODO eventually all transitions will use the lookup
 				for _,opening in ipairs(v.openings) do
 					exit_areas[areanumber][#exit_areas[areanumber]+1]=area_util.resize_area(opening, {8, 0, -8, 0})
 					log.debug("transition area:".. areanumber .. ", connection: ".. connection_nr)

@@ -105,10 +105,10 @@ function space_gen.generate_space(area_details, given_map)
 			space_gen.create_area_separators_with_sensors( resulting_transitions, "indirect", areanumber, transition_details.areanumber, connection)
 			space_gen.rectify_area_details(areas, areanumber, resulting_transitions[1], area_details, true)
 			space_gen.rectify_area_details(areas, transition_details.areanumber, resulting_transitions[2], area_details, true)
-			areas["transition"][areanumber]["f"..areanumber.."t"..transition_details.areanumber.."c"..connection]=
-				{openings={resulting_transitions[1]}, transition_type=transition_type[1]}
+			areas["transition"][areanumber][connection]=
+				{transitions={}, openings={resulting_transitions[1]}, transition_type=transition_type[1]}
 			areas["transition"][transition_details.areanumber]["f"..areanumber.."t"..transition_details.areanumber.."c"..connection]=
-				{openings={resulting_transitions[2]}, transition_type=transition_type[2]}
+				{transitions={}, openings={resulting_transitions[2]}, transition_type=transition_type[2]}
 		end
 	end
 	log.debug(transition_assignments)
