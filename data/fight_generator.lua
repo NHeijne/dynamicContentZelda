@@ -54,8 +54,8 @@ function fight_generator.make(area, diff)
 	end
 	
 	while difficulty > 0 do
-		local xPos = math.random(area.x1+8, area.x2-8)
-		local yPos = math.random(area.y1+8, area.y2-8)
+		local xPos = math.random(area.x1+32, area.x2-32)
+		local yPos = math.random(area.y1+32, area.y2-32)
 		local chosenBreed = breedOptions[math.random(1,#breedOptions)] 
 		while breedDifficulties[chosenBreed] > difficulty do 
 			chosenBreed = breedOptions[math.random(1,#breedOptions)] 
