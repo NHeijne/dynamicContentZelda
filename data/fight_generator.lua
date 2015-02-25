@@ -23,10 +23,19 @@ function fight_generator.add_effects_to_sensors (map, areas)
 						local enemiesInEncounter = fight_generator.make(spawnArea, 5) 
 						for _,enemy in pairs(enemiesInEncounter) do
 							enemy.layer = 0
-							map:create_enemy(enemy)
+							local theEnemyIJustMade = map:create_enemy(enemy)
+							
+							function theEnemyIJustMade:on_hurt(attack)
+								-- log the key
+								local f = sol.file.open("userExperience.txt","a+"); f:write(attack .. "-enemy\n"); f:flush(); f:close()
+								-- returning false gives it back to the engine to handle
+								return false
+							end
+							
 						end
 					else 
 						log.debug("goOutOfArea")
+						local f = sol.file.open("userExperience.txt","a+"); f:write("Just-Exited-An-Area" .. "\n"); f:flush(); f:close()
 					end
 				end
 				

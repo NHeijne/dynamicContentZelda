@@ -64,6 +64,13 @@ function game:is_in_dungeon()
   return self:get_dungeon() ~= nil
 end
 
+function game:on_key_pressed(key, modifiers)
+	-- log the key
+	local f = sol.file.open("userExperience.txt","a+"); f:write(key .. "-keypress\n"); f:flush(); f:close()
+	-- returning false gives it back to the engine to handle
+	return false
+end
+
 -- Checks the initial position and fixes it if necessary.
 local function fix_starting_location(game)
 
@@ -85,6 +92,7 @@ local function fix_starting_location(game)
 end
 
 -- Run the game.
+local f = sol.file.open("userExperience.txt","a+"); f:write("\nA NEW GAME IS STARTING NOW\n"); f:flush(); f:close()
 sol.main.game = game
 fix_starting_location(game)
 game:start()
