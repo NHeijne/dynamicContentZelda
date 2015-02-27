@@ -50,7 +50,7 @@ function content.start_test(given_map)
 																outside=outside, 
 																from_direction="west", 
 																to_direction="east", 
-																preferred_area_surface=80,
+																preferred_area_surface=180,
 																path_width=2*16}
 																)
 	log.debug(area_details)
@@ -76,7 +76,7 @@ function content.start_test(given_map)
 		layer = 0
 	end
 	-- adding effects
-	fight_generator.add_effects_to_sensors(map, content.areas)
+	fight_generator.add_effects_to_sensors(map, content.areas, content.area_details)
 
 	log.debug("filling in area types")
 	log.debug("exclusion_areas")
@@ -85,11 +85,8 @@ function content.start_test(given_map)
 	for k,v in pairs(content.areas["walkable"]) do
 		log.debug("filling in area "..k)
 		log.debug("creating area_type " .. content.area_details[k].area_type)
-		if content.area_details[k].area_type == "F" then content.makeSingleFight(v.open[math.random(#v.open)], layer)
-		elseif content.area_details[k].area_type == "P" then --content.makeSingleMaze(area_util.resize_area(v,{wall_width, wall_width, -wall_width, -wall_width}), exit_areas[k], content.area_details, v.used, layer)
-		elseif content.area_details[k].area_type == "PF" then 
-			--content.makeSingleMaze(area_util.resize_area(v,{wall_width, wall_width, -wall_width, -wall_width}), exit_areas[k], content.area_details, v.used, layer)
-			content.makeSingleFight(v.open[math.random(#v.open)], layer)
+		if content.area_details[k].area_type == "P" or content.area_details[k].area_type == "PF" then 
+			content.makeSingleMaze(area_util.resize_area(v,{wall_width+16, wall_width+16, -wall_width-16, -wall_width-16}), exit_areas[k], content.area_details, v.used, layer)
 		end
     end
 
@@ -112,7 +109,7 @@ end
 function content.makeSingleMaze(area, exit_areas, area_details, exclusion_area, layer) 
 	log.debug("start maze generation")
 	local maze_generator = require("maze_generator")
-	local maze = maze_generator.generate_maze( area, 16, exit_areas, exclusion_area, nil )
+	local maze = maze_generator.generate_maze( area, 16, exit_areas, exclusion_area )
 	for _,v in ipairs(maze) do
 		content.place_tile(v.area, lookup.tiles[v.pattern][area_details.tileset_id], "maze", layer)
 	end

@@ -99,8 +99,8 @@ mission_grammar.grammar = {
 	[12]={ lhs={ nodes={[1]="T"}, edges={} }, 
 		   rhs={ nodes={[1]="PF"}, edges={} } },
     [13]={ lhs={ nodes={[1]="E", [2]="T",		}, edges={ [1]={ [2]="undir_fw" } } }, 
-		   rhs={ nodes={[1]="E", [2]="T", [3]="K:dungeon_key", [4]="L:door_small_key"}, 
-			     edges={ [1]={ [3]="undir_fw", [4]="undir_fw"}, [3]={[4]="dir_fw"}, [4]={[2]="undir_fw"} } } },	
+		   rhs={ nodes={[1]="E", [2]="T", [3]="K:dungeon_key", [4]="L:door_small_key", [5]="P"}, 
+			     edges={ [1]={ [3]="undir_fw", [4]="undir_fw"}, [3]={[4]="dir_fw"}, [4]={[5]="undir_fw"}, [5]={[2]="undir_fw"} } } },	
 
 
 	-------------------------------------------------------------------------------------------------

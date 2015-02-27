@@ -5,16 +5,18 @@ local num_util 			= require("num_util")
 
 local fight_generator = {}
 
-function fight_generator.add_effects_to_sensors (map, areas)
+function fight_generator.add_effects_to_sensors (map, areas, area_details)
 	for sensor in map:get_entities("sensor_pathway_") do
-		sensor.on_activated = 	
-				
+		-- sensor_pathway_<path_type: direct / indirect>_<direction: fwd / bkw >
+		--		 _f_<from areanumber>_t_<to areanumber>
+		--		 _con_<connection_nr for specific transition>_<exitarea / intoarea>
+		local split_table = table_util.split(sensor:get_name(), "_")
+		local is_fight_area = area_details[tonumber(split_table[8])].area_type == "F" 
+
+		if is_fight_area then sensor.on_activated = 	
 				
 				function() 
-					-- sensor_pathway_<path_type: direct / indirect>_<direction: fwd / bkw >
-					--		 _f_<from areanumber>_t_<to areanumber>
-					--		 _con_<connection_nr for specific transition>_<exitarea / intoarea>
-					local split_table = table_util.split(sensor:get_name(), "_")
+					local split_table = split_table
 					if split_table[11] == "intoarea" then 
 						for enemy in map:get_entities("pregenEnemy") do
 							enemy:remove()
@@ -38,7 +40,7 @@ function fight_generator.add_effects_to_sensors (map, areas)
 						local f = sol.file.open("userExperience.txt","a+"); f:write("Just-Exited-An-Area" .. "\n"); f:flush(); f:close()
 					end
 				end
-				
+		end
 				
 	end
 end

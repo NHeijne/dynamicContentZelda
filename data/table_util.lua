@@ -197,4 +197,33 @@ function table_util.choose_random_key(probabilities)
   return nil
 end
 
+function table_util.tbl_contains_tbl( tbl1, tbl2 )
+  for k,v in pairs(tbl2) do
+    if "table" == type(v) and "table" == type(tbl1[k]) then
+      if not table_util.tbl_contains_tbl( tbl1[k], v ) then return false end
+    elseif v ~= tbl1[k] then
+      return false
+    end
+  end
+  return true
+end
+
+function table_util.equal( tbl1, tbl2 )
+  for k,v in pairs(tbl1) do
+    if "table" == type(v) and "table" == type(tbl2[k])  then
+      if not table_util.equal( v, tbl2[k] ) then return false end
+    elseif v ~= tbl1[k] then
+      return false
+    end
+  end
+  for k,v in pairs(tbl2) do
+    if "table" == type(v) and "table" == type(tbl1[k]) then
+      if not table_util.equal( tbl1[k], v ) then return false end
+    elseif v ~= tbl1[k] then
+      return false
+    end
+  end
+  return true
+end
+
 return table_util
