@@ -24,12 +24,16 @@ function content.start_test(given_map)
 	if not game:get_value("sword__1") then hero:start_treasure("sword", 1, "sword__1") end
 	
 	function hero:on_state_changed(state)
-		-- log the key
 		local f = sol.file.open("userExperience.txt","a+"); f:write(state .. "-hero\n"); f:flush(); f:close()
+		if state == "hurt" then 
+			local f = sol.file.open("userExperience.txt","a+")
+			f:write(game:get_life() .. "-life\n") -- This gives previous health for some reason
+			f:flush(); f:close()
+		end
 		-- returning false gives it back to the engine to handle
 		return false
 	end
-	
+		
 	-- Initialize the pseudo random number generator
 	local seed = --783166 -- transition bug
 			tonumber(tostring(os.time()):reverse():sub(1,6)) -- good random seeds
