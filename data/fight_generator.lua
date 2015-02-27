@@ -16,6 +16,7 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 		if is_fight_area then sensor.on_activated = 	
 				
 				function() 
+					local f = sol.file.open("userExperience.txt","a+"); f:write(sensor:get_name() .. "\n"); f:flush(); f:close()
 					local split_table = split_table
 					if split_table[11] == "intoarea" then 
 						for enemy in map:get_entities("pregenEnemy") do
@@ -35,9 +36,6 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 							end
 							
 						end
-					else 
-						log.debug("goOutOfArea")
-						local f = sol.file.open("userExperience.txt","a+"); f:write("Just-Exited-An-Area" .. "\n"); f:flush(); f:close()
 					end
 				end
 		end
