@@ -101,15 +101,6 @@ function content.start_test(given_map)
 	map:create_pickable{layer=hero_layer, x=hero_x+16, y=hero_y, treasure_name="small_key", treasure_variant = 1}
 end
 
-function content.makeSingleFight(area, layer) 
-	local fight_generator = require("fight_generator")
-	local enemiesInEncounter = fight_generator.make(area, 5)
-	for _,enemy in pairs(enemiesInEncounter) do
-		enemy.layer = layer
-		map:create_enemy(enemy)
-	end
-end
-
 function content.makeSingleMaze(area, exit_areas, area_details, exclusion_area, layer) 
 	log.debug("start maze generation")
 	local maze_generator = require("maze_generator")
@@ -118,7 +109,6 @@ function content.makeSingleMaze(area, exit_areas, area_details, exclusion_area, 
 		content.place_tile(v.area, lookup.tiles[v.pattern][area_details.tileset_id], "maze", layer)
 	end
 end
-
 
 function content.show_corners(area, tileset, layer)
 	local layer = layer or 0

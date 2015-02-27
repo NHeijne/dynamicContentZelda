@@ -4,6 +4,7 @@ local area_util 		= require("area_util")
 local num_util 			= require("num_util")
 
 local fight_generator = {}
+difficultyOfFights = 0
 
 function fight_generator.add_effects_to_sensors (map, areas, area_details)
 	for sensor in map:get_entities("sensor_pathway_") do
@@ -23,13 +24,20 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 							enemy:remove()
 						end
 						local spawnArea = areas["walkable"][tonumber(split_table[8])]
-						local enemiesInEncounter = fight_generator.make(spawnArea, 5) 
+						
+						difficultyOfFights = difficultyOfFights + 1
+						local diff = difficultyOfFights
+						local f = sol.file.open("userExperience.txt","a+"); f:write(diff .. "-difficulty\n"); f:flush(); f:close()
+						
+						local enemiesInEncounter = fight_generator.make(spawnArea, diff) 
 						for _,enemy in pairs(enemiesInEncounter) do
-							enemy.layer = 0
+
 							local theEnemyIJustMade = map:create_enemy(enemy)
+							local f = sol.file.open("userExperience.txt","a+")
+							f:write(theEnemyIJustMade:get_breed() .. "-spawned\n")
+							f:flush(); f:close()
 							
 							function theEnemyIJustMade:on_hurt(attack)
-								-- log the key
 								local f = sol.file.open("userExperience.txt","a+"); f:write(attack .. "-enemy\n"); f:flush(); f:close()
 								-- returning false gives it back to the engine to handle
 								return false
@@ -46,7 +54,7 @@ end
 function fight_generator.make(area, diff) 
 	local difficulty = diff
 	local enemiesInFight = {}
-	local breedDifficulties = {["Tentacle"]=1,["lizalfos"]=4,["green_knight_soldier"]=2,["green_duck_soldier"]=3}
+	local breedDifficulties = {["Tentacle"]=1,["lizalfos"]=4,["green_knight_soldier"]=2,["green_duck_soldier"]=3,["ropa"]=1}
 	
 	local breedOptions={}
 	for k,_ in pairs(breedDifficulties) do
