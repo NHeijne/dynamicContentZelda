@@ -25,11 +25,6 @@ function content.start_test(given_map)
 	
 	function hero:on_state_changed(state)
 		local f = sol.file.open("userExperience.txt","a+"); f:write(state .. "-hero\n"); f:flush(); f:close()
-		if state == "hurt" then 
-			local f = sol.file.open("userExperience.txt","a+")
-			f:write(game:get_life() .. "-life\n") -- This gives previous health for some reason
-			f:flush(); f:close()
-		end
 		-- returning false gives it back to the engine to handle
 		return false
 	end

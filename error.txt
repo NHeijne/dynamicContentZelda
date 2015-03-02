@@ -1,10 +1,10 @@
-Error: Failed to load script 'fight_generator': [string "fight_generator.lua"]:28: '=' expected near '+'
-Error: In maps/0: [string "content_generator.lua"]:5: module 'fight_generator' not found:
-	no field package.preload['fight_generator'][string "fight_generator.lua"]:28: '=' expected near '+'
-	no file '.\fight_generator.lua'
-	no file 'C:\Users\Arjen\Documents\GitHub\dynamicContentZelda\lua\fight_generator.lua'
-	no file 'C:\Users\Arjen\Documents\GitHub\dynamicContentZelda\lua\fight_generator\init.lua'
-	no file '.\fight_generator.dll'
-	no file 'C:\Users\Arjen\Documents\GitHub\dynamicContentZelda\fight_generator.dll'
+Error: Failed to load script 'content_generator': [string "content_generator.lua"]:29: function arguments expected near 'return'
+Error: In maps/0: [string "maps/0.lua"]:3: module 'content_generator' not found:
+	no field package.preload['content_generator'][string "content_generator.lua"]:29: function arguments expected near 'return'
+	no file '.\content_generator.lua'
+	no file 'C:\Users\Arjen\Documents\GitHub\dynamicContentZelda\lua\content_generator.lua'
+	no file 'C:\Users\Arjen\Documents\GitHub\dynamicContentZelda\lua\content_generator\init.lua'
+	no file '.\content_generator.dll'
+	no file 'C:\Users\Arjen\Documents\GitHub\dynamicContentZelda\content_generator.dll'
 	no file 'C:\Users\Arjen\Documents\GitHub\dynamicContentZelda\loadall.dll'
 Error: In timer callback: [string "dungeons.lua"]:123: attempt to index local 'world' (a nil value)

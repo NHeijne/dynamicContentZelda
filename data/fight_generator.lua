@@ -17,13 +17,14 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 		if is_fight_area then sensor.on_activated = 	
 				
 				function() 
-					local f = sol.file.open("userExperience.txt","a+"); f:write(sensor:get_name() .. "\n"); f:flush(); f:close()
 					local split_table = split_table
 					if split_table[11] == "intoarea" then 
 						for enemy in map:get_entities("pregenEnemy") do
 							enemy:remove()
 						end
 						local spawnArea = areas["walkable"][tonumber(split_table[8])]
+						
+						analyseGameplaySoFar()
 						
 						difficultyOfFights = difficultyOfFights + 1
 						local diff = difficultyOfFights
@@ -45,10 +46,32 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 							
 						end
 					end
+					local f = sol.file.open("userExperience.txt","a+"); f:write(sensor:get_name() .. "\n"); f:flush(); f:close()
 				end
 		end
 				
 	end
+end
+
+function analyseGameplaySoFar()
+	local f = sol.file.open("userExperience.txt","r")
+	local nothing = {swordSwings=0, swordHits=0, gotHit=0}
+	local room = table_util.copy( nothing )
+
+	while true do
+		local line = f:read("*line")
+		if not line then break end
+		
+		if line=="sword swinging-hero" then room.swordSwings = room.swordSwings + 1 end
+		if line=="sword-enemy" then room.swordHits = room.swordHits + 1 end
+		if line=="hurt-hero" then room.gotHit = room.gotHit + 1 end
+		if string.find(line, "intoarea") or string.find(line, "A NEW GAME IS STARTING NOW") then 
+			room = table_util.copy( nothing )
+		end	
+	end
+	
+	f:flush(); f:close()
+	log.debug( room )
 end
 
 function fight_generator.make(area, diff) 
