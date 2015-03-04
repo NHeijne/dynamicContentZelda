@@ -5,6 +5,7 @@ local num_util 			= require("num_util")
 
 local fight_generator = {}
 difficultyOfFights = 0
+local breedDifficulties = {["Tentacle"]=1,["lizalfos"]=4,["green_knight_soldier"]=2,["green_duck_soldier"]=3,["ropa"]=1}
 
 function fight_generator.add_effects_to_sensors (map, areas, area_details)
 	for sensor in map:get_entities("sensor_pathway_") do
@@ -55,17 +56,21 @@ end
 
 function analyseGameplaySoFar()
 	local f = sol.file.open("userExperience.txt","r")
-	local nothing = {swordSwings=0, swordHits=0, gotHit=0}
+	local nothing = {swordSwings=0, swordHits=0, gotHit=0, monsters=0}
 	local room = table_util.copy( nothing )
 
 	while true do
 		local line = f:read("*line")
-		if not line then break end
+		if not line then 
+			log.debug( room ); break 
+		end
 		
 		if line=="sword swinging-hero" then room.swordSwings = room.swordSwings + 1 end
 		if line=="sword-enemy" then room.swordHits = room.swordHits + 1 end
 		if line=="hurt-hero" then room.gotHit = room.gotHit + 1 end
+		if string.find(line, "spawned") then room.monsters = room.monsters + 1 end
 		if string.find(line, "intoarea") or string.find(line, "A NEW GAME IS STARTING NOW") then 
+			log.debug( room )
 			room = table_util.copy( nothing )
 		end	
 	end
@@ -77,7 +82,6 @@ end
 function fight_generator.make(area, diff) 
 	local difficulty = diff
 	local enemiesInFight = {}
-	local breedDifficulties = {["Tentacle"]=1,["lizalfos"]=4,["green_knight_soldier"]=2,["green_duck_soldier"]=3,["ropa"]=1}
 	
 	local breedOptions={}
 	for k,_ in pairs(breedDifficulties) do
