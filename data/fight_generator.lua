@@ -5,7 +5,7 @@ local num_util 			= require("num_util")
 
 local fight_generator = {}
 difficultyOfFights = 0
-local breedDifficulties = {["Tentacle"]=1,["lizalfos"]=4,["green_knight_soldier"]=2,["green_duck_soldier"]=3,["ropa"]=1}
+local breedDifficulties = {["Tentacle"]=1,["green_knight_soldier"]=2}
 
 function fight_generator.add_effects_to_sensors (map, areas, area_details)
 	for sensor in map:get_entities("sensor_pathway_") do
@@ -19,14 +19,14 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 				
 				function() 
 					local split_table = split_table
-					if split_table[11] == "intoarea" then 
+					if split_table[11] == "intoarea" and split_table[4] == "bkw" then 
+						analyseGameplaySoFar()
+						local f = sol.file.open("userExperience.txt","a+"); f:write(sensor:get_name() .. "\n"); f:flush(); f:close()
 						for enemy in map:get_entities("pregenEnemy") do
 							enemy:remove()
 						end
 						local spawnArea = areas["walkable"][tonumber(split_table[8])]
-						
-						analyseGameplaySoFar()
-						
+												
 						difficultyOfFights = difficultyOfFights + 1
 						local diff = difficultyOfFights
 						local f = sol.file.open("userExperience.txt","a+"); f:write(diff .. "-difficulty\n"); f:flush(); f:close()
@@ -46,8 +46,9 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 							end
 							
 						end
+					else
+						local f = sol.file.open("userExperience.txt","a+"); f:write(sensor:get_name() .. "\n"); f:flush(); f:close()
 					end
-					local f = sol.file.open("userExperience.txt","a+"); f:write(sensor:get_name() .. "\n"); f:flush(); f:close()
 				end
 		end
 				
@@ -62,15 +63,14 @@ function analyseGameplaySoFar()
 	while true do
 		local line = f:read("*line")
 		if not line then 
-			log.debug( room ); break 
+			break 
 		end
 		
 		if line=="sword swinging-hero" then room.swordSwings = room.swordSwings + 1 end
 		if line=="sword-enemy" then room.swordHits = room.swordHits + 1 end
 		if line=="hurt-hero" then room.gotHit = room.gotHit + 1 end
 		if string.find(line, "spawned") then room.monsters = room.monsters + 1 end
-		if string.find(line, "intoarea") or string.find(line, "A NEW GAME IS STARTING NOW") then 
-			log.debug( room )
+		if string.find(line, "intoarea") and string.find(line, "bkw") or string.find(line, "A NEW GAME IS STARTING NOW") then 
 			room = table_util.copy( nothing )
 		end	
 	end

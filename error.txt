@@ -1,10 +1,2 @@
-Error: Failed to load script 'content_generator': [string "content_generator.lua"]:29: function arguments expected near 'return'
-Error: In maps/0: [string "maps/0.lua"]:3: module 'content_generator' not found:
-	no field package.preload['content_generator'][string "content_generator.lua"]:29: function arguments expected near 'return'
-	no file '.\content_generator.lua'
-	no file 'C:\Users\Arjen\Documents\GitHub\dynamicContentZelda\lua\content_generator.lua'
-	no file 'C:\Users\Arjen\Documents\GitHub\dynamicContentZelda\lua\content_generator\init.lua'
-	no file '.\content_generator.dll'
-	no file 'C:\Users\Arjen\Documents\GitHub\dynamicContentZelda\content_generator.dll'
-	no file 'C:\Users\Arjen\Documents\GitHub\dynamicContentZelda\loadall.dll'
+Error: In on_started: [string "content_generator.lua"]:603: calling 'create_dynamic_tile' on bad self (Invalid width -160: should be a positive multiple of 8)
 Error: In timer callback: [string "dungeons.lua"]:123: attempt to index local 'world' (a nil value)
