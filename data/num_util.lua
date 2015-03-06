@@ -8,6 +8,7 @@ end
 
 
 function num_util.random_except(for_these_numbers, from, to)
+	assert(type(for_these_numbers)=="table", "num_util.random_except: Expected table as #1 argument")
 	local checking_table = {}
 	for i = 1, #for_these_numbers do
 		checking_table[for_these_numbers[i]] = true

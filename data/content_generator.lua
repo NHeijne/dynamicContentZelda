@@ -3,11 +3,13 @@ local mission_grammar 	= require("mission_grammar")
 local space_gen 		= require("space_generator")
 local lookup 			= require("data_lookup")
 local fight_generator 	= require("fight_generator")
+local maze_generator 	= require("maze_generator")
 
 local log 				= require("log")
 local table_util 		= require("table_util")
 local area_util 		= require("area_util")
 local num_util 			= require("num_util")
+local light_manager 	= require("maps/lib/light_manager")
 
 local content = {}
 
@@ -30,7 +32,8 @@ function content.start_test(given_map)
 	end
 		
 	-- Initialize the pseudo random number generator
-	local seed = --783166 -- transition bug
+	local seed = 280295
+			--783166 -- transition bug
 			tonumber(tostring(os.time()):reverse():sub(1,6)) -- good random seeds
 	log.debug("random seed = " .. seed)
 	math.randomseed( seed )
@@ -60,6 +63,8 @@ function content.start_test(given_map)
 	game:set_hud_enabled(true)
     game:set_pause_allowed(true)
     game:set_dialog_style("box")
+    light_manager.enable_light_features(map)
+
     --map:set_tileset("1") needs to be set before the map loads
     content.areas = space_gen.generate_space(content.area_details, map)
     log.debug("done with generation")
@@ -80,11 +85,13 @@ function content.start_test(given_map)
 	log.debug("filling in area types")
 	log.debug("exclusion_areas")
 	log.debug(exclusion_areas)
+	maze_generator.set_map(map)
 	local wall_width = content.area_details.wall_width
 	for k,v in pairs(content.areas["walkable"]) do
 		log.debug("filling in area "..k)
 		log.debug("creating area_type " .. content.area_details[k].area_type)
 		if content.area_details[k].area_type == "P" or content.area_details[k].area_type == "PF" then 
+			maze_generator.set_room(v)
 			content.makeSingleMaze(area_util.resize_area(v,{wall_width+16, wall_width+16, -wall_width-16, -wall_width-16}), exit_areas[k], content.area_details, v.used, layer)
 		end
     end
@@ -98,8 +105,7 @@ end
 
 function content.makeSingleMaze(area, exit_areas, area_details, exclusion_area, layer) 
 	log.debug("start maze generation")
-	local maze_generator = require("maze_generator")
-	local maze = maze_generator.generate_maze( area, 16, exit_areas, exclusion_area )
+	local maze = maze_generator.generate_maze( area, 16, exit_areas, exclusion_area, map )
 	for _,v in ipairs(maze) do
 		content.place_tile(v.area, lookup.tiles[v.pattern][area_details.tileset_id], "maze", layer)
 	end

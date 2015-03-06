@@ -226,4 +226,18 @@ function table_util.equal( tbl1, tbl2 )
   return true
 end
 
+-- http://coronalabs.com/blog/2014/09/30/tutorial-how-to-shuffle-table-items/
+function table_util.shuffleTable( t )
+    local rand = math.random 
+    assert( t, "shuffleTable() expected a table, got nil" )
+    local iterations = #t
+    local j
+    
+    for i = iterations, 2, -1 do
+        j = rand(i)
+        t[i], t[j] = t[j], t[i]
+    end
+end
+
+
 return table_util

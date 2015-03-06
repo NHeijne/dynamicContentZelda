@@ -15,6 +15,17 @@ local num_util = require("num_util")
 -- TODO off limit areas exclude={[1]={area={x1, y1, x2, y2},sides_open={"wind_direction"} } 
 -- exit nodes given as areas
 
+local map
+local room
+
+function maze_generator.set_map( given_map )
+	map = given_map
+end
+
+function maze_generator.set_room( area )
+	room = area
+end
+
 function maze_generator.generate_maze( area, corridor_width, exit_areas, exclusion)
 	local maze = {}
 	local wall_width = 8
@@ -27,7 +38,7 @@ function maze_generator.generate_maze( area, corridor_width, exit_areas, exclusi
 	log.debug(exit_areas)
 	local exits = maze_generator.open_exits( maze, exit_areas, area, wall_width, corridor_width )
 	log.debug("maze pathfinding start")
-	maze_generator.create_maze_puzzle( maze, exits )
+	maze_generator.create_maze_puzzle( maze, exits, area )
 	log.debug("maze pathfinding end")
 	log.debug(maze)
 	local area_list = maze_generator.create_area_list( maze, area, corridor_width, wall_width )
@@ -175,12 +186,18 @@ function maze_generator.open_exits( maze, exit_areas, area, wall_width, corridor
 	return exits
 end
 
-function maze_generator.get_neighbors(maze, position)
+-- directions 1:north, 2:east, 3:south, 4:west
+function maze_generator.get_neighbors(maze, position, only_get_unvisited)
 	local neighbors={}
 	if position.x < #maze then neighbors[#neighbors+1]={pos={x=position.x+1, y=position.y}, node=maze[position.x+1][position.y], wall_to=2, wall_from=4} end
 	if position.x > 1 then neighbors[#neighbors+1]={pos={x=position.x-1, y=position.y}, node=maze[position.x-1][position.y], wall_to=4, wall_from=2} end
 	if position.y < #maze[1] then neighbors[#neighbors+1]={pos={x=position.x, y=position.y+1},node=maze[position.x][position.y+1], wall_to=3, wall_from=1} end
 	if position.y > 1 then neighbors[#neighbors+1]={pos={x=position.x, y=position.y-1},node=maze[position.x][position.y-1], wall_to=1, wall_from=3} end
+	if only_get_unvisited then
+		for i=#neighbors,1,-1 do
+			if neighbors[i].node.visited then table.remove(neighbors, i) end
+		end
+	end
 	return neighbors
 end
 
@@ -257,11 +274,158 @@ end
 -- 		Crumbling floor: create 2 overlays, a drop and the floor, and create a reset with the room entry sensor
 
 function maze_generator.create_maze_puzzle( maze, exits, complexity )
+	--maze_generator.make_dark_room()
 	local length_till_exit
 	local distance_to_exit
 	local branches = {}
-	local right_paths = maze_generator.create_initial_paths( maze, exits )
+	local correct_paths = maze_generator.create_initial_paths( maze, exits )
 	-- deform and create branches
+	for i=1, 10 do
+		table.insert(branches, maze_generator.create_straight_branch( maze, correct_paths[math.random(#correct_paths)], 2))
+		table_util.add_table_to_table(maze_generator.deform( maze,  correct_paths[math.random(#correct_paths)] ), branches)
+	end
+end
+
+function maze_generator.deform( maze, correct_path )
+	log.debug("start deforming")
+	--deformation of the path: placing a wall between two positions and connect via a path of nodes which have not been visited yet
+	-- first select a node to travel to
+	local first_node = math.random(#correct_path)
+	local second_node = num_util.random_except({first_node}, 1, #correct_path)
+	if second_node < first_node then first_node, second_node = second_node, first_node end
+	-- that node should be part of the same correct path
+	-- find a path from and to using maze_generator.create_direct_path
+	local path = maze_generator.create_direct_path(correct_path[first_node], correct_path[second_node], maze)	
+	-- IF FOUND
+	local new_branches = {}
+	if path then
+		log.debug("found path")
+		log.debug(path)
+		-- place the wall somewhere in between the two selected nodes (random)
+		local wall_node = math.random(first_node, second_node-1)
+		maze_generator.place_wall_between(correct_path[wall_node], correct_path[wall_node+1], maze)
+		-- add the nodes which fall in between the selected nodes to the branches
+
+		if first_node~=wall_node then 
+			table.insert(new_branches, {})
+			for i=first_node+1, wall_node do table.insert(new_branches[#new_branches], correct_path[i]) end 
+		end
+		if second_node~=wall_node+1 then
+			table.insert(new_branches, {})
+			for i=second_node-1, wall_node+1, -1 do table.insert(new_branches[#new_branches], correct_path[i]) end 
+		end
+		-- remove nodes in between
+		if second_node - first_node > 1 then
+			for i=second_node-1, first_node+1, -1 do
+				table.remove(correct_path, i)
+			end
+		end
+		-- add the found path in between the selected nodes to the correct path
+		for i=#path-1, 1, -1 do
+			table.insert(correct_path, first_node+1, path[i])
+		end
+		-- open path
+		maze_generator.open_path(maze, path)
+	end
+	log.debug("deform success")
+	return new_branches
+end
+
+function maze_generator.create_straight_branch( maze, correct_path, length, from )
+	log.debug("creating straight branch")
+	local possible_branches = {}
+	-- random, but exhaustive, until one has been found
+	local pos_list = table_util.copy(correct_path) 
+	log.debug(pos_list)
+	table_util.shuffleTable( pos_list )
+	if from then table.insert(pos_list, 1, from) end
+	for _,pos in ipairs(pos_list) do
+		local path
+		path=maze_generator.check_straight_path( maze, pos, {x=pos.x+length, y=pos.y} )
+		if path then table.insert(possible_branches, path) end
+		path=maze_generator.check_straight_path( maze, pos, {x=pos.x-length, y=pos.y} )
+		if path then table.insert(possible_branches, path) end
+		path=maze_generator.check_straight_path( maze, pos, {x=pos.x, y=pos.y+length} )
+		if path then table.insert(possible_branches, path) end
+		path=maze_generator.check_straight_path( maze, pos, {x=pos.x, y=pos.y-length} )
+		if path then table.insert(possible_branches, path) end
+		if next(possible_branches) ~= nil then break end
+	end
+	if next(possible_branches) == nil then
+		log.debug("failed to create")
+	 	return nil 
+	end
+	-- IF FOUND
+	-- pick a branch
+	local branch = possible_branches[math.random(#possible_branches)]
+	-- open path
+	maze_generator.open_path(maze, branch)
+	log.debug("create straight branch success")
+	return branch
+end
+
+
+
+-- check_straight_path always ignores the first node
+function maze_generator.check_straight_path( maze, from, to )
+	local path = {from}
+	if from.x == to.x or from.y == to.y then
+		local stepsize_x, stepsize_y = 1, 1
+		if from.x > to.x then stepsize_x = -1 end
+		if from.y > to.y then stepsize_y = -1 end
+		local offset_x, offset_y = 0, 0
+		if from.x == to.x then offset_y = stepsize_y end
+		if from.y == to.y then offset_x = stepsize_x end
+		for x=from.x+offset_x, to.x, stepsize_x do
+			for y=from.y+offset_y, to.y, stepsize_y do
+				if not maze[x] or not maze[x][y] or maze[x][y].visited then 
+					return false 
+				else
+					table.insert(path, {x=x, y=y})
+				end
+			end
+		end
+	else
+		error("check_straight_path: Expected aligned from and to")
+		return false
+	end
+	return path
+end
+
+function maze_generator.place_wall_between( pos1, pos2, maze )
+	local neighbors = maze_generator.get_neighbors(maze, pos1)
+	for k,v in ipairs(neighbors) do
+		if table_util.tbl_contains_tbl(v.pos, pos2) then 
+			maze[v.pos.x][v.pos.y][v.wall_from] = true
+			maze[pos1.x][pos1.y][v.wall_to] = true
+			return true
+		end
+	end
+	return false
+end
+
+
+-- map:create_sensor(properties)
+-- Creates an entity of type sensor on the map.
+
+-- properties (table): A table that describes all properties of the entity to create. Its key-value pairs must be:
+-- name (string, optional): Name identifying the entity or nil. If the name is already used by another entity, a suffix (of the form "_2", "_3", etc.) will be automatically appended to keep entity names unique.
+-- layer (number): Layer on the map (0: low, 1: intermediate, 2: high).
+-- x (number): X coordinate on the map.
+-- y (number): Y coordinate on the map.
+-- width (number): Width of the entity in pixels.
+-- height (number): Height of the entity in pixels.
+-- Return value (sensor): the sensor created.
+function maze_generator.make_dark_room()
+	local room_sensor = map:create_sensor({layer=0, x=room.x1, y=room.y1, width=room.x2-room.x1, height=room.y2-room.y1})
+	room_sensor.on_activated = 
+		function() 
+			local map=map; map:set_light(0) 
+		end
+	room_sensor.on_left = 
+		function() 
+			local map=map; map:set_light(1) 
+		end
 end
 
 function maze_generator.create_initial_paths( maze, exits )
@@ -291,11 +455,17 @@ function maze_generator.create_initial_paths( maze, exits )
 	return paths
 end
 
+-- directions 1:north, 2:east, 3:south, 4:west
 function maze_generator.open_path( maze, path )
 	for i = 1, #path-1, 1 do
-		maze[path[i].pos.x][path[i].pos.y][path[i+1].wall_to]=false
-        maze[path[i+1].pos.x][path[i+1].pos.y][path[i+1].wall_from]=false
-        maze[path[i+1].pos.x][path[i+1].pos.y].visited = true
+		local from, to
+		if path[i+1].x > path[i].x then from, to = 4, 2
+		elseif path[i+1].x < path[i].x then from, to = 2, 4
+		elseif path[i+1].y > path[i].y then from, to = 1, 3
+		elseif path[i+1].y < path[i].y then from, to = 3, 1 end
+		maze[path[i].x][path[i].y][to]=false
+ 		maze[path[i+1].x][path[i+1].y][from]=false
+        maze[path[i+1].x][path[i+1].y].visited = true
 	end
 end
 
@@ -313,33 +483,34 @@ function maze_generator.get_not_visited( maze )
 	return result, n
 end
 
--- TODO test this
+-- TODO test this, not yet functional
 function maze_generator.create_direct_path( from, to, maze )
 	local maze_copy = table_util.copy(maze)
 	maze_copy[from.x][from.y].visited=true
-	local path = {{pos=from}}
+	local path = {from}
 	local current_pos = from
-
+	local done = false
 	repeat
-		local neighbors = maze_generator.get_neighbors(maze_copy, current_pos)
+		local neighbors = maze_generator.get_neighbors(maze_copy, current_pos, true)
 		if #neighbors == 0 then 
 			repeat
 				table.remove(path)
 				local path_length = #path
 				if path_length == 0 then return false end
-				neighbors = maze_generator.get_neighbors(maze_copy, path[path_length].pos)
+				neighbors = maze_generator.get_neighbors(maze_copy, path[path_length], true)
 			until #neighbors ~= 0
 		end 
-		local next_node = neighbors[1]
-		local min_dist = maze_generator.distance(next_node.pos, to)
-		for i=2, #neighbors, 1 do
+		local next_node = nil
+		local min_dist = math.huge
+		for i=1, #neighbors, 1 do
 			local node = neighbors[i]
 			local dist = maze_generator.distance(node.pos, to)
 			if dist < min_dist then min_dist=dist; next_node=node end
 		end
-		table.insert(path, next_node); current_pos = next_node.pos
+		table.insert(path, next_node.pos); current_pos = next_node.pos
 		maze_copy[current_pos.x][current_pos.y].visited=true
-	until table_util.tbl_contains_tbl(current_pos, to)
+		if min_dist == 1 then table.insert(path, to); done=true end
+	until done
 
 	return path
 end
