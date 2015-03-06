@@ -60,6 +60,7 @@ function space_gen.generate_space(area_details, given_map)
 		if new_walkable_area then
 			areas["transition"][areanumber] = {}
 			areas["walkable"][areanumber] = new_walkable_area
+			space_gen.create_area_sensors(new_walkable_area, areanumber, area_details)
 		else
 			log.debug("conflict resolution walkable ".. areanumber .. " failed")
 		end
@@ -77,17 +78,16 @@ function space_gen.generate_space(area_details, given_map)
 			local found_path, found = space_gen.check_for_direct_path(area_details.path_width+2*area_details.wall_width, math.huge, areanumber, transition_details.areanumber, areas)
 			if found then -- create direct transition
 				local resulting_transitions, connected_at = space_gen.create_direct_transition(found_path, transition_details, area_details.path_width+2*area_details.wall_width, areas)
-				space_gen.create_area_separators_with_sensors( connected_at, "direct", areanumber, transition_details.areanumber, connection)
 				space_gen.rectify_area_details(areas, areanumber, connected_at[1], area_details, true)
 				space_gen.rectify_area_details(areas, transition_details.areanumber, connected_at[#connected_at], area_details, true)
 				log.debug("creating links, area ".. areanumber.." connection "..connection)
 				local links, to_transition = space_gen.expand_transition_connected_at( connected_at, area_details )
 				areas["transition"][areanumber][connection]={transitions=resulting_transitions,
-															 openings=to_transition,
+															 opening=to_transition[1],
 															 links=links,
 															 transition_type="direct", 
 															 connected_at=connected_at[1]}
-				areas["transition"][transition_details.areanumber]["area_from"..areanumber.."_to"..transition_details.areanumber.."_con_"..connection]={transitions={}, transition_type="direct", connected_at=connected_at[#connected_at]}
+				areas["transition"][transition_details.areanumber]["area_from"..areanumber.."_to"..transition_details.areanumber.."_con_"..connection]={transitions={}, opening=to_transition[2], transition_type="direct", connected_at=connected_at[#connected_at]}
 				for _, v in ipairs(resulting_transitions) do
 					space_gen.conflict_resolution(v, areas, boundary_width, "transition")
 				end
@@ -102,13 +102,12 @@ function space_gen.generate_space(area_details, given_map)
 		for connection, transition_details in pairs(indirect_connections) do
 			-- collect all the touching areas and create a list of open areas left for the indirect transitions
 			local resulting_transitions, transition_type = space_gen.create_indirect_transition(connection, areanumber, transition_details, areas, area_details)
-			space_gen.create_area_separators_with_sensors( resulting_transitions, "indirect", areanumber, transition_details.areanumber, connection)
 			space_gen.rectify_area_details(areas, areanumber, resulting_transitions[1], area_details, true)
 			space_gen.rectify_area_details(areas, transition_details.areanumber, resulting_transitions[2], area_details, true)
 			areas["transition"][areanumber][connection]=
-				{transitions={}, openings={resulting_transitions[1]}, transition_type=transition_type[1]}
+				{transitions={}, opening=resulting_transitions[1], transition_type=transition_type[1]}
 			areas["transition"][transition_details.areanumber]["f"..areanumber.."t"..transition_details.areanumber.."c"..connection]=
-				{transitions={}, openings={resulting_transitions[2]}, transition_type=transition_type[2]}
+				{transitions={}, opening=resulting_transitions[2], transition_type=transition_type[2]}
 		end
 	end
 	log.debug(transition_assignments)
@@ -140,6 +139,7 @@ end
 -- Return value (separator): The separator created.
 
 -- direction = 0:east, 1:north, 2:west, 3:south
+-- OLD
 function space_gen.create_area_separators_with_sensors( connected_at, path_type, from, to, connection_nr)
 	log.debug("create_area_separators_with_sensors")
 	log.debug(connected_at)
@@ -206,6 +206,14 @@ function space_gen.create_area_separators_with_sensors( connected_at, path_type,
 	end
 end
 
+
+function space_gen.create_area_sensors( area, areanumber, area_details )
+	local ww = area_details.wall_width
+	map:create_sensor({name="areasensor_inside_"..areanumber.."_type_"..area_details[areanumber].area_type, 
+		layer=0, x=area.x1+ww, y=area.y1+ww, width=area.x2-area.x1-2*ww, height=area.y2-area.y1-2*ww})
+	map:create_sensor({name="areasensor_outside_"..areanumber.."_type_"..area_details[areanumber].area_type, 
+		layer=0, x=area.x1-24, y=area.y1-24, width=area.x2-area.x1+2*24, height=area.y2-area.y1+2*24})
+end
 
 
 function space_gen.rectify_area_details(existing_areas, areanumber, new_area, area_details, transition_bool)
@@ -335,6 +343,7 @@ function space_gen.expand_transition_connected_at( connected_at, area_details )
 	local total = #connected_at
 	local to_transition = {	area_util.expand_line( connected_at[1], width ), 
 							area_util.expand_line( connected_at[total], width )}
+	to_transition[2].direction = (to_transition[2].direction+2)%4
 	local links = {}
 	for i=2,total-1 do
 		links[i-1]=area_util.expand_line (connected_at[i], width )

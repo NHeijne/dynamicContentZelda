@@ -12,6 +12,7 @@ function game:initialize_hud()
   local pause_icon_builder = require("hud/pause_icon")
   local item_icon_builder = require("hud/item_icon")
   local action_icon_builder = require("hud/action_icon")
+  local position_builder = require("hud/position")
 
   self.hud = {  -- Array for the hud elements, table for other hud info.
     showing_dialog = false,
@@ -29,6 +30,10 @@ function game:initialize_hud()
 
   menu = rupees_builder:new(self)
   menu:set_dst_position(8, -20)
+  self.hud[#self.hud + 1] = menu
+
+  menu = position_builder:new(self)
+  menu:set_dst_position(8, -30)
   self.hud[#self.hud + 1] = menu
 
   menu = small_keys_builder:new(self)

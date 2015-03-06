@@ -32,7 +32,7 @@ function content.start_test(given_map)
 	end
 		
 	-- Initialize the pseudo random number generator
-	local seed = 280295
+	local seed = --280295
 			--783166 -- transition bug
 			tonumber(tostring(os.time()):reverse():sub(1,6)) -- good random seeds
 	log.debug("random seed = " .. seed)
@@ -101,6 +101,22 @@ function content.start_test(given_map)
 	local hero_x, hero_y, hero_layer = hero:get_position()
 	map.small_keys_savegame_variable = "small_key_map"..map:get_id()
 	map:create_pickable{layer=hero_layer, x=hero_x+16, y=hero_y, treasure_name="small_key", treasure_variant = 1}
+	map:set_doors_open("door_normal_area")
+	content.open_normal_doors_sensorwise()
+end
+
+function content.open_normal_doors_sensorwise()
+	for sensor in map:get_entities("areasensor_outside_") do
+		local split_table = table_util.split(sensor:get_name(), "_")
+		sensor.on_activated = 
+			function()
+				map:open_doors("door_normal_area_"..split_table[3])
+			end
+		sensor.on_left = 
+			function ()
+				map:close_doors("door_normal_area_"..split_table[3])
+			end
+	end
 end
 
 function content.makeSingleMaze(area, exit_areas, area_details, exclusion_area, layer) 
@@ -192,18 +208,16 @@ function content.create_forest_map(existing_areas, area_details)
 			    	content.place_tile(v.transitions[i], 49, "transition", 0)
 			    	content.show_corners(v.transitions[i], tileset)
 			    end
-			elseif #v.openings~= 0 then -- we do a lookup, TODO eventually all transitions will use the lookup
+			elseif #v.opening~= nil then -- we do a lookup, TODO eventually all transitions will use the lookup
 				local t_details = lookup.transitions[v.transition_type]
-				for i=1, #v.openings do
-					table.insert(exclusion_areas[areanumber], {area=v.openings[i], sides_open={"south"}})
-					for positioning, tile in pairs(t_details) do
-						local temp_pos={x1=v.openings[i].x1+positioning.x1,
-									    y1=v.openings[i].y1+positioning.y1,
-									    x2=v.openings[i].x1+positioning.x2,
-									    y2=v.openings[i].y1+positioning.y2}
-						content.place_tile(temp_pos, tile[tileset], "transition", 0)
-					end
-			    end
+				table.insert(exclusion_areas[areanumber], {area=v.opening, sides_open={"south"}})
+				for positioning, tile in pairs(t_details) do
+					local temp_pos={x1=v.opening.x1+positioning.x1,
+								    y1=v.opening.y1+positioning.y1,
+								    x2=v.opening.x1+positioning.x2,
+								    y2=v.opening.y1+positioning.y2}
+					content.place_tile(temp_pos, tile[tileset], "transition", 0)
+				end
 			end
 		end
 	end
@@ -365,12 +379,12 @@ function content.create_dungeon_map(existing_areas, area_details)
 					exit_areas[areanumber][#exit_areas[areanumber]+1]=area_util.resize_area(v.connected_at, {wall_width+8, 0, -wall_width-8, 0})
 				end
 			end
-			if v.transition_type == "direct" and #v.transitions ~= 0 then
+			if v.transition_type == "direct" then
 				local previous_walls, previous_corners
 				local transition_pieces = #v.transitions
 				log.debug("transition area:".. areanumber .. ", connection: ".. connection_nr)
 				log.debug(v)
-				for i=1, transition_pieces do
+				for i=1, transition_pieces, 1 do
 					-- first place part of the transition
 			    	log.debug("transition area:".. areanumber .. ", connection: ".. connection_nr .. ", part: ".. i)
 			    	content.place_tile(v.transitions[i], lookup.tiles["dungeon_floor"][tileset], "transition", 0)
@@ -390,25 +404,23 @@ function content.create_dungeon_map(existing_areas, area_details)
 			    	end
 			    	previous_walls, previous_corners = walls, corners
 			    end
-			    for _,opening in ipairs(v.openings) do
-			    	if opening.direction == 1 or opening.direction == 3 then
+			    if v.opening ~= nil then
+			    	if v.opening.direction == 1 or v.opening.direction == 3 then
 		    			-- create the ground to walk on
-		    			content.place_prop("edge_doors_1", area_util.from_center(opening, 32, opening.y2-opening.y1), 0, tileset, lookup.transitions)
+		    			content.place_prop("edge_doors_1", area_util.from_center(v.opening, 32, v.opening.y2-v.opening.y1), 0, tileset, lookup.transitions)
 		    		else
-		    			content.place_prop("edge_doors_0", area_util.from_center(opening, opening.x2-opening.x1 ,32 ), 0, tileset, lookup.transitions)
+		    			content.place_prop("edge_doors_0", area_util.from_center(v.opening, v.opening.x2-v.opening.x1 ,32 ), 0, tileset, lookup.transitions)
 		    		end
-			    end
-			elseif v.openings ~= nil then -- we do a lookup, TODO eventually all transitions will use the lookup
-				for _,opening in ipairs(v.openings) do
-					exit_areas[areanumber][#exit_areas[areanumber]+1]=area_util.resize_area(opening, {8, 0, -8, 0})
-					log.debug("transition area:".. areanumber .. ", connection: ".. connection_nr)
-					log.debug("placing prop indirect transition")
-					log.debug(v)
-					log.debug(tileset)
-					content.place_prop(v.transition_type, opening, 0, tileset, lookup.transitions, "transition"..v.transition_type)
-			    end
+		    	end
+			elseif v.opening ~= nil then -- we do a lookup, TODO eventually all transitions will use the lookup
+				exit_areas[areanumber][#exit_areas[areanumber]+1]=area_util.resize_area(v.opening, {8, 0, -8, 0})
+				log.debug("transition area:".. areanumber .. ", connection: ".. connection_nr)
+				log.debug("placing prop indirect transition")
+				log.debug(tileset)
+				content.place_prop(v.transition_type, v.opening, 0, tileset, lookup.transitions, "transition"..v.transition_type)
 			end
 			content.create_barriers( area_details, existing_areas, areanumber, connection_nr )
+			content.create_normal_doors( area_details, existing_areas, areanumber, connection_nr )
 		end
 	end
 
@@ -428,6 +440,45 @@ function content.place_walls(area, wall_width)
 	end
 end
 
+function content.create_normal_doors( area_details, existing_areas, areanumber, connection_nr )
+	log.debug("create_normal_doors")
+	local transition_details = existing_areas["transition"][areanumber][connection_nr]
+	local op = transition_details.opening
+	if op == nil then return false end
+	local object_details = lookup.doors["door_normal"]
+	log.debug(op)
+	local dir = op.direction
+	local name = "door_normal_area_"..areanumber.."_1"
+	local position
+	local temp_area
+	if dir == 1 or dir == 3 then 		
+		temp_area = area_util.from_center(op, 16, op.y2-op.y1)
+	elseif dir == 0 or dir == 2 then 	
+		temp_area = area_util.from_center(op, op.x2-op.x1, 16)
+	end
+	if dir == 3 or dir == 0 then 		
+		position = {x1=temp_area.x1, x2=temp_area.x1+16, y1=temp_area.y1, y2=temp_area.y1+16 }
+	elseif dir == 2 or dir == 1 then 	
+		position = {x1=temp_area.x2-16, x2=temp_area.x2, y1=temp_area.y2-16, y2=temp_area.y2 }
+	end
+	local optional = {name=name}
+	content.place_door(object_details, dir, position, optional)
+end
+
+function content.place_door( details, direction, area, optional )
+	local layer = optional.layer or 0
+	local details = table_util.copy(details)
+	details.layer = details.layer+layer
+	for k,v in pairs(optional) do
+		details[k] = v
+	end
+	details.direction = direction
+	details.x, details.y = area.x1, area.y1
+	log.debug(details)
+	map:create_door(details)
+
+end
+
 -- barrier type is already concluded when the mission grammar is formed
 -- so we need to create a table of destructables and doors to place at specific spots along the area
 function content.create_barriers( area_details, existing_areas, areanumber, connection_nr )
@@ -439,7 +490,7 @@ function content.create_barriers( area_details, existing_areas, areanumber, conn
 	 	return false 
 	end
 	local transition_details = existing_areas["transition"][areanumber][connection_nr]
-	local openings = transition_details.openings
+	local opening = transition_details.opening
 	local ww = area_details.wall_width
 	for _,barrier in pairs(barriers) do
 		local split = table_util.split(barrier, ":")
@@ -454,13 +505,13 @@ function content.create_barriers( area_details, existing_areas, areanumber, conn
 		end
 		local obj_size = object_details.required_size
 		if split[1] == "L" then
-			local dir = openings[1].direction
+			local dir = opening.direction
 			local position
 			local temp_area
 			if dir == 1 or dir == 3 then 		
-				temp_area = area_util.from_center(openings[1], 16, openings[1].y2-openings[1].y1)
+				temp_area = area_util.from_center(opening, 16, opening.y2-opening.y1)
     		elseif dir == 0 or dir == 2 then 	
-    			temp_area = area_util.from_center(openings[1], openings[1].x2-openings[1].x1, 16)
+    			temp_area = area_util.from_center(opening, opening.x2-opening.x1, 16)
     		end
     		if dir == 3 or dir == 0 then 		
 				position = {x1=temp_area.x1, x2=temp_area.x1+16, y1=temp_area.y1, y2=temp_area.y1+16 }
@@ -477,12 +528,12 @@ function content.create_barriers( area_details, existing_areas, areanumber, conn
 			-- create destructible and doors (weak_blocks)
 			-- determine direction and the area
 			local available_areas = {}
-
-			table.insert(available_areas, area_util.get_side(openings[1], (openings[1].direction+2)%4, math.max(obj_size.x, obj_size.y), -ww))
+			local pw = area_details.path_width
+			table.insert(available_areas, area_util.get_side(opening, (opening.direction+2)%4, math.max(obj_size.x, obj_size.y), -ww))
 			for _,t in pairs(transition_details.transitions) do
 				local new_t = area_util.resize_area(t, {ww, ww, -ww, -ww})
 				local new_t_size = area_util.get_area_size(new_t)
-				if new_t_size.x > obj_size.x and new_t_size.y > obj_size.y then table.insert(available_areas, new_t) end
+				if new_t_size.x > obj_size.x and new_t_size.y > obj_size.y then table.insert(available_areas, area_util.from_center(new_t, math.min(pw,new_t_size.x), math.min(pw,new_t_size.y), true)) end
 			end
 			log.debug("available_areas")
 			log.debug(available_areas)
@@ -563,7 +614,7 @@ end
 
 function content.place_lock( details, direction, area, optional )
 	local layer = optional.layer or 0
-	local details = details
+	local details = table_util.copy(details)
 	details.layer = details.layer+layer
 	for k,v in pairs(optional) do
 		details[k] = v
