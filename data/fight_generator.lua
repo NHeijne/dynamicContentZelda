@@ -10,35 +10,31 @@ local breedDifficulties = {["Tentacle"]=1,["green_knight_soldier"]=2}
 function fight_generator.add_effects_to_sensors (map, areas, area_details)
 	for sensor in map:get_entities("areasensor_inside_") do
 		-- areasensor_<inside/outside>_5_type_<F for fights>
+		
 		--local split_table = table_util.split(sensor:get_name(), "_")
-
 		--if split_table[5] == "F" then 
 		sensor.on_activated = 	
 				
 				function() 
-					--local split_table = table_util.split(sensor:get_name(), "_")
-					--local f = sol.file.open("userExperience.txt","a+")
-					--if split_table[11] == "intoarea" and split_table[4] == "bkw" then 
 					analyseGameplaySoFar()
 					local f = sol.file.open("userExperience.txt","a+"); f:write(sensor:get_name() .. "\n"); f:flush(); f:close()
-					-- APPARENTLY, THERE'S AN ERROR HAPPENING HERE
+					--local split_table = table_util.split(sensor:get_name(), "_")
 					--local f = sol.file.open("userExperience.txt","a+"); f:write(split_table .. "\n"); f:flush(); f:close()
 					
 					for enemy in map:get_entities("pregenEnemy") do enemy:remove() end
+					-- This next line is problematic.
 					local spawnArea = areas["walkable"][tonumber( 1 )] -- split_table[3])]
 					
-					--local f = sol.file.open("userExperience.txt","a+"); f:write(spawnArea .. "\n"); f:flush(); f:close()
-
 					difficultyOfFights = difficultyOfFights + 1
 					local diff = difficultyOfFights
-					
-					--f:write(diff .. "-difficulty\n")
+					local f = sol.file.open("userExperience.txt","a+"); f:write(diff .. "-difficulty\n"); f:flush(); f:close()
 					
 					local enemiesInEncounter = fight_generator.make(spawnArea, diff) 
 					for _,enemy in pairs(enemiesInEncounter) do
-
 						local theEnemyIJustMade = map:create_enemy(enemy)
-						--f:write(theEnemyIJustMade:get_breed() .. "-spawned\n")
+						local f = sol.file.open("userExperience.txt","a+") 
+						f:write(theEnemyIJustMade:get_breed() .. "-spawned\n")
+						f:flush(); f:close()
 						
 						function theEnemyIJustMade:on_hurt(attack)
 							local f = sol.file.open("userExperience.txt","a+"); f:write(attack .. "-enemy\n"); f:flush(); f:close()
@@ -47,10 +43,6 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 						end
 						
 					end
-					--else
-					--	local f = sol.file.open("userExperience.txt","a+"); f:write(sensor:get_name() .. "\n"); f:flush(); f:close()
-					--end
-					f:flush(); f:close()
 				end
 		--end
 				
