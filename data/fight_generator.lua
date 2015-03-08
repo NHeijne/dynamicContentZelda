@@ -5,7 +5,9 @@ local num_util 			= require("num_util")
 
 local fight_generator = {}
 local difficultyOfFights = 1
-local breedDifficulties = {["Tentacle"]=1,["green_knight_soldier"]=2,["mandible"]=2}
+local breedDifficulties = {["globul"]=3,["pike_auto"]=2,["tentacle"]=1,["snap_dragon"]=3,
+							["green_knight_soldier"]=2,["mandible"]=2,["red_knight_soldier"]=3,
+							["minillosaur_egg_fixed"]=2,["blue_hardhat_beetle"]=3,["blue_bullblin"]=3}
 
 function fight_generator.add_effects_to_sensors (map, areas, area_details)
 	for sensor in map:get_entities("areasensor_inside_") do
