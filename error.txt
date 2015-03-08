@@ -1,1 +1,1 @@
-Error: In on_activated: [string "fight_generator.lua"]:23: attempt to concatenate local 'split_table' (a table value)
+Error: In on_left: [string "fight_generator.lua"]:75: attempt to perform arithmetic on a nil value
