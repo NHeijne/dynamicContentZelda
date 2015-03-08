@@ -103,6 +103,9 @@ function content.start_test(given_map)
 	map:create_pickable{layer=hero_layer, x=hero_x+16, y=hero_y, treasure_name="small_key", treasure_variant = 1}
 	map:set_doors_open("door_normal_area")
 	content.open_normal_doors_sensorwise()
+	local entity = map:create_custom_entity({name="fireball_statue", direction=0, layer=0, x=hero_x+48, y=hero_y+16, model="fireball_statue"})
+	entity:start()
+	sol.timer.start(map, 12000, function() entity:stop() end)
 end
 
 function content.open_normal_doors_sensorwise()

@@ -217,6 +217,8 @@ sprite{ id = "menus/hero_head", description = "Menu: Hero head" }
 sprite{ id = "menus/hero_point", description = "Menu: Hero point" }
 sprite{ id = "menus/solarus_logo", description = "Menu: Solarus logo" }
 sprite{ id = "entities/solid_switch", description = "Solid switch" }
+sprite{ id = "entities/fireball_statue", description = "fireball_statue" }
+sprite{ id = "enemies/red_projectile", description = "Red Projectile Triple" }
 
 music{ id = "agahnim", description = "Agahnim theme" }
 music{ id = "beginning", description = "Beginning" }
@@ -458,7 +460,10 @@ enemy{ id = "poutroxor", description = "Poutroxor" }
 enemy{ id = "billy", description = "Billy" }
 enemy{ id = "ganon", description = "Ganon" }
 enemy{ id = "fire_bat", description = "Fire bat" }
+enemy{ id = "red_projectile", description = "Red Projectile" }
+enemy{ id = "fireball_statue", description = "Fireball Statue" }
 
+entity{ id = "fireball_statue", description = "Fireball Statue" }
 
 language{ id = "de", description = "Deutsch" }
 language{ id = "en", description = "English" }
