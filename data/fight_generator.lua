@@ -18,12 +18,11 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 				function() 
 					analyseGameplaySoFar()
 					local f = sol.file.open("userExperience.txt","a+"); f:write(sensor:get_name() .. "\n"); f:flush(); f:close()
-					--local split_table = table_util.split(sensor:get_name(), "_")
-					--local f = sol.file.open("userExperience.txt","a+"); f:write(split_table .. "\n"); f:flush(); f:close()
+					local sensorname = sensor:get_name()
+					local split_table = table_util.split(sensorname, "_")
 					
 					for enemy in map:get_entities("pregenEnemy") do enemy:remove() end
-					-- This next line is problematic.
-					local spawnArea = areas["walkable"][tonumber( 1 )] -- split_table[3])]
+					local spawnArea = areas["walkable"][tonumber(split_table[3])]
 					
 					difficultyOfFights = difficultyOfFights + 1
 					local diff = difficultyOfFights
