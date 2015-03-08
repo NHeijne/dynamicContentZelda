@@ -8,49 +8,43 @@ difficultyOfFights = 0
 local breedDifficulties = {["Tentacle"]=1,["green_knight_soldier"]=2}
 
 function fight_generator.add_effects_to_sensors (map, areas, area_details)
-	for sensor in map:get_entities("sensor_pathway_") do
-		-- sensor_pathway_<path_type: direct / indirect>_<direction: fwd / bkw >
-		--		 _f_<from areanumber>_t_<to areanumber>
-		--		 _con_<connection_nr for specific transition>_<exitarea / intoarea>
-		local split_table = table_util.split(sensor:get_name(), "_")
-		local is_fight_area = area_details[tonumber(split_table[8])].area_type == "F" 
-
-		if is_fight_area then sensor.on_activated = 	
+	for sensor in map:get_entities("areasensor_inside_") do
+		-- areasensor_<inside/outside>_5_type_<F for fights>
+		
+		--local split_table = table_util.split(sensor:get_name(), "_")
+		--if split_table[5] == "F" then 
+		sensor.on_activated = 	
 				
 				function() 
-					local split_table = split_table
-					if split_table[11] == "intoarea" and split_table[4] == "bkw" then 
-						analyseGameplaySoFar()
-						local f = sol.file.open("userExperience.txt","a+"); f:write(sensor:get_name() .. "\n"); f:flush(); f:close()
-						for enemy in map:get_entities("pregenEnemy") do
-							enemy:remove()
-						end
-						local spawnArea = areas["walkable"][tonumber(split_table[8])]
-												
-						difficultyOfFights = difficultyOfFights + 1
-						local diff = difficultyOfFights
-						local f = sol.file.open("userExperience.txt","a+"); f:write(diff .. "-difficulty\n"); f:flush(); f:close()
+					analyseGameplaySoFar()
+					local f = sol.file.open("userExperience.txt","a+"); f:write(sensor:get_name() .. "\n"); f:flush(); f:close()
+					--local split_table = table_util.split(sensor:get_name(), "_")
+					--local f = sol.file.open("userExperience.txt","a+"); f:write(split_table .. "\n"); f:flush(); f:close()
+					
+					for enemy in map:get_entities("pregenEnemy") do enemy:remove() end
+					-- This next line is problematic.
+					local spawnArea = areas["walkable"][tonumber( 1 )] -- split_table[3])]
+					
+					difficultyOfFights = difficultyOfFights + 1
+					local diff = difficultyOfFights
+					local f = sol.file.open("userExperience.txt","a+"); f:write(diff .. "-difficulty\n"); f:flush(); f:close()
+					
+					local enemiesInEncounter = fight_generator.make(spawnArea, diff) 
+					for _,enemy in pairs(enemiesInEncounter) do
+						local theEnemyIJustMade = map:create_enemy(enemy)
+						local f = sol.file.open("userExperience.txt","a+") 
+						f:write(theEnemyIJustMade:get_breed() .. "-spawned\n")
+						f:flush(); f:close()
 						
-						local enemiesInEncounter = fight_generator.make(spawnArea, diff) 
-						for _,enemy in pairs(enemiesInEncounter) do
-
-							local theEnemyIJustMade = map:create_enemy(enemy)
-							local f = sol.file.open("userExperience.txt","a+")
-							f:write(theEnemyIJustMade:get_breed() .. "-spawned\n")
-							f:flush(); f:close()
-							
-							function theEnemyIJustMade:on_hurt(attack)
-								local f = sol.file.open("userExperience.txt","a+"); f:write(attack .. "-enemy\n"); f:flush(); f:close()
-								-- returning false gives it back to the engine to handle
-								return false
-							end
-							
+						function theEnemyIJustMade:on_hurt(attack)
+							local f = sol.file.open("userExperience.txt","a+"); f:write(attack .. "-enemy\n"); f:flush(); f:close()
+							-- returning false gives it back to the engine to handle
+							return false
 						end
-					else
-						local f = sol.file.open("userExperience.txt","a+"); f:write(sensor:get_name() .. "\n"); f:flush(); f:close()
+						
 					end
 				end
-		end
+		--end
 				
 	end
 end

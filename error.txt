@@ -1,2 +1,3 @@
-Error: In on_started: [string "content_generator.lua"]:603: calling 'create_dynamic_tile' on bad self (Invalid width -160: should be a positive multiple of 8)
-Error: In timer callback: [string "dungeons.lua"]:123: attempt to index local 'world' (a nil value)
+Error: In on_activated: [string "fight_generator.lua"]:27: attempt to concatenate local 'spawnArea' (a table value)
+Error: In on_activated: [string "fight_generator.lua"]:27: attempt to concatenate local 'spawnArea' (a table value)
+Error: In on_activated: [string "fight_generator.lua"]:27: attempt to concatenate local 'spawnArea' (a table value)
