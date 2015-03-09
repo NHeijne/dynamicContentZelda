@@ -1,3 +1,2 @@
-Error: In on_activated: [string "fight_generator.lua"]:27: attempt to concatenate local 'spawnArea' (a table value)
-Error: In on_activated: [string "fight_generator.lua"]:27: attempt to concatenate local 'spawnArea' (a table value)
-Error: In on_activated: [string "fight_generator.lua"]:27: attempt to concatenate local 'spawnArea' (a table value)
+Error: In on_started: [string "maze_generator.lua"]:181: table index is nil
+Error: In timer callback: [string "dungeons.lua"]:123: attempt to index local 'world' (a nil value)

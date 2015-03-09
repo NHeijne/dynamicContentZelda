@@ -4,28 +4,27 @@ local area_util 		= require("area_util")
 local num_util 			= require("num_util")
 
 local fight_generator = {}
-difficultyOfFights = 0
-local breedDifficulties = {["Tentacle"]=1,["green_knight_soldier"]=2}
+local difficultyOfFights = 1
+local breedDifficulties = {["globul"]=3,["pike_auto"]=2,["tentacle"]=1,["snap_dragon"]=3,
+							["green_knight_soldier"]=2,["mandible"]=2,["red_knight_soldier"]=3,
+							["minillosaur_egg_fixed"]=2,["blue_hardhat_beetle"]=3,["blue_bullblin"]=3}
 
 function fight_generator.add_effects_to_sensors (map, areas, area_details)
 	for sensor in map:get_entities("areasensor_inside_") do
 		-- areasensor_<inside/outside>_5_type_<F for fights>
+		local sensorname = sensor:get_name()
+		local split_table = table_util.split(sensorname, "_")
 		
-		--local split_table = table_util.split(sensor:get_name(), "_")
-		--if split_table[5] == "F" then 
-		sensor.on_activated = 	
-				
-				function() 
-					analyseGameplaySoFar()
+		if split_table[5] == "F" then 
+			sensor.on_activated = 
+				function()
 					local f = sol.file.open("userExperience.txt","a+"); f:write(sensor:get_name() .. "\n"); f:flush(); f:close()
-					--local split_table = table_util.split(sensor:get_name(), "_")
-					--local f = sol.file.open("userExperience.txt","a+"); f:write(split_table .. "\n"); f:flush(); f:close()
+					local f = sol.file.open("userExperience.txt","a+"); f:write(os.time() .. "-time\n"); f:flush(); f:close()
+					local split_table = split_table
 					
 					for enemy in map:get_entities("pregenEnemy") do enemy:remove() end
-					-- This next line is problematic.
-					local spawnArea = areas["walkable"][tonumber( 1 )] -- split_table[3])]
+					local spawnArea = areas["walkable"][tonumber(split_table[3])]
 					
-					difficultyOfFights = difficultyOfFights + 1
 					local diff = difficultyOfFights
 					local f = sol.file.open("userExperience.txt","a+"); f:write(diff .. "-difficulty\n"); f:flush(); f:close()
 					
@@ -44,14 +43,21 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 						
 					end
 				end
-		--end
+			sensor.on_left = 
+				function() 
+					analyseGameplaySoFar()
+					difficultyOfFights = difficultyOfFights + 1
+					local f = sol.file.open("userExperience.txt","a+"); f:write(os.time() .. "-time\n"); f:flush(); f:close()
+					local f = sol.file.open("userExperience.txt","a+"); f:write("left the room\n"); f:flush(); f:close()
+				end
+		end
 				
 	end
 end
 
 function analyseGameplaySoFar()
 	local f = sol.file.open("userExperience.txt","r")
-	local nothing = {swordSwings=0, swordHits=0, gotHit=0, monsters=0}
+	local nothing = {swordSwings=0, swordHits=0, gotHit=0, monsters=0, timeInRoom=0, directionChange=0}
 	local room = table_util.copy( nothing )
 
 	while true do
@@ -64,7 +70,14 @@ function analyseGameplaySoFar()
 		if line=="sword-enemy" then room.swordHits = room.swordHits + 1 end
 		if line=="hurt-hero" then room.gotHit = room.gotHit + 1 end
 		if string.find(line, "spawned") then room.monsters = room.monsters + 1 end
-		if string.find(line, "intoarea") and string.find(line, "bkw") or string.find(line, "A NEW GAME IS STARTING NOW") then 
+		if string.find(line, "time") then 
+			local lineTime = table_util.split(line, "-")
+			room.timeInRoom = os.time() - tonumber (lineTime[1])
+		end
+		if line=="right-keypress" or line=="left-keypress" or line=="up-keypress" or line=="down-keypress" then 
+			room.directionChange = room.directionChange + 1
+		end
+		if string.find(line, "areasensor") or string.find(line, "A NEW GAME IS STARTING NOW") then 
 			room = table_util.copy( nothing )
 		end	
 	end
