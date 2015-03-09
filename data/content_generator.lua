@@ -376,11 +376,14 @@ function content.create_dungeon_map(existing_areas, area_details)
 		for connection_nr,v in pairs(connections) do
 			log.debug(v.transitions)
 			if v.connected_at then
+				local resized_connected_at
 				if v.connected_at.x1 == v.connected_at.x2 then 
-					exit_areas[areanumber][#exit_areas[areanumber]+1]=area_util.resize_area(v.connected_at, {0, wall_width+8, 0, -wall_width-8})
+					resized_connected_at=area_util.resize_area(v.connected_at, {0, wall_width+8, 0, -wall_width-8})
 				else
-					exit_areas[areanumber][#exit_areas[areanumber]+1]=area_util.resize_area(v.connected_at, {wall_width+8, 0, -wall_width-8, 0})
+					resized_connected_at=area_util.resize_area(v.connected_at, {wall_width+8, 0, -wall_width-8, 0})
 				end
+				if type(connection_nr) == "string" then table.insert(exit_areas[areanumber], 1, resized_connected_at) -- this should be the entrypoint of the area
+				else table.insert(exit_areas[areanumber], resized_connected_at) end
 			end
 			if v.transition_type == "direct" then
 				local previous_walls, previous_corners

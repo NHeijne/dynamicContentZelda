@@ -87,7 +87,7 @@ function space_gen.generate_space(area_details, given_map)
 															 links=links,
 															 transition_type="direct", 
 															 connected_at=connected_at[1]}
-				areas["transition"][transition_details.areanumber]["area_from"..areanumber.."_to"..transition_details.areanumber.."_con_"..connection]={transitions={}, opening=to_transition[2], transition_type="direct", connected_at=connected_at[#connected_at]}
+				areas["transition"][transition_details.areanumber]["entry_direct_area_"..areanumber.."_con_"..connection]={transitions={}, opening=to_transition[2], transition_type="direct", connected_at=connected_at[#connected_at]}
 				for _, v in ipairs(resulting_transitions) do
 					space_gen.conflict_resolution(v, areas, boundary_width, "transition")
 				end
@@ -106,7 +106,7 @@ function space_gen.generate_space(area_details, given_map)
 			space_gen.rectify_area_details(areas, transition_details.areanumber, resulting_transitions[2], area_details, true)
 			areas["transition"][areanumber][connection]=
 				{transitions={}, opening=resulting_transitions[1], transition_type=transition_type[1]}
-			areas["transition"][transition_details.areanumber]["f"..areanumber.."t"..transition_details.areanumber.."c"..connection]=
+			areas["transition"][transition_details.areanumber]["entry_indirect_area_"..areanumber.."_con_"..connection]=
 				{transitions={}, opening=resulting_transitions[2], transition_type=transition_type[2]}
 		end
 	end
@@ -210,7 +210,7 @@ end
 function space_gen.create_area_sensors( area, areanumber, area_details )
 	local ww = area_details.wall_width
 	map:create_sensor({name="areasensor_inside_"..areanumber.."_type_"..area_details[areanumber].area_type, 
-		layer=0, x=area.x1+ww, y=area.y1+ww, width=area.x2-area.x1-2*ww, height=area.y2-area.y1-2*ww})
+		layer=0, x=area.x1+ww-8, y=area.y1+ww-8, width=area.x2-area.x1-(2*ww-16), height=area.y2-area.y1-(2*ww-16)})
 	map:create_sensor({name="areasensor_outside_"..areanumber.."_type_"..area_details[areanumber].area_type, 
 		layer=0, x=area.x1-24, y=area.y1-24, width=area.x2-area.x1+2*24, height=area.y2-area.y1+2*24})
 end

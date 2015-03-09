@@ -239,5 +239,14 @@ function table_util.shuffleTable( t )
     end
 end
 
+function table_util.reverse_table(t)
+    local reversedTable = {}
+    local itemCount = #t
+    for k, v in ipairs(t) do
+        reversedTable[itemCount + 1 - k] = v
+    end
+    return reversedTable
+end
+
 
 return table_util

@@ -41,9 +41,9 @@ function maze_generator.generate_maze( area, corridor_width, exit_areas, exclusi
 	maze_generator.create_maze_puzzle( maze, exits, area )
 	log.debug("maze pathfinding end")
 	log.debug(maze)
-	local area_list = maze_generator.create_area_list( maze, area, corridor_width, wall_width )
+	local area_list, prop_list = maze_generator.create_area_list( maze, area, corridor_width, wall_width )
 	log.debug(area_list)
- 	return area_list
+ 	return area_list, prop_list
 end
 
 function maze_generator.exclude( area, maze, exclusion, corridor_width, wall_width )
@@ -138,7 +138,7 @@ function maze_generator.create_area_list( maze, area, corridor_width, wall_width
 										 	   }, pattern="maze_post"} end
 		end
 	end
-	return area_list
+	return area_list, prop_list
 end
 
 function maze_generator.initialize_maze( maze, area, wall_width, corridor_width )
@@ -278,12 +278,30 @@ function maze_generator.create_maze_puzzle( maze, exits, complexity )
 	local length_till_exit
 	local distance_to_exit
 	local branches = {}
-	local correct_paths = maze_generator.create_initial_paths( maze, exits )
+	local correct_paths = maze_generator.create_initial_paths( maze, exits ) -- the first correct path from end to beginning is the entry point
+	log.debug(correct_paths)
+	log.debug("correct_paths")
+	-- so we reverse that one so we can always go forward with each path
+	correct_paths[1] = table_util.reverse_table(correct_paths[1])
 	-- deform and create branches
 	for i=1, 10 do
-		table.insert(branches, maze_generator.create_straight_branch( maze, correct_paths[math.random(#correct_paths)], 2))
-		table_util.add_table_to_table(maze_generator.deform( maze,  correct_paths[math.random(#correct_paths)] ), branches)
+		local path_nr = math.random(#correct_paths)
+		branches[path_nr] = branches[path_nr] or {}
+		table.insert(branches[path_nr], maze_generator.create_straight_branch( maze, correct_paths[path_nr], 2))
+		table_util.add_table_to_table(maze_generator.deform( maze, correct_paths[path_nr] ), branches[path_nr])
 	end
+	-- form a plan of additions
+	-- analyse the game so far
+
+	-- replace parts of the maze with templates
+	-- switch
+	-- 
+
+	-- add those special parts based on order of placement priority
+	-- pikes
+	-- teleports
+	-- jumps
+	-- <open>
 end
 
 function maze_generator.deform( maze, correct_path )
@@ -329,6 +347,50 @@ function maze_generator.deform( maze, correct_path )
 	end
 	log.debug("deform success")
 	return new_branches
+end
+
+function maze_generator.create_teleport_junction( maze, correct_path, branches, nr_of_teleports)
+	-- find a spot along the path that has enough branches for the nr_of_teleports
+	-- we can add a wall before that spot
+	-- if that spot is the start of a branch then place the teleport back at the end of the branch and the way forward one spot removed
+	-- add teleports to the end of the branches whereever there is space, add a destination to the beginning of the path
+	--
+end
+
+function maze_generator.create_pike_trap( maze, branches, nr_pikes )
+	-- place at the end of the branch where there is space enough and that is far away enough to function as trap
+	for _,branch in ipairs(branches) do
+		local branch_total = #branch
+		local straight_length = maze_generator.check_straight_length( maze, branch )
+		-- if length is small then we can use either a detect or auto pike
+		if straight_length <= 2 then
+			maze[branch[straight_length].x][branch[straight_length].y].prop = "pike_detect"
+		end
+		--TODO
+		-- if length is large then a detect might have more effect
+		-- if there are two branches at a single node then we can use an auto pike that is in the same direction as the correct path
+	end
+end
+
+function maze_generator.create_fireball_statue( maze )
+	-- check the unused parts of the maze for this
+	-- use mostly corners or far away points, which is likely the most interesting way to use the fireball statues
+end
+
+function maze_generator.check_straight_length( maze, branch )
+	local pos_a = branch[1]
+	local pos_b = branch[2]
+	local direction, last_direction
+	local straight_length = 0
+	for i=2,#branch do
+		pos_a = branch[i-1]
+		pos_b = branch[i]
+		if pos_a.x ~= pos_b.x then direction = "v" else direction = "h" end
+		if last_direction == nil then last_direction = direction; straight_length = straight_length + 1
+		elseif last_direction ~= direction or maze[pos_b.x][pos_b.y].prop then return straight_length
+		else straight_length = straight_length + 1 end
+	end
+	return straight_length
 end
 
 function maze_generator.create_straight_branch( maze, correct_path, length, from )
@@ -482,8 +544,7 @@ function maze_generator.get_not_visited( maze )
 	end
 	return result, n
 end
-
--- TODO test this, not yet functional
+ 
 function maze_generator.create_direct_path( from, to, maze )
 	local maze_copy = table_util.copy(maze)
 	maze_copy[from.x][from.y].visited=true
