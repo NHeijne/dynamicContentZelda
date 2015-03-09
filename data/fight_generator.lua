@@ -5,7 +5,7 @@ local num_util 			= require("num_util")
 
 local fight_generator = {}
 local difficultyOfFights = 1
-local breedDifficulties = {["globul"]=3,["pike_auto"]=2,["tentacle"]=1,["snap_dragon"]=3,
+local breedDifficulties = {["globul"]=3,["tentacle"]=1,["snap_dragon"]=3,--["pike_auto"]=2,
 							["green_knight_soldier"]=2,["mandible"]=2,["red_knight_soldier"]=3,
 							["minillosaur_egg_fixed"]=2,["blue_hardhat_beetle"]=3,["blue_bullblin"]=3}
 
@@ -22,7 +22,7 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 					local f = sol.file.open("userExperience.txt","a+"); f:write(os.time() .. "-time\n"); f:flush(); f:close()
 					local split_table = split_table
 					
-					for enemy in map:get_entities("pregenEnemy") do enemy:remove() end
+					for enemy in map:get_entities("generatedEnemy") do enemy:remove() end
 					local spawnArea = areas["walkable"][tonumber(split_table[3])]
 					
 					local diff = difficultyOfFights
@@ -41,7 +41,15 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 							return false
 						end
 						
+						function theEnemyIJustMade:on_dead()
+							if not map:has_entities("generatedEnemy") then 
+								map:open_doors("door_normal_area_"..split_table[3])
+							end
+							return false
+						end
+						
 					end
+					map:close_doors("door_normal_area_"..split_table[3])
 				end
 			sensor.on_left = 
 				function() 
@@ -103,7 +111,7 @@ function fight_generator.make(area, diff)
 			chosenBreed = breedOptions[math.random(1,#breedOptions)] 
 		end
 		-- monster = {name, layer, x,y, direction, breed,rank,savegame_variable, treasure_name,treasure_variant,treasure_savegame_variable}
-		table.insert(enemiesInFight,{name="pregenEnemy_thisOne", layer=0, x=xPos, y=yPos, direction=0, breed=chosenBreed})
+		table.insert(enemiesInFight,{name="generatedEnemy_thisOne", layer=0, x=xPos, y=yPos, direction=0, breed=chosenBreed})
 		difficulty = difficulty - breedDifficulties[chosenBreed]
 	end
 	return enemiesInFight

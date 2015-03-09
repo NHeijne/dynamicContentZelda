@@ -1,2 +1,10 @@
-Error: In on_started: [string "maze_generator.lua"]:181: table index is nil
+Error: Failed to load script 'fight_generator': [string "fight_generator.lua"]:129: 'end' expected (to close 'function' at line 12) near '<eof>'
+Error: In maps/0: [string "content_generator.lua"]:5: module 'fight_generator' not found:
+	no field package.preload['fight_generator'][string "fight_generator.lua"]:129: 'end' expected (to close 'function' at line 12) near '<eof>'
+	no file '.\fight_generator.lua'
+	no file 'C:\Users\Arjen\Documents\GitHub\dynamicContentZelda\lua\fight_generator.lua'
+	no file 'C:\Users\Arjen\Documents\GitHub\dynamicContentZelda\lua\fight_generator\init.lua'
+	no file '.\fight_generator.dll'
+	no file 'C:\Users\Arjen\Documents\GitHub\dynamicContentZelda\fight_generator.dll'
+	no file 'C:\Users\Arjen\Documents\GitHub\dynamicContentZelda\loadall.dll'
 Error: In timer callback: [string "dungeons.lua"]:123: attempt to index local 'world' (a nil value)
