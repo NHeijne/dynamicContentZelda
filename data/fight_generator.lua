@@ -28,7 +28,7 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 					local diff = difficultyOfFights
 					local f = sol.file.open("userExperience.txt","a+"); f:write(diff .. "-difficulty\n"); f:flush(); f:close()
 					
-					local enemiesInEncounter = fight_generator.make(spawnArea, diff) 
+					local enemiesInEncounter = fight_generator.make(spawnArea, diff, map) 
 					for _,enemy in pairs(enemiesInEncounter) do
 						local theEnemyIJustMade = map:create_enemy(enemy)
 						local f = sol.file.open("userExperience.txt","a+") 
@@ -94,7 +94,7 @@ function analyseGameplaySoFar()
 	log.debug( room )
 end
 
-function fight_generator.make(area, diff) 
+function fight_generator.make(area, diff, map) 
 	local difficulty = diff
 	local enemiesInFight = {}
 	
@@ -104,8 +104,12 @@ function fight_generator.make(area, diff)
 	end
 	
 	while difficulty > 0 do
-		local xPos = math.random(area.x1+32, area.x2-32)
-		local yPos = math.random(area.y1+32, area.y2-32)
+		local hero = map:get_hero()
+		local xPos,yPos = hero:get_position()
+		while hero:get_distance(xPos,yPos) < 100 do
+			xPos = math.random(area.x1+40, area.x2-40)
+			yPos = math.random(area.y1+40, area.y2-40)
+		end
 		local chosenBreed = breedOptions[math.random(1,#breedOptions)] 
 		while breedDifficulties[chosenBreed] > difficulty do 
 			chosenBreed = breedOptions[math.random(1,#breedOptions)] 
