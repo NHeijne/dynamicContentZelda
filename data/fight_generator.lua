@@ -69,7 +69,8 @@ end
 
 function analyseGameplaySoFar(map)
 	local f = sol.file.open("userExperience.txt","r")
-	local nothing = {swordSwings=0, swordHits=0, gotHit=0, monsters=0, timeInRoom=0, directionChange=0, lifeLostInRoom=0, uselessKeys=0}
+	local nothing = {swordSwings=0, swordHits=0, gotHit=0, monsters=0, timeInRoom=0, 
+			directionChange=0, lifeLostInRoom=0, uselessKeys=0, monsterTypes={}}
 	local room = table_util.copy( nothing )
 
 	while true do
@@ -81,8 +82,15 @@ function analyseGameplaySoFar(map)
 		if line=="sword swinging-hero" then room.swordSwings = room.swordSwings + 1 end
 		if line=="sword-enemy" then room.swordHits = room.swordHits + 1 end
 		if line=="hurt-hero" then room.gotHit = room.gotHit + 1 end
-		if string.find(line, "spawned") then room.monsters = room.monsters + 1 end
 		local splitLine = table_util.split(line, "-")
+		if splitLine[2] == "spawned" then 
+			room.monsters = room.monsters + 1 
+			if room.monsterTypes[splitLine[1]] == nil then
+				room.monsterTypes[splitLine[1]] = 1
+			else
+				room.monsterTypes[splitLine[1]] = room.monsterTypes[splitLine[1]] + 1
+			end
+		end
 		if string.find(line, "life") then 
 			local game = map:get_game()
 			room.lifeLostInRoom = tonumber (splitLine[1]) - game:get_life()
