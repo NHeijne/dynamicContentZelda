@@ -69,7 +69,7 @@ end
 
 function analyseGameplaySoFar(map)
 	local f = sol.file.open("userExperience.txt","r")
-	local nothing = {swordSwings=0, swordHits=0, gotHit=0, monsters=0, timeInRoom=0, directionChange=0, lifeLostInRoom=0}
+	local nothing = {swordSwings=0, swordHits=0, gotHit=0, monsters=0, timeInRoom=0, directionChange=0, lifeLostInRoom=0, uselessKeys=0}
 	local room = table_util.copy( nothing )
 
 	while true do
@@ -82,17 +82,20 @@ function analyseGameplaySoFar(map)
 		if line=="sword-enemy" then room.swordHits = room.swordHits + 1 end
 		if line=="hurt-hero" then room.gotHit = room.gotHit + 1 end
 		if string.find(line, "spawned") then room.monsters = room.monsters + 1 end
+		local splitLine = table_util.split(line, "-")
 		if string.find(line, "life") then 
-			local startLife = table_util.split(line, "-")
 			local game = map:get_game()
-			room.lifeLostInRoom = tonumber (startLife[1]) - game:get_life()
+			room.lifeLostInRoom = tonumber (splitLine[1]) - game:get_life()
 		end
 		if string.find(line, "time") then 
-			local lineTime = table_util.split(line, "-")
-			room.timeInRoom = os.time() - tonumber (lineTime[1])
+			room.timeInRoom = os.time() - tonumber (splitLine[1])
 		end
 		if line=="right-keypress" or line=="left-keypress" or line=="up-keypress" or line=="down-keypress" then 
 			room.directionChange = room.directionChange + 1
+		end
+		if splitLine[2] == "keypress" and splitLine[1]~="right" and splitLine[1]~="left" and splitLine[1]~="up" and splitLine[1]~="down" 
+				and splitLine[1]~="c" and splitLine[1]~="space" and splitLine[1]~="x" and splitLine[1]~="v" and splitLine[1]~="d" then 
+			room.uselessKeys = room.uselessKeys + 1
 		end
 		if string.find(line, "areasensor") or string.find(line, "A NEW GAME IS STARTING NOW") then 
 			room = table_util.copy( nothing )

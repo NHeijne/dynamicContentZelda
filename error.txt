@@ -1,1 +1,1 @@
-Fatal: Teletransporter expected with the stairs
+Error: In on_dead: [string "fight_generator.lua"]:109: attempt to index global 'splitLine' (a nil value)
