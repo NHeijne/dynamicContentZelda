@@ -33,6 +33,7 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 					local enemiesInEncounter = fight_generator.make(spawnArea, diff, map) 
 					for _,enemy in pairs(enemiesInEncounter) do
 						local theEnemyIJustMade = map:create_enemy(enemy)
+						theEnemyIJustMade:set_treasure("random")
 						local f = sol.file.open("userExperience.txt","a+") 
 						f:write(theEnemyIJustMade:get_breed() .. "-spawned\n")
 						f:flush(); f:close()
@@ -46,21 +47,20 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 						function theEnemyIJustMade:on_dead()
 							if not map:has_entities("generatedEnemy") then 
 								map:open_doors("door_normal_area_"..split_table[3])
+								
+								analyseGameplaySoFar(map)
+								difficultyOfFights = difficultyOfFights + 1
+								local game = map:get_game()
+								local f = sol.file.open("userExperience.txt","a+"); f:write(game:get_life() .. "-life\n"); f:flush(); f:close()
+								local f = sol.file.open("userExperience.txt","a+"); f:write(os.time() .. "-time\n"); f:flush(); f:close()
+								local f = sol.file.open("userExperience.txt","a+"); f:write("finished the fight\n"); f:flush(); f:close()
+								
 							end
 							return false
 						end
 						
 					end
 					map:close_doors("door_normal_area_"..split_table[3])
-				end
-			sensor.on_left = 
-				function() 
-					analyseGameplaySoFar(map)
-					difficultyOfFights = difficultyOfFights + 1
-					local game = map:get_game()
-					local f = sol.file.open("userExperience.txt","a+"); f:write(game:get_life() .. "-life\n"); f:flush(); f:close()
-					local f = sol.file.open("userExperience.txt","a+"); f:write(os.time() .. "-time\n"); f:flush(); f:close()
-					local f = sol.file.open("userExperience.txt","a+"); f:write("left the room\n"); f:flush(); f:close()
 				end
 		end
 				

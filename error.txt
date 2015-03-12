@@ -1,2 +1,1 @@
-Error: In on_activated: [string "fight_generator.lua"]:111: attempt to index local 'heroPos' (a number value)
-Error: In on_activated: [string "fight_generator.lua"]:111: attempt to index local 'heroPos' (a number value)
+Fatal: Teletransporter expected with the stairs
