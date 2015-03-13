@@ -8,6 +8,12 @@ sol.main.load_file("menus/dialog_box")(game)
 sol.main.load_file("menus/game_over")(game)
 sol.main.load_file("hud/hud")(game)
 
+-- Key presses to keep track of.
+local leftPressed = false
+local rightPressed = false
+local upPressed = false
+local downPressed = false
+
 -- Useful functions for this specific quest.
 
 function game:on_started()
@@ -66,6 +72,19 @@ end
 
 function game:on_key_pressed(key, modifiers)
 	local f = sol.file.open("userExperience.txt","a+"); f:write(key .. "-keypress\n"); f:flush(); f:close()
+	if key == "left" then leftPressed = true end
+	if key == "right" then rightPressed = true end
+	if key == "up" then upPressed = true end
+	if key == "down" then downPressed = true end
+	-- returning false gives it back to the engine to handle
+	return false
+end
+
+function game:on_key_released(key, modifiers)
+	if key == "left" then leftPressed = false end
+	if key == "right" then rightPressed = false end
+	if key == "up" then upPressed = false end
+	if key == "down" then downPressed = false end
 	-- returning false gives it back to the engine to handle
 	return false
 end
@@ -91,6 +110,14 @@ local function fix_starting_location(game)
 end
 
 local f = sol.file.open("userExperience.txt","a+"); f:write("A NEW GAME IS STARTING NOW\n"); f:flush(); f:close()
+sol.timer.start(200, function ()
+	if leftPressed or rightPressed or upPressed or downPressed then
+		local f = sol.file.open("userExperience.txt","a+"); f:write("moving around\n"); f:flush(); f:close()
+	else
+		local f = sol.file.open("userExperience.txt","a+"); f:write("standing still\n"); f:flush(); f:close()
+	end
+	return true
+end)
 -- Run the game.
 sol.main.game = game
 fix_starting_location(game)

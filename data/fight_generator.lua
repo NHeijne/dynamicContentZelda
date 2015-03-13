@@ -70,7 +70,8 @@ end
 function analyseGameplaySoFar(map)
 	local f = sol.file.open("userExperience.txt","r")
 	local nothing = {swordHits=0, monsters=0, timeInRoom=0, directionChange=0, 
-			lifeLostInRoom=0, uselessKeys=0, monsterTypes={}, heroStates={}}
+			lifeLostInRoom=0, uselessKeys=0, monsterTypes={}, heroStates={}, 
+			moving=0, standing=0, percentageStanding=0}
 	local room = table_util.copy( nothing )
 
 	while true do
@@ -97,6 +98,12 @@ function analyseGameplaySoFar(map)
 				room.monsterTypes[splitLine[1]] = room.monsterTypes[splitLine[1]] + 1
 			end
 		end
+		if line == "moving around" then 
+			room.moving = room.moving + 1
+		end
+		if line == "standing still" then 
+			room.standing = room.standing + 1
+		end
 		if string.find(line, "life") then 
 			local game = map:get_game()
 			room.lifeLostInRoom = tonumber (splitLine[1]) - game:get_life()
@@ -115,6 +122,8 @@ function analyseGameplaySoFar(map)
 			room = table_util.copy( nothing )
 		end	
 	end
+	
+	room.percentageStanding = room.standing/(room.moving+room.standing)
 	
 	f:flush(); f:close()
 	log.debug( room )
