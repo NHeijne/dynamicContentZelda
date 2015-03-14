@@ -127,7 +127,59 @@ function analyseGameplaySoFar(map)
 	room.percentageStanding = room.standing/(room.moving+room.standing)
 	
 	f:flush(); f:close()
-	log.debug( room )
+	logTheRoom (room)
+end
+
+function logTheRoom (room) 
+	local f = sol.file.open("roomSummaries.csv","a+")
+	
+	--hits,monsters,time,dirChange,lostLife,useless,moving,standing,percStand,startLife,
+	--globul,tentacle,snap,greenKnight,mandible,redKnight,egg,hardhat,bullblin
+	--free,freezed,grabbing,hurt,stairs,loading,spin,swinging,tapping
+	
+	--swordHits=0, monsters=0, timeInRoom=0, directionChange=0, 
+	--lifeLostInRoom=0, uselessKeys=0, moving=0, standing=0, 
+	--percentageStanding=0, startingLife=0
+	f:write(room.swordHits .. ",")
+	f:write(room.monsters .. ",")
+	f:write(room.timeInRoom .. ",")
+	f:write(room.directionChange .. ",")
+	f:write(room.lifeLostInRoom .. ",")
+	f:write(room.uselessKeys .. ",")
+	f:write(room.moving .. ",")
+	f:write(room.standing .. ",")
+	f:write(room.percentageStanding .. ",")
+	f:write(room.startingLife .. ",")
+	
+	--["globul"]=3,["tentacle"]=1,["snap_dragon"]=3,
+	--["green_knight_soldier"]=2,["mandible"]=2,["red_knight_soldier"]=3,
+	--["minillosaur_egg_fixed"]=2,["blue_hardhat_beetle"]=3,["blue_bullblin"]=3
+	f:write(room.monsterTypes.globul or 0); f:write(",")
+	f:write(room.monsterTypes.tentacle or 0); f:write(",")
+	f:write(room.monsterTypes.snap_dragon or 0); f:write(",")
+	f:write(room.monsterTypes.green_knight_soldier or 0); f:write(",")
+	f:write(room.monsterTypes.mandible or 0); f:write(",")
+	f:write(room.monsterTypes.red_knight_soldier or 0); f:write(",")
+	f:write(room.monsterTypes.minillosaur_egg_fixed or 0); f:write(",")
+	f:write(room.monsterTypes.blue_hardhat_beetle or 0); f:write(",")
+	f:write(room.monsterTypes.blue_bullblin or 0); f:write(",")
+
+	--"free", "freezed", "grabbing", "hurt", "stairs", "sword loading", "sword spin attack", "sword swinging", "sword tapping",
+	f:write(room.heroStates.free or 0); f:write(",")
+	f:write(room.heroStates.freezed or 0); f:write(",")
+	f:write(room.heroStates.grabbing or 0); f:write(",")
+	f:write(room.heroStates.hurt or 0); f:write(",")
+	f:write(room.heroStates.stairs or 0); f:write(",")
+	f:write(room.heroStates["sword loading"] or 0); f:write(",")
+	f:write(room.heroStates["sword spin attack"] or 0); f:write(",")
+	f:write(room.heroStates["sword swinging"] or 0); f:write(",")
+	f:write(room.heroStates["sword tapping"] or 0)
+	-- The following aren't being logged because theyare not very useful for now.
+	--"back to solid ground", "boomerang", "bow", "carrying", "falling", "forced walking", "hookshot", "jumping", 
+	--"lifting", "plunging", "pulling", "pushing", "running", "stream", "swimming", "treasure", "using item", "victory"
+	
+	f:write("\n")
+	f:flush(); f:close()
 end
 
 function fight_generator.make(area, diff, map) 
