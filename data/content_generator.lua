@@ -24,6 +24,7 @@ function content.start_test(given_map)
 	log.debug_log_reset()
 	hero:freeze()
 	if not game:get_value("sword__1") then hero:start_treasure("sword", 1, "sword__1") end
+	game:set_max_life(24); game:set_life(24)
 	
 	function hero:on_state_changed(state)
 		local f = sol.file.open("userExperience.txt","a+"); f:write(state .. "-hero\n"); f:flush(); f:close()
@@ -103,9 +104,7 @@ function content.start_test(given_map)
 	map:create_pickable{layer=hero_layer, x=hero_x+16, y=hero_y, treasure_name="small_key", treasure_variant = 1}
 	map:set_doors_open("door_normal_area")
 	content.open_normal_doors_sensorwise()
-	--local entity = map:create_custom_entity({name="fireball_statue", direction=0, layer=0, x=hero_x+48, y=hero_y+16, model="fireball_statue"})
-	--entity:start()
-	--sol.timer.start(map, 12000, function() entity:stop() end)
+	
 end
 
 function content.open_normal_doors_sensorwise()
