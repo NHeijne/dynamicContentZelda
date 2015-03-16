@@ -1,2 +1,1 @@
-Error: In on_started: [string "maze_generator.lua"]:181: table index is nil
-Error: In timer callback: [string "dungeons.lua"]:123: attempt to index local 'world' (a nil value)
+Error: In on_dead: [string "fight_generator.lua"]:109: attempt to index global 'splitLine' (a nil value)
