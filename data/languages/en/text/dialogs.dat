@@ -6431,6 +6431,17 @@ Thanks for playing!$0
 }
 -----------------------
 
+dialog{
+  id = "test.variable",
+  text = [[$v]]
+}
+
+dialog{
+  id = "test.question",
+  question=true,
+  text = [[$v]]
+}
+
 -- ****** Full specification of dialog properties ******
 
 -- We describe here the meaning of each dialog property.

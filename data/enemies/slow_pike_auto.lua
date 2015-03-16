@@ -4,7 +4,6 @@ local enemy = ...
 -- depending on its direction.
 
 local recent_obstacle = 0
-local move
 
 function enemy:on_created()
 
@@ -20,21 +19,17 @@ function enemy:on_created()
   self:set_attack_consequence("arrow", "protected")
   self:set_attack_consequence("hookshot", "protected")
   self:set_attack_consequence("boomerang", "protected")
-  self:restart()
 end
 
 function enemy:on_restarted()
-  self:update_move() 
-  move:start(self)
-end
 
-function enemy:update_move()
   local sprite = self:get_sprite()
   local direction4 = sprite:get_direction()
-  move = sol.movement.create("path")
-  move:set_path{direction4 * 2}
-  move:set_speed(64)
-  move:set_loop(true)
+  local m = sol.movement.create("path")
+  m:set_path{direction4 * 2}
+  m:set_speed(80)
+  m:set_loop(true)
+  m:start(self)
 end
 
 function enemy:on_obstacle_reached()
@@ -52,12 +47,7 @@ function enemy:on_obstacle_reached()
   end
 
   recent_obstacle = 8
-  move:stop()
-  sol.timer.start(self, 500, function() 
-    self:update_move() 
-    move:start(self)
-  end)
-
+  self:restart()
 end
 
 function enemy:on_position_changed()

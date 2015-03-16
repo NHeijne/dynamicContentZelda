@@ -2,6 +2,8 @@ map{ id = "test", description = "Test_map" }
 map{ id = "0", description = "Start" }
 map{ id = "1", description = "Dungeon test" }
 map{ id = "2", description = "Arjen Test" }
+map{ id = "4", description = "Example" }
+map{ id = "5", description = "Questhubs" }
 
 tileset{ id = "1", description = "Light World" }
 tileset{ id = "13", description = "Dark World" }
@@ -219,6 +221,7 @@ sprite{ id = "menus/solarus_logo", description = "Menu: Solarus logo" }
 sprite{ id = "entities/solid_switch", description = "Solid switch" }
 sprite{ id = "entities/fireball_statue", description = "fireball_statue" }
 sprite{ id = "enemies/red_projectile", description = "Red Projectile Triple" }
+sprite{ id = "entities/teletransporter_destination", description = "Teletransporter Destination" }
 
 music{ id = "agahnim", description = "Agahnim theme" }
 music{ id = "beginning", description = "Beginning" }
@@ -462,6 +465,8 @@ enemy{ id = "ganon", description = "Ganon" }
 enemy{ id = "fire_bat", description = "Fire bat" }
 enemy{ id = "red_projectile", description = "Red Projectile" }
 enemy{ id = "fireball_statue", description = "Fireball Statue" }
+enemy{ id = "slow_pike_detect", description = "Slow Pike (move near hero)" }
+enemy{ id = "slow_pike_auto", description = "Slow Pike (always moves)" }
 
 entity{ id = "fireball_statue", description = "Fireball Statue" }
 

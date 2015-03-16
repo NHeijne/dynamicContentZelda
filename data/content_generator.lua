@@ -91,7 +91,7 @@ function content.start_test(given_map)
 		log.debug("filling in area "..k)
 		log.debug("creating area_type " .. content.area_details[k].area_type)
 		if content.area_details[k].area_type == "P" or content.area_details[k].area_type == "PF" then 
-			maze_generator.set_room(v)
+			maze_generator.set_room(v, 16, 8, "mazeprop_area_"..k)
 			content.makeSingleMaze(area_util.resize_area(v,{wall_width+16, wall_width+16, -wall_width-16, -wall_width-16}), exit_areas[k], content.area_details, v.used, layer)
 		end
     end
@@ -104,8 +104,7 @@ function content.start_test(given_map)
 	map:set_doors_open("door_normal_area")
 	content.open_normal_doors_sensorwise()
 	local entity = map:create_custom_entity({name="fireball_statue", direction=0, layer=0, x=hero_x+48, y=hero_y+16, model="fireball_statue"})
-	entity:start()
-	sol.timer.start(map, 12000, function() entity:stop() end)
+	entity:stop()
 end
 
 function content.open_normal_doors_sensorwise()
@@ -124,7 +123,7 @@ end
 
 function content.makeSingleMaze(area, exit_areas, area_details, exclusion_area, layer) 
 	log.debug("start maze generation")
-	local maze = maze_generator.generate_maze( area, 16, exit_areas, exclusion_area, map )
+	local maze = maze_generator.generate_maze( area, exit_areas, exclusion_area, map )
 	for _,v in ipairs(maze) do
 		content.place_tile(v.area, lookup.tiles[v.pattern][area_details.tileset_id], "maze", layer)
 	end

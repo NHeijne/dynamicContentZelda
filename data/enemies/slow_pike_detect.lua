@@ -3,10 +3,9 @@ local enemy = ...
 -- Pike that moves when the hero is close.
 
 local state = "stopped"  -- "stopped", "moving", "going_back" or "paused".
+local hero_found = false
 local initial_xy = {}
 local activation_distance = 24
-
-local hero_found = false
 
 function enemy:on_created()
 
@@ -34,26 +33,23 @@ function enemy:on_update()
     local x, y = self:get_position()
     local hero_x, hero_y = hero:get_position()
     local dx, dy = hero_x - x, hero_y - y
-
-    if not hero_found and math.abs(dy) < activation_distance and math.abs(dx) < 16 then
+    if not hero_found and math.abs(dy) < activation_distance then
       if dx > 0 then
 	self:go(0)
       else
 	self:go(2)
       end
     end
-    if not hero_found and math.abs(dx) < activation_distance and math.abs(dy) < 16 then
+    if not hero_found and math.abs(dx) < activation_distance then
       if dy > 0 then
 	self:go(3)
       else
 	self:go(1)
       end
     end
-    if (math.abs(dx) < activation_distance and math.abs(dy) < 16) or 
-	  (math.abs(dx) < 16 and math.abs(dy) < activation_distance) then
+    if math.abs(dx) < activation_distance and math.abs(dy) < 16 or 
+	  math.abs(dx) < 16 and math.abs(dy) < activation_distance then
 	  hero_found = true
-    else
-	  hero_found = false
     end
   end
 end
@@ -96,7 +92,7 @@ end
 
 function enemy:on_collision_enemy(other_enemy, other_sprite, my_sprite)
 
-  if string.find(other_enemy:get_breed(),"pike") and state == "moving" then
+  if other_enemy:get_breed() == self:get_breed() and state == "moving" then
     self:go_back()
   end
 end
@@ -108,7 +104,7 @@ function enemy:go_back()
     state = "going_back"
 
     local m = sol.movement.create("target")
-    m:set_speed(32)
+    m:set_speed(64)
     m:set_target(initial_xy.x, initial_xy.y)
     m:set_smooth(false)
     m:start(self)

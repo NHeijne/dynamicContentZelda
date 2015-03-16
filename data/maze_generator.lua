@@ -22,13 +22,17 @@ function maze_generator.set_map( given_map )
 	map = given_map
 end
 
-function maze_generator.set_room( area )
+function maze_generator.set_room( area, corridor_width, wall_width, name_prefix )
 	room = area
+	room.corridor_width = corridor_width
+	room.wall_width = wall_width
+	room.name_prefix = name_prefix
 end
 
-function maze_generator.generate_maze( area, corridor_width, exit_areas, exclusion)
+function maze_generator.generate_maze( area, exit_areas, exclusion)
+	local corridor_width = room.corridor_width
 	local maze = {}
-	local wall_width = 8
+	local wall_width = room.wall_width
 	log.debug("initialize_maze")
 	maze_generator.initialize_maze( maze, area, wall_width, corridor_width )
 	log.debug(maze)
@@ -351,10 +355,77 @@ end
 
 function maze_generator.create_teleport_junction( maze, correct_path, branches, nr_of_teleports)
 	-- find a spot along the path that has enough branches for the nr_of_teleports
-	-- we can add a wall before that spot
+	local selected_spot
+	local branches_encountered = 0
+	local nodes_left = {}
+	local selected_branches = {}
+	for i=1, #correct_path-1, 1 do
+		local pos = correct_path[i]
+		for _, branch in ipairs(branches) do
+			local branch_at_pos, nodes = maze_generator.branch_at_pos(maze, branch, pos)
+			if branch_at_pos then 
+				branches_encountered = branches_encountered + 1
+				nodes_left[branches_encountered] = nodes
+				selected_branches[branches_encountered] = branch
+			end
+			if branches_encountered == nr_of_teleports then
+				selected_spot = i
+				break
+			end
+		end
+		if selected_spot ~= nil then break end
+	end 
+	selected_spot = selected_spot or #correct_path-1
+	-- we can add a wall after that spot
+	maze_generator.place_wall_between(correct_path[selected_spot], correct_path[selected_spot+1], maze)
 	-- if that spot is the start of a branch then place the teleport back at the end of the branch and the way forward one spot removed
+	local correct_dest, incorrect_dest
+	local extra_branch_found = false
+	for _, branch in ipairs(branches) do
+		local branch_at_pos, nodes = maze_generator.branch_at_pos(maze, branch, correct_path[selected_spot+1])
+		if branch_at_pos then 
+			extra_branch_found = true
+			correct_dest = maze_generator.teleport_dest( maze, branch[nodes+1] )
+		end
+	end
+	if not extra_branch_found then correct_dest = maze_generator.teleport_dest( maze, correct_path[selected_spot+1] ) end
+	incorrect_dest = maze_generator.teleport_dest( maze, correct_path[selected_spot] )
 	-- add teleports to the end of the branches whereever there is space, add a destination to the beginning of the path
+	--TODO
 	--
+end
+
+function maze_generator.pos_to_area( pos )
+	local x1 = room.x1 + room.wall_width + (pos.x-1)*(room.wall_width+room.corridor_width)
+	local y1 = room.y1 + room.wall_width + (pos.y-1)*(room.wall_width+room.corridor_width)
+	local x2 = room.x1 + pos.x*(room.wall_width+room.corridor_width)
+	local y2 = room.y1 + pos.y*(room.wall_width+room.corridor_width)
+	return {x1=x1, x2=x2, y1=y1, y2=y2}
+end
+
+function maze_generator.teleport_dest( maze, pos )
+	local area = maze_generator.pos_to_area(pos)
+	local prop_name = "teletransporter_destination"
+	maze[pos.x][pos.y].prop = prop_name
+	local details = {name=room.name_prefix..prop_name, layer=0, x=(area.x1+area.x2)/2, y=(area.y1+area.y2)/2+5, direction=-1,  sprite="entities/"..prop_name }
+	local destination = map:create_destination(details)
+	return destination
+end
+
+function maze_generator.teleport_entry(maze, pos, destination)
+
+end
+
+function maze_generator.branch_at_pos( maze, branch, pos )
+	local branch_at_pos = false
+	local nodes = 0
+	if table_util.tbl_contains_tbl( branch[1], pos) then
+		branch_at_pos = true
+		for k = 2, #branch do
+			if maze[branch[k].x][branch[k].y].prop then break else nodes = nodes+1 end
+		end
+	end
+	return branch_at_pos, nodes
 end
 
 function maze_generator.create_pike_trap( maze, branches, nr_pikes )
