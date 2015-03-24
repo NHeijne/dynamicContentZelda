@@ -17,7 +17,7 @@ local probabilities = {
   [{ "magic_flask", 1}] = 25,   -- Small magic jar.
   [{ "magic_flask", 2}] = 8,    -- Big magic jar.
   [{ "heart", 1}]       = 100,  -- Heart.
-  [{ "fairy", 1}]       = 2,    -- Fairy.
+  --[{ "fairy", 1}]       = 2,    -- Fairy.
 }
 
 function item:on_pickable_created(pickable)

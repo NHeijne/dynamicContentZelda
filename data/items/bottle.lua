@@ -58,6 +58,11 @@ function item:on_using()
     }
     self:set_variant(1) -- make the bottle empty
     self:set_finished()
+  elseif variant == 7 then
+    -- diluted potion
+    game:add_life(4)
+    self:set_variant(1)
+    self:set_finished()
   end
 end
 

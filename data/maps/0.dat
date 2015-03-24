@@ -4,6 +4,7 @@ properties{
   width = 4000,
   height = 4000,
   tileset = "4",
+  music = "overworld",
 }
 
 enemy{

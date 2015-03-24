@@ -569,9 +569,9 @@ dialog{
   icon = 19,
   skip = "all",
   text = [[
-The Rock Key! But
-where is the right
-lock?
+The key to the
+Mines to the 
+east!
 ]]
 }
 --------------------
@@ -713,8 +713,8 @@ dialog{
   skip = "all",
   text = [[
 The Wooden Key.
-There's only one
-lock for this key!
+It's the key
+to the shed!
 ]]
 }
 --------------------
@@ -1285,6 +1285,17 @@ Eat them later to
 recover Hearts!
 ]]
 }
+
+-- 1 Pommes
+dialog{
+  id = "_treasure.apple_single.1",
+  icon = 16,
+  text = [[
+You found an Apple!$0
+Eat it later to
+recover a Heart!
+]]
+}
 --------------------
 
 -- 1 Pain au Chocolat
@@ -1321,8 +1332,8 @@ dialog{
   id = "_treasure.rock_key.1",
   icon = 19,
   text = [[
-You found the Rock
-Key!$0
+You got the key to
+the mines!$0
 ]]
 }
 --------------------
@@ -1476,11 +1487,9 @@ dialog{
   id = "_treasure.wooden_key.1",
   icon = 30,
   text = [[
-You found the Wooden
-Key!$0
-
-You must find where
-to use it!
+You got the Wooden
+Key! The shed is 
+outside.$0
 ]]
 }
 --------------------
@@ -1743,6 +1752,42 @@ your enemies!
 }
 --------------------
 
+-- Flower Quest
+dialog{
+  id = "_treasure.flower.1",
+  icon = 24,
+  text = [[
+You found the
+Cure Flower!$0
+
+Now to turn this 
+into a potion for 
+your brother.
+]]
+}
+
+dialog{
+  id = "_treasure.cure.1",
+  icon = 99,
+  text = [[
+You created the
+Cure Potion!$0
+
+Hurry to your 
+brother!
+]]
+}
+
+dialog{
+  id = "_treasure.diluted_red_potion.1",
+  icon = 96,
+  text = [[
+Supposedly restores
+many hitpoints...
+]]
+}
+
+--------------------
 -- Epée 2 (Glaive Hylien) / Hylian Blade
 dialog{
   id = "_treasure.sword.2",
@@ -2180,6 +2225,17 @@ Too bad!
 ]]
 }
 -----------------------
+
+-- Lorsqu'on regarde une porte verrouillé ou un bloc verrouillé
+-- et qu'on ne possède pas de Petite Clé
+dialog{
+  id = "locked",
+  skip = "all",
+  text = [[
+It's locked!
+]]
+}
+
 
 -- Lorsqu'on regarde une porte verrouillé ou un bloc verrouillé
 -- et qu'on ne possède pas de Petite Clé
@@ -5451,6 +5507,15 @@ restores life!
 Hehehe...
 ]]
 }
+
+dialog{
+  id = "witch.red_potion",
+  text = [[
+Red Potion:
+restores lots of life!
+Hehehe...
+]]
+}
 -----------------------
 
 dialog{
@@ -6433,11 +6498,13 @@ Thanks for playing!$0
 
 dialog{
   id = "test.variable",
+  icon = -1,
   text = [[$v]]
 }
 
 dialog{
   id = "test.question",
+  icon = -1,
   question=true,
   text = [[$v]]
 }
