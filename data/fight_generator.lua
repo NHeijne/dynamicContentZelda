@@ -2,6 +2,7 @@ local log 				= require("log")
 local table_util 		= require("table_util")
 local area_util 		= require("area_util")
 local num_util 			= require("num_util")
+local matrix			= require("matrix")
 
 local fight_generator = {}
 local difficultyOfFights = 1
