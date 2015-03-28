@@ -5,13 +5,31 @@ local num_util 			= require("num_util")
 local matrix			= require("matrix")
 
 local fight_generator = {}
-local difficultyOfFights = 1
-local breedDifficulties = {["globul"]=3,["tentacle"]=1,["snap_dragon"]=3,--["pike_auto"]=2,["fireball_statue"]=2,
-							["green_knight_soldier"]=2,["mandible"]=2,["red_knight_soldier"]=3,
-							["minillosaur_egg_fixed"]=2,["blue_hardhat_beetle"]=3,["blue_bullblin"]=3}
---local entity = map:create_custom_entity({name="fireball_statue", direction=0, layer=0, x=hero_x+48, y=hero_y+16, model="fireball_statue"})
---entity:start()
---sol.timer.start(map, 12000, function() entity:stop() end)
+local lowestDifficulty = 2
+local highestDifficulty = 5
+local difficultyOfFights = lowestDifficulty
+
+ --[[
+      0.2244 * monsters +
+     -0.1209 * startLife +
+      0.8654 * globul +
+     -0.0779 * tentacle +
+     -0.2317 * snap +
+      1.0567 * greenKnight +
+     -0.1819 * mandible +
+      0.4246 * redKnight +
+     -0.1387 * egg +
+      0.68   * hardhat +
+      0.8188 * bullblin +
+      3.8072
+ ]]--
+local allowedVariance = 0.5
+local startLifeDifficulty = -0.1209
+local monsterAmountDifficulty = 0.2244
+local baseDifficulty = 3.8072
+local breedDifficulties = {["globul"]=0.8654,["tentacle"]=-0.0779,["snap_dragon"]=-0.2317,--["pike_auto"]=2,["fireball_statue"]=2,
+							["green_knight_soldier"]=1.0567,["mandible"]=-0.1819,["red_knight_soldier"]=0.4246,
+							["minillosaur_egg_fixed"]=-0.1387,["blue_hardhat_beetle"]=0.68,["blue_bullblin"]=0.8188}
 
 function fight_generator.add_effects_to_sensors (map, areas, area_details)
 	for sensor in map:get_entities("areasensor_inside_") do
@@ -34,7 +52,7 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 					local diff = difficultyOfFights
 					local f = sol.file.open("userExperience.txt","a+"); f:write(diff .. "-difficulty\n"); f:flush(); f:close()
 					
-					local enemiesInEncounter = fight_generator.make(spawnArea, diff, map) 
+					local enemiesInEncounter = fight_generator.make(spawnArea, diff, map, game:get_life()) 
 					for _,enemy in pairs(enemiesInEncounter) do
 						local theEnemyIJustMade = map:create_enemy(enemy)
 						theEnemyIJustMade:set_treasure("random")
@@ -54,6 +72,7 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 								
 								analyseGameplaySoFar(map)
 								difficultyOfFights = difficultyOfFights + 1
+								if difficultyOfFights > highestDifficulty then difficultyOfFights = lowestDifficulty end
 								local game = map:get_game()
 								local f = sol.file.open("userExperience.txt","a+"); f:write(game:get_life() .. "-life\n"); f:flush(); f:close()
 								local f = sol.file.open("userExperience.txt","a+"); f:write(os.time() .. "-time\n"); f:flush(); f:close()
@@ -178,7 +197,7 @@ function logTheRoom (room)
 	f:write(room.heroStates["sword spin attack"] or 0); f:write(",")
 	f:write(room.heroStates["sword swinging"] or 0); f:write(",")
 	f:write(room.heroStates["sword tapping"] or 0)
-	-- The following aren't being logged because theyare not very useful for now.
+	-- The following aren't being logged because they are not very useful for now.
 	--"back to solid ground", "boomerang", "bow", "carrying", "falling", "forced walking", "hookshot", "jumping", 
 	--"lifting", "plunging", "pulling", "pushing", "running", "stream", "swimming", "treasure", "using item", "victory"
 	
@@ -186,8 +205,9 @@ function logTheRoom (room)
 	f:flush(); f:close()
 end
 
-function fight_generator.make(area, diff, map) 
-	local difficulty = diff
+function fight_generator.make(area, maxDiff, map, currentLife) 
+
+	local difficulty = baseDifficulty + startLifeDifficulty * currentLife
 	local enemiesInFight = {}
 	
 	local breedOptions={}
@@ -195,7 +215,9 @@ function fight_generator.make(area, diff, map)
 		table.insert( breedOptions, k )
 	end
 	
-	while difficulty > 0 do
+	--local f = sol.file.open("userExperience.txt","a+"); f:write(difficulty .. "-makingDifficulty-------------\n"); f:flush(); f:close()
+	
+	while difficulty < maxDiff - allowedVariance do
 		local hero = map:get_hero()
 		local xPos,yPos = hero:get_position()
 		while hero:get_distance(xPos,yPos) < 100 do
@@ -203,12 +225,12 @@ function fight_generator.make(area, diff, map)
 			yPos = math.random(area.y1+40, area.y2-40)
 		end
 		local chosenBreed = breedOptions[math.random(1,#breedOptions)] 
-		while breedDifficulties[chosenBreed] > difficulty do 
+		while breedDifficulties[chosenBreed] + monsterAmountDifficulty + difficulty < maxDiff + allowedVariance  do 
 			chosenBreed = breedOptions[math.random(1,#breedOptions)] 
 		end
 		-- monster = {name, layer, x,y, direction, breed,rank,savegame_variable, treasure_name,treasure_variant,treasure_savegame_variable}
 		table.insert(enemiesInFight,{name="generatedEnemy_thisOne", layer=0, x=xPos, y=yPos, direction=0, breed=chosenBreed})
-		difficulty = difficulty - breedDifficulties[chosenBreed]
+		difficulty = difficulty + breedDifficulties[chosenBreed] + monsterAmountDifficulty
 	end
 	return enemiesInFight
 end

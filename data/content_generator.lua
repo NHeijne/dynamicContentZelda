@@ -24,6 +24,7 @@ function content.start_test(given_map)
 	log.debug_log_reset()
 	hero:freeze()
 	--if not game:get_value("sword__1") then hero:start_treasure("sword", 1, "sword__1") end
+	game:set_max_life(24); game:set_life(24)
 	
 	function hero:on_state_changed(state)
 		local f = sol.file.open("userExperience.txt","a+"); f:write(state .. "-hero\n"); f:flush(); f:close()
