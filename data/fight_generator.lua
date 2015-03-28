@@ -5,7 +5,7 @@ local num_util 			= require("num_util")
 local matrix			= require("matrix")
 
 local fight_generator = {}
-local lowestDifficulty = 2
+local lowestDifficulty = 1
 local highestDifficulty = 5
 local difficultyOfFights = lowestDifficulty
 
@@ -214,9 +214,6 @@ function fight_generator.make(area, maxDiff, map, currentLife)
 	for k,_ in pairs(breedDifficulties) do
 		table.insert( breedOptions, k )
 	end
-	
-	--local f = sol.file.open("userExperience.txt","a+"); f:write(difficulty .. "-makingDifficulty-------------\n"); f:flush(); f:close()
-	
 	while difficulty < maxDiff - allowedVariance do
 		local hero = map:get_hero()
 		local xPos,yPos = hero:get_position()
@@ -225,12 +222,16 @@ function fight_generator.make(area, maxDiff, map, currentLife)
 			yPos = math.random(area.y1+40, area.y2-40)
 		end
 		local chosenBreed = breedOptions[math.random(1,#breedOptions)] 
-		while breedDifficulties[chosenBreed] + monsterAmountDifficulty + difficulty < maxDiff + allowedVariance  do 
+
+		while breedDifficulties[chosenBreed] + monsterAmountDifficulty + difficulty > maxDiff + allowedVariance  do 
 			chosenBreed = breedOptions[math.random(1,#breedOptions)] 
 		end
 		-- monster = {name, layer, x,y, direction, breed,rank,savegame_variable, treasure_name,treasure_variant,treasure_savegame_variable}
 		table.insert(enemiesInFight,{name="generatedEnemy_thisOne", layer=0, x=xPos, y=yPos, direction=0, breed=chosenBreed})
 		difficulty = difficulty + breedDifficulties[chosenBreed] + monsterAmountDifficulty
+		
+								local f = sol.file.open("userExperience.txt","a+"); f:write(difficulty .. "-makingDifficulty-------------\n"); f:flush(); f:close()
+
 	end
 	return enemiesInFight
 end
