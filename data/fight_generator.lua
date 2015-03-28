@@ -9,21 +9,21 @@ local lowestDifficulty = 1
 local highestDifficulty = 5
 local difficultyOfFights = lowestDifficulty
 
- --[[
-      0.2244 * monsters +
-     -0.1209 * startLife +
-      0.8654 * globul +
-     -0.0779 * tentacle +
-     -0.2317 * snap +
-      1.0567 * greenKnight +
-     -0.1819 * mandible +
-      0.4246 * redKnight +
-     -0.1387 * egg +
-      0.68   * hardhat +
-      0.8188 * bullblin +
-      3.8072
- ]]--
-local allowedVariance = 0.5
+--[[
+0.2244 * monsters +
+-0.1209 * startLife +
+0.8654 * globul +
+-0.0779 * tentacle +
+-0.2317 * snap +
+1.0567 * greenKnight +
+-0.1819 * mandible +
+0.4246 * redKnight +
+-0.1387 * egg +
+0.68   * hardhat +
+0.8188 * bullblin +
+3.8072
+]]--
+local allowedVariance = 0.1
 local startLifeDifficulty = -0.1209
 local monsterAmountDifficulty = 0.2244
 local baseDifficulty = 3.8072
@@ -84,6 +84,21 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 						
 					end
 					map:close_doors("door_normal_area_"..split_table[3])
+					
+					if not map:has_entities("generatedEnemy") then 
+						map:open_doors("door_normal_area_"..split_table[3])
+						
+						analyseGameplaySoFar(map)
+						difficultyOfFights = difficultyOfFights + 1
+						if difficultyOfFights > highestDifficulty then difficultyOfFights = lowestDifficulty end
+						local game = map:get_game()
+						local f = sol.file.open("userExperience.txt","a+"); f:write(game:get_life() .. "-life\n"); f:flush(); f:close()
+						local f = sol.file.open("userExperience.txt","a+"); f:write(os.time() .. "-time\n"); f:flush(); f:close()
+						local f = sol.file.open("userExperience.txt","a+"); f:write("finished the fight\n"); f:flush(); f:close()
+						
+					end
+					return false
+					
 				end
 		end
 				
@@ -229,9 +244,6 @@ function fight_generator.make(area, maxDiff, map, currentLife)
 		-- monster = {name, layer, x,y, direction, breed,rank,savegame_variable, treasure_name,treasure_variant,treasure_savegame_variable}
 		table.insert(enemiesInFight,{name="generatedEnemy_thisOne", layer=0, x=xPos, y=yPos, direction=0, breed=chosenBreed})
 		difficulty = difficulty + breedDifficulties[chosenBreed] + monsterAmountDifficulty
-		
-								local f = sol.file.open("userExperience.txt","a+"); f:write(difficulty .. "-makingDifficulty-------------\n"); f:flush(); f:close()
-
 	end
 	return enemiesInFight
 end
