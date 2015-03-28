@@ -6,7 +6,7 @@ local area_util = {}
 
 -- part of conflict resolution
 function area_util.shrink_until_no_conflict(new_area, old_area, preference)
-	log.debug("short conflict resolution")
+	-- log.debug("short conflict resolution")
 	local conflict_free = false
 	local newly_made_areas = {}
 	intersection = area_util.areas_intersect(new_area, old_area)
@@ -14,21 +14,21 @@ function area_util.shrink_until_no_conflict(new_area, old_area, preference)
 	local conflict_area
 	newly_made_areas[#newly_made_areas+1], conflict_area = area_util.shrink_area(old_area, intersection, preference)
 	intersection = area_util.areas_intersect(new_area, conflict_area)
-	log.debug("conflict area:")
-	log.debug(conflict_area)
-	log.debug("intersection:")
-	log.debug(intersection)
+	-- log.debug("conflict area:")
+	-- log.debug(conflict_area)
+	-- log.debug("intersection:")
+	-- log.debug(intersection)
 	if area_util.areas_equal(conflict_area, intersection) then conflict_free = true end
 	while not conflict_free do
 		newly_made_areas[#newly_made_areas+1], conflict_area = area_util.shrink_area(conflict_area, intersection, preference)
 		intersection = area_util.areas_intersect(new_area, conflict_area)
-		log.debug("conflict area:")
-		log.debug(conflict_area)
-		log.debug("intersection:")
-		log.debug(intersection)
+		-- log.debug("conflict area:")
+		-- log.debug(conflict_area)
+		-- log.debug("intersection:")
+		-- log.debug(intersection)
 		if area_util.areas_equal(conflict_area, intersection) then conflict_free = true end
 	end
-	log.debug("conflict free again")
+	-- log.debug("conflict free again")
 	table_util.remove_false(newly_made_areas)
 	return newly_made_areas, conflict_area
 end
@@ -36,27 +36,15 @@ end
 
 
 function area_util.create_walls( area, wall_width )
-	local walls = {["n"]={{x1=area.x1+wall_width, x2=area.x2-wall_width, y1=area.y1, y2=area.y1+wall_width}},
-				   ["e"]={{x1=area.x2-wall_width, x2=area.x2, y1=area.y1+wall_width, y2=area.y2-wall_width}},
-				   ["w"]={{x1=area.x1, x2=area.x1+wall_width, y1=area.y1+wall_width, y2=area.y2-wall_width}},
-				   ["s"]={{x1=area.x1+wall_width, x2=area.x2-wall_width, y1=area.y2-wall_width, y2=area.y2}}}
-	local corners = {["ne"]={x1=area.x2-wall_width, x2=area.x2, y1=area.y1, y2=area.y1+wall_width},
-					 ["nw"]={x1=area.x1, x2=area.x1+wall_width, y1=area.y1, y2=area.y1+wall_width},
-					 ["se"]={x1=area.x2-wall_width, x2=area.x2, y1=area.y2-wall_width, y2=area.y2},
-					 ["sw"]={x1=area.x1, x2=area.x1+wall_width, y1=area.y2-wall_width, y2=area.y2}}
-	--[[local floor_edge= {["n"]={x1=area.x1+wall_width, x2=area.x2-wall_width, y1=area.y1+wall_width, y2=area.y1+wall_width+8},
-					   ["e"]={x1=area.x2-wall_width-8, x2=area.x2-wall_width, y1=area.y1+wall_width, y2=area.y2-wall_width},
-					   ["w"]={x1=area.x1+wall_width, x2=area.x1+wall_width+8, y1=area.y1+wall_width, y2=area.y2-wall_width},
-					   ["s"]={x1=area.x1+wall_width, x2=area.x2-wall_width, y1=area.y2-wall_width-8, y2=area.y2-wall_width}}
-	local floor_edge_corners]]-- TODO cosmetics
-	local open_area = {{x1=area.x1+wall_width, x2=area.x2-wall_width, y1=area.y1+wall_width, y2=area.y2-wall_width}}
-	for _,side in pairs(walls) do
-		for _,wall in pairs(side) do
-			if area_util.get_area_size(wall).size <= 0 then table.remove(side) end
-		end
-	end
-	if area_util.get_area_size(open_area[1]).size <= 0 then table.remove(open_area) end
-	return walls, corners, open_area
+	local walls = {[1]={x1=area.x1+wall_width, x2=area.x2-wall_width, y1=area.y1, y2=area.y1+wall_width},
+				   [0]={x1=area.x2-wall_width, x2=area.x2, y1=area.y1+wall_width, y2=area.y2-wall_width},
+				   [2]={x1=area.x1, x2=area.x1+wall_width, y1=area.y1+wall_width, y2=area.y2-wall_width},
+				   [3]={x1=area.x1+wall_width, x2=area.x2-wall_width, y1=area.y2-wall_width, y2=area.y2}}
+	local corners = {[1]={x1=area.x2-wall_width, x2=area.x2, y1=area.y1, y2=area.y1+wall_width},
+					 [2]={x1=area.x1, x2=area.x1+wall_width, y1=area.y1, y2=area.y1+wall_width},
+					 [0]={x1=area.x2-wall_width, x2=area.x2, y1=area.y2-wall_width, y2=area.y2},
+					 [3]={x1=area.x1, x2=area.x1+wall_width, y1=area.y2-wall_width, y2=area.y2}}
+	return walls, corners
 end
 
 
@@ -401,10 +389,10 @@ end
 function area_util.get_side(area, direction, pluslength, pluswidth)
 	local pluslength = pluslength or 0
 	local pluswidth = pluswidth or 0
-	if direction == 0 then return {x1=area.x2, x2=area.x2+pluslength, y1=area.y1-pluswidth, y2=area.y2+pluswidth} end
-	if direction == 1 then return {x1=area.x1-pluswidth, x2=area.x2+pluswidth, y1=area.y1-pluslength, y2=area.y1} end
-	if direction == 2 then return {x1=area.x1-pluslength, x2=area.x1, y1=area.y1-pluswidth, y2=area.y2+pluswidth} end
-	if direction == 3 then return {x1=area.x1-pluswidth, x2=area.x2+pluswidth, y1=area.y2, y2=area.y2+pluslength} end
+	if direction == 0 then return area_util.correct({x1=area.x2, x2=area.x2+pluslength, y1=area.y1-pluswidth, y2=area.y2+pluswidth}) end
+	if direction == 1 then return area_util.correct({x1=area.x1-pluswidth, x2=area.x2+pluswidth, y1=area.y1-pluslength, y2=area.y1}) end
+	if direction == 2 then return area_util.correct({x1=area.x1-pluslength, x2=area.x1, y1=area.y1-pluswidth, y2=area.y2+pluswidth}) end
+	if direction == 3 then return area_util.correct({x1=area.x1-pluswidth, x2=area.x2+pluswidth, y1=area.y2, y2=area.y2+pluslength}) end
 	return false
 end
 
@@ -419,6 +407,11 @@ function area_util.from_center( area, x, y, round_to_8)
 		center_y = math.floor(((area.y2+area.y1)/2)/8)*8
 	end
 	return {x1=center_x-x/2, x2=center_x+x/2, y1=center_y-y/2, y2=center_y+y/2}
+end
+
+-- makes sure there are no negative width or height in the area
+function area_util.correct(area)
+	return {x1=math.min(area.x1, area.x2), x2=math.max(area.x1, area.x2), y1=math.min(area.y1, area.y2), y2=math.max(area.y1, area.y2)}
 end
 
 return area_util

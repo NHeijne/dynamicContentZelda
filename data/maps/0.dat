@@ -3,31 +3,13 @@ properties{
   y = 0,
   width = 4000,
   height = 4000,
-  tileset = "4",
-  music = "overworld",
-}
-
-enemy{
-  layer = 0,
-  x = 376,
-  y = 1077,
-  direction = 1,
-  breed = "pike_auto",
-}
-
-enemy{
-  layer = 0,
-  x = 392,
-  y = 1093,
-  direction = 3,
-  breed = "pike_detect",
+  tileset = "1",
 }
 
 destination{
-  layer = 1,
-  x = 296,
-  y = 1069,
-  name = "start_position",
+  layer = 0,
+  x = 8,
+  y = 13,
   direction = 3,
   default = true,
 }

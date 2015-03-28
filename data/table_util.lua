@@ -73,24 +73,24 @@ end
 -- table = {[n]={element1...elementN}, [n]={element1...elementN}, ...}
 function table_util.combinations( tbl )
   local key_list, nr_keys = table_util.get_keys( tbl )
-  log.debug("key_list")
-  log.debug(key_list)
+  -- log.debug("key_list")
+  -- log.debug(key_list)
   local n_list = {}
   local max_n_list={}
   for i=1, nr_keys do 
     n_list[i] = 1 
     max_n_list[i]=#tbl[key_list[i]]
   end
-  log.debug("n_list")
-  log.debug(n_list)
-  log.debug("max_n_list")
-  log.debug(max_n_list)
+  -- log.debug("n_list")
+  -- log.debug(n_list)
+  -- log.debug("max_n_list")
+  -- log.debug(max_n_list)
   local result = {}
   local r = 0
   local done = false
   repeat
     r = r+1
-    log.debug("r="..r)
+    -- log.debug("r="..r)
     result[r]={}
     for i=1, nr_keys do result[r][key_list[i]]=tbl[key_list[i]][n_list[i]] end
     n_list[nr_keys]=n_list[nr_keys]+1
@@ -104,8 +104,8 @@ function table_util.combinations( tbl )
         end
       end
     end
-    log.debug("result[r]=")
-    log.debug(result[r])
+    -- log.debug("result[r]=")
+    -- log.debug(result[r])
   until done
   return result
 end
@@ -158,15 +158,15 @@ end
 
 function table_util.remove_false(tab)
   local remove_these={}
-  log.debug("length before: "..tostring(#tab))
+  -- log.debug("length before: "..tostring(#tab))
   for i=#tab, 1, -1 do
     if not tab[i] then remove_these[#remove_these+1]=i end
   end
-  log.debug("false_encountered: "..tostring(#remove_these))
+  -- log.debug("false_encountered: "..tostring(#remove_these))
   for _,v in ipairs(remove_these) do
     table.remove(tab, v)
   end
-  log.debug("length after: "..tostring(#tab))
+  -- log.debug("length after: "..tostring(#tab))
 end
 
 function table_util.concat_table(table1, table2)
@@ -246,6 +246,21 @@ function table_util.reverse_table(t)
         reversedTable[itemCount + 1 - k] = v
     end
     return reversedTable
+end
+
+function table_util.random(tbl)
+   return tbl[math.random(#tbl)] 
+end
+
+function table_util.get(tbl, index_tbl)
+    local depth = 1
+    local obj = tbl
+    repeat
+      obj = obj[index_tbl[depth]] or false
+      if not obj then return false end
+      depth = depth+1
+    until depth > #index_tbl
+    return obj
 end
 
 

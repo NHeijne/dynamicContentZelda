@@ -23,7 +23,7 @@ function content.start_test(given_map)
 	hero = map:get_hero()
 	log.debug_log_reset()
 	hero:freeze()
-	--if not game:get_value("sword__1") then hero:start_treasure("sword", 1, "sword__1") end
+	if not game:get_value("sword__1") then hero:start_treasure("sword", 1, "sword__1") end
 	
 	function hero:on_state_changed(state)
 		local f = sol.file.open("userExperience.txt","a+"); f:write(state .. "-hero\n"); f:flush(); f:close()
@@ -31,6 +31,8 @@ function content.start_test(given_map)
 		return false
 	end
 		
+	log.debug("test")
+	log.debug("end test")
 	-- Initialize the pseudo random number generator
 	local seed = --280295
 			--783166 -- transition bug
@@ -39,10 +41,10 @@ function content.start_test(given_map)
 	math.randomseed( seed )
 	math.random(); math.random(); math.random()
 	-- done. :-)
-	-- testing area below
-	log.debug("test_area")
+
 	mission_grammar.update_keys_and_barriers(game)
-	mission_grammar.produce_graph( "outside_normal", 7, 3, 0, 7)
+	mission_grammar.produce_graph( "outside", 7, 3, 0, 7)
+	log.debug("produced graph")
 	log.debug(mission_grammar.produced_graph)
 	log.debug("area_details")
 	local tileset_id = tonumber(map:get_tileset())
@@ -55,10 +57,7 @@ function content.start_test(given_map)
 																preferred_area_surface=180,
 																path_width=2*16}
 																)
-	log.debug(area_details)
-	log.debug("test_area")
-	-- testing area above
-
+	log.debug(content.area_details)
 	hero:set_visible(true)
 	game:set_hud_enabled(true)
     game:set_pause_allowed(true)
@@ -66,17 +65,20 @@ function content.start_test(given_map)
     light_manager.enable_light_features(map)
 
     --map:set_tileset("1") needs to be set before the map loads
-    content.areas = space_gen.generate_space(content.area_details, map)
+    --content.areas = space_gen.generate_space(content.area_details, map)
+    content.areas = space_gen.generate_simple_space(content.area_details, map)
     log.debug("done with generation")
 	
 	local exit_areas={}
     local exclusion_areas={}
     local layer
 	if content.area_details.outside then -- forest
-    	exit_areas, exclusion_areas = content.create_forest_map(content.areas, content.area_details)
+    	--exit_areas, exclusion_areas = content.create_forest_map(content.areas, content.area_details)
+    	exit_areas, exclusion_areas = content.create_simple_forest_map(content.areas, content.area_details)
     	layer = 0
 	else -- dungeon
-		exit_areas, exclusion_areas = content.create_dungeon_map(content.areas, content.area_details)
+		-- exit_areas, exclusion_areas = content.create_dungeon_map(content.areas, content.area_details)
+		exit_areas, exclusion_areas = content.create_simple_dungeon_map(content.areas, content.area_details)
 		layer = 0
 	end
 	-- adding effects
@@ -86,25 +88,27 @@ function content.start_test(given_map)
 	log.debug("exclusion_areas")
 	log.debug(exclusion_areas)
 	maze_generator.set_map(map)
-	local wall_width = content.area_details.wall_width
 	for k,v in pairs(content.areas["walkable"]) do
-		log.debug("filling in area "..k)
-		log.debug("creating area_type " .. content.area_details[k].area_type)
-		if content.area_details[k].area_type == "P" or content.area_details[k].area_type == "PF" then 
-			maze_generator.set_room(v, 16, 8, "mazeprop_area_"..k)
-			content.makeSingleMaze(area_util.resize_area(v,{wall_width+16, wall_width+16, -wall_width-16, -wall_width-16}), exit_areas[k], content.area_details, v.used, layer)
+		for _, a in ipairs(v) do
+			log.debug("filling in area "..k)
+			log.debug("creating area_type " .. content.area_details[k].area_type)
+			if content.area_details[k].area_type == "P" or content.area_details[k].area_type == "PF" then 
+				maze_generator.set_room(a, 16, 8, "mazeprop_area_"..k)
+				content.makeSingleMaze(area_util.resize_area(a,{24+16, 24+16, -24-16, -24-16}), exit_areas[k], content.area_details, {}, layer)
+			end
 		end
     end
 
 	--log.debug(printGlobalVariables())
 	hero:unfreeze()
-	local hero_x, hero_y, hero_layer = hero:get_position()
-	map.small_keys_savegame_variable = "small_key_map"..map:get_id()
-	map:create_pickable{layer=hero_layer, x=hero_x+16, y=hero_y, treasure_name="small_key", treasure_variant = 1}
+	content.place_separators(content.areas)
+	-- local hero_x, hero_y, hero_layer = hero:get_position()
+	-- map.small_keys_savegame_variable = "small_key_map"..map:get_id()
+	-- map:create_pickable{layer=hero_layer, x=hero_x+16, y=hero_y, treasure_name="small_key", treasure_variant = 1}
 	map:set_doors_open("door_normal_area")
-	content.open_normal_doors_sensorwise()
-	local entity = map:create_custom_entity({name="fireball_statue", direction=0, layer=0, x=hero_x+48, y=hero_y+16, model="fireball_statue"})
-	entity:stop()
+	-- content.open_normal_doors_sensorwise()
+	-- local entity = map:create_custom_entity({name="fireball_statue", direction=0, layer=0, x=hero_x+48, y=hero_y+16, model="fireball_statue"})
+	-- entity:stop()
 end
 
 function content.open_normal_doors_sensorwise()
@@ -144,8 +148,8 @@ function content.spread_props(area, density_offset, prop_names, prop_index)
 	-- place randomly in the areas that are left
 	local areas_left = {table_util.copy(area)}
 	repeat
-		log.debug("areas_left")
-		log.debug(areas_left)
+		-- log.debug("areas_left")
+		-- log.debug(areas_left)
 		local selected_prop 
 		if "table" == type(prop_names[prop_index]) then
 			selected_prop = prop_names[prop_index][math.random(#prop_names[prop_index])]
@@ -185,7 +189,7 @@ function content.create_forest_map(existing_areas, area_details)
 	for k,v in pairs(existing_areas["walkable"]) do
     	log.debug("walkable " .. k)
     	log.debug(v)
-    	content.spread_props(v, 0, {{"flower1","flower2", "fullgrass"}}, 1)
+    	content.spread_props(v, 24, {{"flower1","flower2", "fullgrass"}}, 1)
     	content.show_corners(v, tileset)
     end
     for k,v in pairs(existing_areas["boundary"]) do
@@ -207,148 +211,25 @@ function content.create_forest_map(existing_areas, area_details)
 				for i=1, #v.transitions do
 			    	log.debug("transition area:".. areanumber .. ", connection: ".. connection_nr .. ", part: ".. i)
 			    	log.debug(v.transitions[i])
-			    	content.place_tile(v.transitions[i], 49, "transition", 0)
+			    	content.place_tile(v.transitions[i], 7, "transition", 0)
 			    	content.show_corners(v.transitions[i], tileset)
 			    end
-			elseif #v.opening~= nil then -- we do a lookup, TODO eventually all transitions will use the lookup
-				local t_details = lookup.transitions[v.transition_type]
-				table.insert(exclusion_areas[areanumber], {area=v.opening, sides_open={"south"}})
-				for positioning, tile in pairs(t_details) do
-					local temp_pos={x1=v.opening.x1+positioning.x1,
-								    y1=v.opening.y1+positioning.y1,
-								    x2=v.opening.x1+positioning.x2,
-								    y2=v.opening.y1+positioning.y2}
-					content.place_tile(temp_pos, tile[tileset], "transition", 0)
-				end
+			-- elseif #v.opening~= nil then -- we do a lookup, TODO eventually all transitions will use the lookup
+			-- 	local t_details = lookup.transitions[v.transition_type]
+			-- 	table.insert(exclusion_areas[areanumber], {area=v.opening, sides_open={"south"}})
+			-- 	for positioning, tile in pairs(t_details) do
+			-- 		local temp_pos={x1=v.opening.x1+positioning.x1,
+			-- 					    y1=v.opening.y1+positioning.y1,
+			-- 					    x2=v.opening.x1+positioning.x2,
+			-- 					    y2=v.opening.y1+positioning.y2}
+			-- 		content.place_tile(temp_pos, tile[tileset], "transition", 0)
+			-- 	end
 			end
 		end
 	end
-
-	-- create tree lines which will follow a certain pattern uniformly across the map
-	local tree_size = {x=64, y=80}
-	local width, height = map:get_size()
-	-- create each horizontal layer of trees
-	local treelines = math.floor((height-32) -- 32 is the heiht that overlaps with the previous row
-										/ 48) -- the height of the tree that is not overlapping at the bottom row
-	log.debug("treelines")
-	log.debug(treelines)
-	local blocking_size = {x=48, y=64}
-	local treeline_area_list = {}
-	local left_overs = {}
-	for i=1, treelines do
-		local x_offset = 0
-		if i % 2 == 0 then x_offset=24 end
-		local top_line = 32+i*48-blocking_size.y
-		local new_treeline = {x1=x_offset+8, y1=top_line, 
-							  x2=width-(width-x_offset-16)%blocking_size.x,
-							  y2=32+i*48}
-		local chopped_treeline = {new_treeline}
-		-- checking for overlap with transitions
-		log.debug("content.create_forest_map transitions treeline "..i)
-		for areanumber,connections in pairs(existing_areas["transition"]) do
-			for connection_nr,v in pairs(connections) do
-				if v.transition_type == "direct" then
-					for k=1, #v.transitions do
-						local counter=1
-						repeat
-							log.debug(counter)
-							local tl = chopped_treeline[counter]
-							if tl and area_util.areas_intersect(tl, v.transitions[k]) then 
-								log.debug("content.create_forest_map found intersection treeline "..i)
-								local new_areas = area_util.shrink_until_no_conflict(v.transitions[k], tl, "horizontal")
-								chopped_treeline[counter] = false
-								table_util.add_table_to_table(new_areas, chopped_treeline)
-							else 
-								counter = counter +1
-							end
-						until counter > #chopped_treeline
-					end
-				end
-			end
-		end
-		log.debug("content.create_forest_map walkable treeline "..i)
-		for areanumber,walkable in pairs(existing_areas["walkable"]) do
-			local counter = 1
-			log.debug(counter)
-			repeat
-				local tl = chopped_treeline[counter]
-				if tl and area_util.areas_intersect(tl, walkable) then 
-					log.debug("content.create_forest_map found intersection treeline "..i)
-					local new_areas = area_util.shrink_until_no_conflict(walkable, tl, "horizontal")
-					chopped_treeline[counter] = false
-					table_util.add_table_to_table(new_areas, chopped_treeline)
-				else 
-					counter = counter +1
-				end
-			until counter > #chopped_treeline
-		end
-		table_util.remove_false(chopped_treeline)
-		for _, tl in ipairs(chopped_treeline) do
-			local area_size = area_util.get_area_size(tl)
-			local x_available = (tl.x2 - (tl.x2-x_offset) % blocking_size.x) - (tl.x1 + (blocking_size.x - (tl.x1-x_offset) % blocking_size.x))
-			if area_size.y < blocking_size.y or x_available < blocking_size.x then 
-				if tl.y1 == top_line then tl.y1 = tl.y1+16 end
-				table.insert(left_overs, tl)
-			else 
-				-- chop left side
-				if tl.y1 == top_line then tl.y1 = tl.y1+16 end
-				--left
-				local till_next_part = (tl.x1-x_offset)%blocking_size.x 
-				if till_next_part == 0 then till_next_part = blocking_size.x  
-				else till_next_part = blocking_size.x - till_next_part end
-				local left_area = {x1=tl.x1,y1=tl.y1,x2=tl.x1+(till_next_part-8),y2=tl.y2}
-				tl.x1 = tl.x1+(till_next_part)
-				if left_area.x2-left_area.x1 > 8 then
-					table.insert(left_overs, left_area)
-				end
-				-- chop right side
-				till_next_part = (tl.x2-x_offset)%blocking_size.x 
-				if till_next_part == 0 then till_next_part = blocking_size.x end
-				local right_area = {x1=tl.x2-(till_next_part)+8,y1=tl.y1,x2=tl.x2,y2=tl.y2}
-				tl.x2 = tl.x2-(till_next_part)
-				if right_area.x2-right_area.x1 > 8 then
-					table.insert(left_overs, right_area)
-				end
-				if tl.x2-tl.x1 ~= 0 then table.insert(treeline_area_list, tl) end 
-			end
-		end
-	end
-	-- visualize
-	for _, tl in ipairs(treeline_area_list) do
-		--left side
-		content.place_tile({x1=tl.x1-8, y1=tl.y1-3*8, x2=tl.x1, y2=tl.y1+2*8}, 513, "forest", 2) -- left canopy
-		content.place_tile({x1=tl.x2, y1=tl.y1-3*8, x2=tl.x2+8, y2=tl.y1+2*8}, 514, "forest", 2) -- right canopy
-		--right side
-		content.place_tile({x1=tl.x1-8, y1=tl.y1+2*8, x2=tl.x1, y2=tl.y1+4*8}, 503, "forest", 0) -- left trunk
-		content.place_tile({x1=tl.x2, y1=tl.y1+2*8, x2=tl.x2+8, y2=tl.y1+4*8}, 504, "forest", 0) -- right trunk
-		-- fill the middle
-		content.place_tile({x1=tl.x1, y1=tl.y1+3*8, x2=tl.x2, y2=tl.y1+5*8}, 505, "forest", 0) -- middle trunk
-		content.place_tile({x1=tl.x1, y1=tl.y1-2*8, x2=tl.x2, y2=tl.y1+3*8}, 502, "forest", 0) -- wall
-		content.place_tile({x1=tl.x1, y1=tl.y1-2*8, x2=tl.x2, y2=tl.y1+3*8}, 511, "forest", 2) -- middle canopy
-		content.place_tile({x1=tl.x1, y1=tl.y1-4*8, x2=tl.x2, y2=tl.y1-2*8}, 512, "forest", 2) -- top canopy
-		-- tricky part, the bottom trunk
-		local x = tl.x1+8
-		repeat
-			content.place_tile({x1=x, y1=tl.y1+5*8, x2=x+32, y2=tl.y1+6*8}, 523, "forest", 0) -- bottom trunk
-			x = x+48
-		until x > tl.x2
-	end
-	-- TODO combine leftovers into sizable pieces and fill those with other forest props
-	for _, lo in ipairs(left_overs) do
-		content.spread_props(lo, 0, {	{"small_green_tree", "small_lightgreen_tree", "tree_stump"}, 
-										"impassable_rock_32x16", "impassable_rock_16x32", "impassable_rock_16x16"
-										--{"flower1","flower2", "fullgrass"}
-										}, 1)
-		--content.place_tile(lo, 275, "water", 0)
-		--[[local area_size = area_util.get_area_size(lo)
-		if area_size.x > 32 and area_size.y > 32 then
-			local random_area = area_util.random_internal_area(lo, 32, 32)
-			content.spread_props(lo, 24, "flower1")
-		end]]--
-	end
-
-	return exit_areas, exclusion_areas
 end
+
+
 
 function content.create_dungeon_map(existing_areas, area_details)
 	-- start filling in
@@ -479,7 +360,7 @@ function content.place_door( details, direction, area, optional )
 	end
 	details.direction = direction
 	details.x, details.y = area.x1, area.y1
-	log.debug(details)
+	-- log.debug(details)
 	map:create_door(details)
 
 end
@@ -605,12 +486,12 @@ function content.tile_destructible( details, area, barrier_type, optional )
 		for y=area.y1, area.y2-details.offset.y, details.required_size.y do
 			details.x, details.y = x+details.offset.x, y+details.offset.y
 			if barrier_type == "door" then
-				log.debug("creating door")
-				log.debug(details)
+				-- log.debug("creating door")
+				-- log.debug(details)
 				map:create_door(details)
 			else
-				log.debug("creating destructible")
-				log.debug(details)
+				-- log.debug("creating destructible")
+				-- log.debug(details)
 				map:create_destructible(details)
 			end
 		end
@@ -626,8 +507,8 @@ function content.place_lock( details, direction, area, optional )
 	end
 	details.direction = direction
 	details.x, details.y = area.x1, area.y1
-	log.debug("creating lock")
-	log.debug(details)
+	-- log.debug("creating lock")
+	-- log.debug(details)
 	map:create_door(details)
 end
 
@@ -665,7 +546,7 @@ function content.place_tile(area, pattern_id, par_name, layer)
 	map:create_dynamic_tile({name=par_name, 
 							layer=layer, 
 							x=area.x1, y=area.y1, 
-							width=area.x2-area.x1, height=area.y2-area.y1, 
+							width=math.floor((area.x2-area.x1)/8)*8, height=math.floor((area.y2-area.y1)/8)*8, 
 							pattern=pattern_id, enabled_at_start=true})
 end
 
@@ -701,6 +582,317 @@ function content.random_area_details(nr_of_areas, preferred_area_surface)
 	end
 	return area_details
 end
+
+
+-----------------------------------------------------------------------------------------------------------------------------------------------
+-----==================================================    Overhaul starts here =========================================----------------------
+-----------------------------------------------------------------------------------------------------------------------------------------------
+
+
+function content.place_separators( areas )
+	for areanumber, a in pairs(areas["nodes"]) do
+		for _, area in ipairs(a) do	
+			local east = area_util.expand_line( area_util.get_side(area, 0), 8 )
+			local north = area_util.expand_line( area_util.get_side(area, 1), 8 )
+			local west = area_util.expand_line( area_util.get_side(area, 2), 8 )
+			local south = area_util.expand_line( area_util.get_side(area, 3), 8 )
+			map:create_separator{layer=0, x=east.x1, y=east.y1, width=east.x2-east.x1, height=east.y2-east.y1}
+			map:create_separator{layer=0, x=north.x1, y=north.y1, width=north.x2-north.x1, height=north.y2-north.y1}
+			map:create_separator{layer=0, x=west.x1, y=west.y1, width=west.x2-west.x1, height=west.y2-west.y1}
+			map:create_separator{layer=0, x=south.x1, y=south.y1, width=south.x2-south.x1, height=south.y2-south.y1}
+		end 
+    end
+end
+
+function content.create_simple_forest_map(areas, area_details)
+	-- start filling in
+	local tileset = area_details.tileset_id
+	local bounding_area 
+	local exclusion_areas_trees={}
+	local ex = 0
+	for areanumber, a in pairs(areas["walkable"]) do
+
+		for _, area in ipairs(a) do	
+			ex=ex+1
+			exclusion_areas_trees[ex] = area
+			content.spread_props(area, 24, {{"flower1","flower2", "fullgrass", "halfgrass"}}, 1) 
+			--content.place_tile(area, 8, "walkable", 0)
+			if bounding_area == nil then bounding_area = area
+			else bounding_area = area_util.merge_areas(bounding_area, area) end
+		end -- filling in the otherwise empty areas
+		
+    end
+    bounding_area = area_util.resize_area(bounding_area, {-152, -128, 256, 256}) 
+
+	local exit_areas={}
+    local exclusion_areas={}
+	for areanumber,connections in pairs(areas["exit"]) do
+		exit_areas[areanumber]={}
+		exclusion_areas[areanumber]={}
+		-- log.debug("check this now")
+		-- log.debug(connections)
+		for _, connection in ipairs(connections) do
+			for direction, area in pairs(connection) do
+				if areanumber == "start" and direction == 2 then 
+					map:create_destination{name="start_here",layer=0, x=area.x1+100, y=area.y1+16, direction=0}
+					hero:teleport(map:get_id(), "start_here")
+				end
+				ex=ex+1
+				exclusion_areas_trees[ex] = area
+				table.insert(exit_areas[areanumber], area_util.get_side(area, (direction+2)%4))
+				--content.spread_props(area, 24, {{"flower1","flower2", "fullgrass"}}, 1) 
+				--content.place_tile(area, 8, "transition", 0)
+				content.create_simple_barriers( area_details, area_util.from_center(area, 32, 32), direction, areanumber, area.to_area )
+			end
+		end
+	end
+
+	content.plant_trees(bounding_area, exclusion_areas_trees)
+
+end
+
+function content.create_simple_dungeon_map(areas, area_details)
+	-- start filling in floor
+	local tileset = area_details.tileset_id
+	log.debug("walkables")
+	for areanumber, a in pairs(areas["walkable"]) do
+		log.debug("areanumber "..areanumber)
+		for _, area in ipairs(a) do	
+			log.debug("placing floor")
+			content.place_tile(area, lookup.tiles["dungeon_floor"][tileset], "walkable", 0)
+			local floortiles, corners = area_util.create_walls(area, 8)
+			for _, dir in ipairs({0, 1, 2, 3}) do
+				log.debug("placing edgetile in direction "..dir)
+				content.place_tile(floortiles[dir], lookup.wall_tiling["floortile"][dir][tileset], "walkable", 0)
+				content.place_tile(corners[dir], lookup.wall_tiling["floorcorner"][dir][tileset], "walkable", 0)
+			end
+		end 
+
+    end
+
+    -- walls
+    for areanumber, a in pairs(areas["nodes"]) do
+
+		for _, area in ipairs(a) do	
+			local walls, corners = area_util.create_walls(area_util.resize_area(area, {8, 8, -8, -8}), 24)
+
+			for _, dir in ipairs({0, 1, 2, 3}) do
+				local side = area_util.get_side(area, dir, -8, 0)				
+				content.place_tile(side, lookup.tiles["dungeon_spacer"][tileset], "spacer", 1)
+				content.place_tile(walls[dir], lookup.wall_tiling["wall"][dir][tileset], "wall", 0)
+				content.place_tile(corners[dir], lookup.wall_tiling["corner"][dir][tileset], "wall", 0)
+			end
+		end -- filling in the otherwise empty areas
+
+    end
+
+    -- transitions
+	local exit_areas={}
+    local exclusion_areas={}
+	for areanumber,connections in pairs(areas["exit"]) do
+		exit_areas[areanumber]={}
+		exclusion_areas[areanumber]={}
+		-- log.debug("check this now")
+		-- log.debug(connections)
+		for _, connection in ipairs(connections) do
+			for direction, area in pairs(connection) do
+				if areanumber == "start" and direction == 2 then 
+					map:create_destination{name="start_here",layer=0, x=area.x1+100, y=area.y1+16, direction=0}
+					hero:teleport(map:get_id(), "start_here")
+					content.place_prop("edge_doors_0", area_util.get_side(area, 2, 32, 0), 0, tileset, lookup.transitions)
+				end
+				table.insert(exit_areas[areanumber], area_util.get_side(area, (direction+2)%4))
+				if direction == 3 or direction == 0 then
+					content.place_prop("edge_doors_"..direction, area, 0, tileset, lookup.transitions)
+				end
+				content.create_simple_barriers( area_details, area_util.get_side(area, (direction+2)%4, 32, 0), direction, areanumber, area.to_area )
+				content.create_simple_door( area, areanumber, direction )
+			end
+		end
+	end
+	
+	return exit_areas, exclusion_areas
+end
+
+function content.create_simple_door( area, areanumber, direction )
+	local object_details = lookup.doors["door_normal"]
+	local name = "door_normal_area_"..areanumber.."_1"
+	local position
+	local temp_area
+	if direction == 1 or direction == 3 then 		
+		temp_area = area_util.from_center(area, 16, area.y2-area.y1)
+	elseif direction == 0 or direction == 2 then 	
+		temp_area = area_util.from_center(area, area.x2-area.x1, 16)
+	end
+	if direction == 3 or direction == 0 then 		
+		position = {x1=temp_area.x1, x2=temp_area.x1+16, y1=temp_area.y1, y2=temp_area.y1+16 }
+	elseif direction == 2 or direction == 1 then 	
+		position = {x1=temp_area.x2-16, x2=temp_area.x2, y1=temp_area.y2-16, y2=temp_area.y2 }
+	end
+	local optional = {name=name}
+	content.place_door(object_details, direction, position, optional)
+end
+
+
+-- barrier type is already concluded when the mission grammar is formed
+-- so we need to create a table of destructables and doors to place at specific spots along the area
+function content.create_simple_barriers( area_details, opening, direction, areanumber, to_area )
+	-- log.debug("creating simple barriers")
+	-- log.debug("to_area")
+	-- log.debug(to_area)
+	if not to_area then return false end
+	-- log.debug(areanumber .." to ".. to_area)
+	-- check if area details has anything on barriers to the to_area
+	local connection = false
+	for k, v in ipairs(area_details[areanumber]) do	if v.areanumber == to_area then connection = k end end
+	if not connection then return false
+	else
+		-- log.debug("found connection "..connection)
+		local barriers =area_details[areanumber][connection].barriers
+		-- log.debug()
+		if barriers == nil then	return false end
+		-- log.debug("found barriers")
+		-- log.debug(barriers)
+		for _,barrier in pairs(barriers) do
+			local split = table_util.split(barrier, ":")
+			local barrier_type
+			local object_details
+			if lookup.destructible[split[2]] then 
+				barrier_type = "destructible" 
+				object_details = lookup.destructible[split[2]]
+			else
+				barrier_type = "door" 
+				object_details = lookup.doors[split[2]]
+			end
+			local obj_size = object_details.required_size
+			if split[1] == "L" then
+				local dir = direction
+				local position
+				local temp_area
+				if dir == 1 or dir == 3 then 		
+					temp_area = area_util.from_center(opening, 16, opening.y2-opening.y1)
+	    		elseif dir == 0 or dir == 2 then 	
+	    			temp_area = area_util.from_center(opening, opening.x2-opening.x1, 16)
+	    		end
+	    		if dir == 3 or dir == 0 then 		
+					position = {x1=temp_area.x1, x2=temp_area.x1+16, y1=temp_area.y1, y2=temp_area.y1+16 }
+	    		elseif dir == 2 or dir == 1 then 	
+	    			position = {x1=temp_area.x2-16, x2=temp_area.x2, y1=temp_area.y2-16, y2=temp_area.y2 }
+	    		end
+	    		local optional = {opening_condition="small_key_map"..map:get_id()}
+	    		content.place_lock( object_details, dir, position, optional )
+				-- create lock (placed upon the entry of the transition)
+				-- determine direction
+				-- place door in beginning of transition at connected_at
+			else
+				
+				-- create destructible and doors (weak_blocks)
+				-- determine direction and the area
+				-- place destructibles in front of the transition or inside the transition
+				content.tile_destructible( object_details, opening , barrier_type, {} )
+			end
+			
+		end
+
+	end
+	
+end
+
+
+
+function content.plant_trees(area, exclude_these)
+	-- create tree lines which will follow a certain pattern uniformly across the map
+
+	local tree_size = {x=64, y=80}
+	local x, y, width, height = area.x1, area.y1, area.x2-area.x1, area.y2-area.y1
+	-- create each horizontal layer of trees
+	local treelines = math.floor((height-32) -- 32 is the height that overlaps with the previous row
+										/ 48) -- the height of the tree that is not overlapping at the bottom row
+	log.debug("treelines")
+	-- log.debug(treelines)
+	local blocking_size = {x=48, y=64}
+	local treeline_area_list = {}
+	local left_overs = {}
+	for i=1, treelines do
+		local x_offset = 0
+		if i % 2 == 0 then x_offset=24 end
+		local top_line = 16+(i-1)*48
+		local new_treeline = {x1=x+x_offset+8, y1=y+top_line, 
+							  x2=x+width, y2=y+top_line+64}
+		local chopped_treeline = {new_treeline}
+		-- checking for overlap with transitions
+		-- log.debug("content.create_forest_map transitions treeline "..i)
+		for _, area in ipairs(exclude_these) do
+			local counter=1
+			repeat
+				-- log.debug(counter)
+				local tl = chopped_treeline[counter]
+				if tl and area_util.areas_intersect(tl, area) then 
+					-- log.debug("content.create_forest_map found intersection treeline "..i)
+					local new_areas = area_util.shrink_until_no_conflict(area, tl, "horizontal")
+					chopped_treeline[counter] = false
+					table_util.add_table_to_table(new_areas, chopped_treeline)
+				else 
+					counter = counter +1
+				end
+			until counter > #chopped_treeline
+		end
+		table_util.remove_false(chopped_treeline)
+		for _, tl in ipairs(chopped_treeline) do
+			local area_size = area_util.get_area_size(tl)
+			local x_available = (tl.x2 - (tl.x2-x_offset-x) % blocking_size.x) - (tl.x1 + (blocking_size.x - (tl.x1-x_offset-x) % blocking_size.x))
+			if area_size.y < blocking_size.y or x_available < blocking_size.x then 
+				if tl.y1 == top_line then tl.y1 = tl.y1+16 end
+				table.insert(left_overs, tl)
+			else 
+				-- chop left side
+				tl.y1 = tl.y1+16
+				--left
+				local till_next_part = (tl.x1-x_offset-x)%blocking_size.x 
+				if till_next_part <= 0 then till_next_part = blocking_size.x  
+				else till_next_part = blocking_size.x - till_next_part end
+				local left_area = {x1=tl.x1,y1=tl.y1,x2=tl.x1+(till_next_part-8),y2=tl.y2}
+				tl.x1 = tl.x1+(till_next_part)
+				if left_area.x2-left_area.x1 > 8 then
+					table.insert(left_overs, left_area)
+				end
+				-- chop right side
+				till_next_part = (tl.x2-x_offset-x)%blocking_size.x 
+				if till_next_part <= 0 then till_next_part = blocking_size.x end
+				local right_area = {x1=tl.x2-(till_next_part)+8,y1=tl.y1,x2=tl.x2,y2=tl.y2}
+				tl.x2 = tl.x2-(till_next_part)
+				if right_area.x2-right_area.x1 > 8 then
+					table.insert(left_overs, right_area)
+				end
+				if tl.x2-tl.x1 ~= 0 then table.insert(treeline_area_list, tl) end 
+			end
+		end
+	end
+	-- visualize
+	for _, tl in ipairs(treeline_area_list) do
+		-- content.show_corners(tl)
+		--left side
+		content.place_tile({x1=tl.x1-8, y1=tl.y1-3*8, x2=tl.x1, y2=tl.y1+2*8}, 513, "forest", 2) -- left canopy
+		content.place_tile({x1=tl.x2, y1=tl.y1-3*8, x2=tl.x2+8, y2=tl.y1+2*8}, 514, "forest", 2) -- right canopy
+		--right side
+		content.place_tile({x1=tl.x1-8, y1=tl.y1+2*8, x2=tl.x1, y2=tl.y1+4*8}, 503, "forest", 0) -- left trunk
+		content.place_tile({x1=tl.x2, y1=tl.y1+2*8, x2=tl.x2+8, y2=tl.y1+4*8}, 504, "forest", 0) -- right trunk
+		-- fill the middle
+		content.place_tile({x1=tl.x1, y1=tl.y1+3*8, x2=tl.x2, y2=tl.y1+5*8}, 505, "forest", 0) -- middle trunk
+		content.place_tile({x1=tl.x1, y1=tl.y1-2*8, x2=tl.x2, y2=tl.y1+3*8}, 502, "forest", 0) -- wall
+		content.place_tile({x1=tl.x1, y1=tl.y1-2*8, x2=tl.x2, y2=tl.y1+3*8}, 511, "forest", 2) -- middle canopy
+		content.place_tile({x1=tl.x1, y1=tl.y1-4*8, x2=tl.x2, y2=tl.y1-2*8}, 512, "forest", 2) -- top canopy
+		-- tricky part, the bottom trunk
+		local x = tl.x1+8
+		repeat
+			content.place_tile({x1=x, y1=tl.y1+5*8, x2=x+32, y2=tl.y1+6*8}, 523, "forest", 0) -- bottom trunk
+			x = x+48
+		until x > tl.x2
+	end
+
+	return exit_areas, exclusion_areas
+end
+
 
 
 return content

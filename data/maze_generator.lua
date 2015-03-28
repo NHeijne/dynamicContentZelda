@@ -2,6 +2,7 @@ local maze_generator = {}
 
 local log = require("log")
 local table_util = require("table_util")
+local area_util = require("area_util")
 local num_util = require("num_util")
 
 -- NOTE TODO this can later be used to find a good path in areas or transitions
@@ -18,41 +19,134 @@ local num_util = require("num_util")
 local map
 local room
 
+-- direction (number): Direction of the door, between 0 (East of the room) and 3 (South of the room).
+
 function maze_generator.set_map( given_map )
 	map = given_map
 end
 
 function maze_generator.set_room( area, corridor_width, wall_width, name_prefix )
 	room = area
-	room.corridor_width = corridor_width
-	room.wall_width = wall_width
-	room.name_prefix = name_prefix
+	if type(corridor_width) == "table" then room.corridor_width = corridor_width
+	else room.corridor_width = {x=corridor_width, y=corridor_width} end
+	if type(wall_width) == "table" then room.wall_width = wall_width
+	else room.wall_width = {x=wall_width, y=wall_width} end
+	room.name_prefix = name_prefix or "space"
 end
 
 function maze_generator.generate_maze( area, exit_areas, exclusion)
 	local corridor_width = room.corridor_width
 	local maze = {}
 	local wall_width = room.wall_width
-	log.debug("initialize_maze")
+	-- log.debug("initialize_maze")
 	maze_generator.initialize_maze( maze, area, wall_width, corridor_width )
-	log.debug(maze)
-	log.debug("excluding areas")
+	-- log.debug(maze)
+	-- log.debug("excluding areas")
 	if exclusion ~= nil and next(exclusion) ~= nil then maze_generator.exclude( area, maze, exclusion, corridor_width, wall_width ) end
-	log.debug("open_exits")
-	log.debug(exit_areas)
+	-- log.debug("open_exits")
+	-- log.debug(exit_areas)
 	local exits = maze_generator.open_exits( maze, exit_areas, area, wall_width, corridor_width )
-	log.debug("maze pathfinding start")
+	-- log.debug("maze pathfinding start")
 	maze_generator.create_maze_puzzle( maze, exits, area )
-	log.debug("maze pathfinding end")
-	log.debug(maze)
+	-- log.debug("maze pathfinding end")
+	-- log.debug(maze)
 	local area_list, prop_list = maze_generator.create_area_list( maze, area, corridor_width, wall_width )
-	log.debug(area_list)
+	-- log.debug(area_list)
  	return area_list, prop_list
 end
 
+function maze_generator.generate_rooms( area_details )
+	local width, height = map:get_size(); local corridor_width = room.corridor_width; local wall_width = room.wall_width
+	local maze = {}
+	maze_generator.initialize_maze( maze, room, wall_width, corridor_width )
+	local start_node = {x=1, y=1}--y=math.floor(#maze[1]/2)}-- entrance is always west center
+	maze[start_node.x][start_node.y].visited = true
+	maze[start_node.x][start_node.y][2] = "exit"
+	maze_generator.recursive_rooms( maze, area_details, "start", start_node, 2 )
+	return maze_generator.create_room_list( maze, corridor_width, {x=wall_width.x/2, y=wall_width.y/2} )
+end
+
+-- direction (number): Direction of the door, between 0 (East of the room) and 3 (South of the room).
+function maze_generator.recursive_rooms( maze, area_details, areanumber, pos, last_direction )
+	-- if the area contains multiple tasks then we assign multiple nodes in random directions
+	maze[pos.x][pos.y].areanumber = areanumber
+	if areanumber ~= "goal" then
+		local cur_pos = pos
+		if type(area_details[areanumber].area_type) == "table" then
+
+		end
+		-- follow area details; place the next nodes at spots that have the most free neighbors
+		for _,connection in ipairs(area_details[areanumber]) do
+			local neighbors = maze_generator.get_neighbors(maze, cur_pos, true)
+			local ranking = {[0]={}, [1]={}, [2]={}, [3]={}}
+			for _,nb in ipairs(neighbors) do
+				table.insert(ranking[#maze_generator.get_neighbors(maze, nb.pos, true)], nb)
+			end
+			local selected_nb
+			for i=3, 1, -1 do
+				if #ranking[i] > 0 then 
+					selected_nb = table_util.random(ranking[i]); break
+				end
+			end
+			maze_generator.open_path(maze, {cur_pos, selected_nb.pos}, "exit")
+			maze_generator.recursive_rooms( maze, area_details, connection.areanumber, selected_nb.pos, selected_nb.wall_to )
+		end
+	end
+end
+
+
+function maze_generator.create_room_list ( maze, corridor_width, wall_width )
+	result = {["walkable"]={}, ["opening"]={}, ["exit"]={}, ["nodes"]={}}
+	local w = result["walkable"]; local o = result["opening"]; local e = result["exit"]; local n = result["nodes"];
+	for x=1, #maze do
+		for y=1, #maze[1] do
+			-- add corridor to walkable, walls which are false to opening and exits to exit
+			if maze[x][y].areanumber ~= nil then
+				local a_nr = maze[x][y].areanumber
+				w[a_nr] = w[a_nr] or {}; o[a_nr] = o[a_nr] or {}; e[a_nr] = e[a_nr] or {}; n[a_nr] = n[a_nr] or {}
+				local walkable = maze_generator.pos_to_area({x=x, y=y})
+				local node = area_util.resize_area(walkable, {-wall_width.x, -wall_width.y, wall_width.x, wall_width.y})
+				local exits, openings = maze_generator.maze_wall_to_areas( maze, {x=x, y=y}, corridor_width, wall_width, node)
+				table.insert(w[a_nr], walkable); table.insert(n[a_nr], node);table.insert(e[a_nr], exits); table.insert(o[a_nr], openings)
+			end
+		end
+	end
+	return result
+end
+
+function maze_generator.maze_wall_to_areas( maze, pos, corridor_width, wall_width, node)
+	local exits = {} -- 32 wide
+	local openings = {} -- 64 wide?
+	local walls = {[1]={x1=node.x1+wall_width.x, x2=node.x2-wall_width.x, y1=node.y1, y2=node.y1+wall_width.y},
+				   [0]={x1=node.x2-wall_width.x, x2=node.x2, y1=node.y1+wall_width.y, y2=node.y2-wall_width.y},
+				   [2]={x1=node.x1, x2=node.x1+wall_width.x, y1=node.y1+wall_width.y, y2=node.y2-wall_width.y},
+				   [3]={x1=node.x1+wall_width.x, x2=node.x2-wall_width.x, y1=node.y2-wall_width.y, y2=node.y2}}
+
+	if maze[pos.x][pos.y][0] == "exit" or maze[pos.x][pos.y][0] == false then
+		exits[0] = area_util.from_center( walls[0], wall_width.x, 32) 
+		exits[0].to_area = table_util.get(maze, {pos.x+1, pos.y, "areanumber"}) end
+	if maze[pos.x][pos.y][1] == "exit" or maze[pos.x][pos.y][1] == false then
+		exits[1] = area_util.from_center( walls[1], 32, wall_width.y) 
+		exits[1].to_area = table_util.get(maze, {pos.x, pos.y-1, "areanumber"}) end
+	if maze[pos.x][pos.y][2] == "exit" or maze[pos.x][pos.y][2] == false then	
+		exits[2] = area_util.from_center( walls[2], wall_width.x, 32) 
+		exits[2].to_area = table_util.get(maze, {pos.x-1, pos.y, "areanumber"}) end
+	if maze[pos.x][pos.y][3] == "exit" or maze[pos.x][pos.y][3] == false then
+		exits[3] = area_util.from_center( walls[3], 32, wall_width.y) 
+		exits[3].to_area = table_util.get(maze, {pos.x, pos.y+1, "areanumber"}) end
+	return exits, openings
+end
+
+
+
+
+function maze_generator.generate_path( area, from, to, closed_parts )
+	-- for inside the areas
+end
+
 function maze_generator.exclude( area, maze, exclusion, corridor_width, wall_width )
-	log.debug("excluding areas")
-	log.debug(exclusion)
+	-- log.debug/("excluding areas")
+	-- log.debug(exclusion)
 	-- determine in which node the topleft area is located
 	local excluded_node_area = {}
 	for _, exclusion_details in ipairs(exclusion) do
@@ -60,12 +154,12 @@ function maze_generator.exclude( area, maze, exclusion, corridor_width, wall_wid
 		local sides_open = exclusion_details.sides_open
 
 		-- identify in which nodes the exclusion area is located
-		local x1 = math.ceil((exclusion_area.x1-area.x1)/(wall_width+corridor_width))
-		local y1 = math.ceil((exclusion_area.y1-area.y1)/(wall_width+corridor_width))
-		local x2 = math.ceil((exclusion_area.x2-area.x1)/(wall_width+corridor_width))
-		local y2 = math.ceil((exclusion_area.y2-area.y1)/(wall_width+corridor_width))
+		local x1 = math.ceil((exclusion_area.x1-area.x1)/(wall_width.x+corridor_width.x))
+		local y1 = math.ceil((exclusion_area.y1-area.y1)/(wall_width.y+corridor_width.y))
+		local x2 = math.ceil((exclusion_area.x2-area.x1)/(wall_width.x+corridor_width.x))
+		local y2 = math.ceil((exclusion_area.y2-area.y1)/(wall_width.y+corridor_width.y))
 
-		-- directions 1:north, 2:east, 3:south, 4:west
+		-- direction (number): Direction of the door, between 0 (East of the room) and 3 (South of the room).
 		for x=x1, x2 do
 			for y=y1, y2 do
 				if not(x < 1 or y<1 or x>#maze or y >#maze[1]) then
@@ -73,12 +167,12 @@ function maze_generator.exclude( area, maze, exclusion, corridor_width, wall_wid
 					maze[x][y][1] = false
 					maze[x][y][2] = false
 					maze[x][y][3] = false
-					maze[x][y][4] = false
+					maze[x][y][0] = false
 					-- close the side if it's not supposed to be open
 					if x == x1 and not table_util.contains(sides_open, "west") then
-						maze[x][y][4] = true end
-					if x == x2 and not table_util.contains(sides_open, "east") then
 						maze[x][y][2] = true end
+					if x == x2 and not table_util.contains(sides_open, "east") then
+						maze[x][y][0] = true end
 					if y == y1 and not table_util.contains(sides_open, "north") then
 						maze[x][y][1] = true end
 					if y == y2 and not table_util.contains(sides_open, "south") then
@@ -98,47 +192,47 @@ function maze_generator.create_area_list( maze, area, corridor_width, wall_width
 	local area_list = {}
 	-- if at least one wall is connected to the post then create it
 	if maze[1][1][1] or maze[1][1][4] then
-		table.insert(area_list, {area={x1=area.x1, y1=area.y1, x2=area.x1+wall_width, y2=area.y1+wall_width}, pattern="maze_post"})
+		table.insert(area_list, {area={x1=area.x1, y1=area.y1, x2=area.x1+wall_width.x, y2=area.y1+wall_width.y}, pattern="maze_post"})
 	end
-	-- directions 1:north, 2:east, 3:south, 4:west
+	-- direction (number): Direction of the door, between 0 (East of the room) and 3 (South of the room).
 	for x=1, max_x do
 		for y=1, max_y do
 			if x==1 then -- create left side, skipping topleft
-				if maze[x][y][4] then area_list[#area_list+1] = {area={x1=area.x1, y1=area.y1+wall_width+(wall_width+corridor_width)*(y-1),
-												 x2=area.x1+wall_width, y2=area.y1+(wall_width+corridor_width)*y}, pattern="maze_wall_ver"} end
-			 	if maze[x][y][4] or maze[x][y][3] or ( y<max_y and maze[x][y+1][4]) then
-					area_list[#area_list+1] = {area={x1=area.x1, y1=area.y1+(wall_width+corridor_width)*y, 
-												  	 x2=area.x1+wall_width, y2=area.y1+(wall_width+corridor_width)*y+wall_width}, 
+				if maze[x][y][2] then area_list[#area_list+1] = {area={x1=area.x1, y1=area.y1+wall_width.y+(wall_width.y+corridor_width.y)*(y-1),
+												 x2=area.x1+wall_width.x, y2=area.y1+(wall_width.y+corridor_width.y)*y}, pattern="maze_wall_ver"} end
+			 	if maze[x][y][2] or maze[x][y][3] or ( y<max_y and maze[x][y+1][2]) then
+					area_list[#area_list+1] = {area={x1=area.x1, y1=area.y1+(wall_width.y+corridor_width.y)*y, 
+												  	 x2=area.x1+wall_width.x, y2=area.y1+(wall_width.y+corridor_width.y)*y+wall_width.y}, 
 											   pattern="maze_post"} end
 			end
 			if y==1 then -- create top side, skipping topleft
-				if maze[x][y][1] then area_list[#area_list+1] = {area={x1=area.x1+wall_width+(wall_width+corridor_width)*(x-1), y1=area.y1,
-												 x2=area.x1+(wall_width+corridor_width)*x, y2=area.y1+wall_width}, pattern="maze_wall_hor"} end
+				if maze[x][y][1] then area_list[#area_list+1] = {area={x1=area.x1+wall_width.x+(wall_width.x+corridor_width.x)*(x-1), y1=area.y1,
+												 x2=area.x1+(wall_width.x+corridor_width.x)*x, y2=area.y1+wall_width.y}, pattern="maze_wall_hor"} end
 				-- if at least one wall is connected to the post then create it
-				if maze[x][y][1] or maze[x][y][2] or ( x<max_x and maze[x+1][y][1]) then
-					area_list[#area_list+1] = {area={x1=area.x1+(wall_width+corridor_width)*x, y1=area.y1, 
-												  	 x2=area.x1+(wall_width+corridor_width)*x+wall_width, y2=area.y1+wall_width}, 
+				if maze[x][y][1] or maze[x][y][0] or ( x<max_x and maze[x+1][y][1]) then
+					area_list[#area_list+1] = {area={x1=area.x1+(wall_width.x+corridor_width.x)*x, y1=area.y1, 
+												  	 x2=area.x1+(wall_width.x+corridor_width.x)*x+wall_width.x, y2=area.y1+wall_width.y}, 
 											   pattern="maze_post"} end
 			end
 			-- bottom side
-			if maze[x][y][3] then area_list[#area_list+1] = {area={x1=area.x1+wall_width+(wall_width+corridor_width)*(x-1),
-															 	   y1=area.y1+(wall_width+corridor_width)*y,
-															 	   x2=area.x1+(wall_width+corridor_width)*x,
-															 	   y2=area.y1+wall_width+(wall_width+corridor_width)*y,
+			if maze[x][y][3] then area_list[#area_list+1] = {area={x1=area.x1+wall_width.x+(wall_width.x+corridor_width.x)*(x-1),
+															 	   y1=area.y1+(wall_width.y+corridor_width.y)*y,
+															 	   x2=area.x1+(wall_width.x+corridor_width.x)*x,
+															 	   y2=area.y1+wall_width.y+(wall_width.y+corridor_width.y)*y,
 															 	   }, pattern="maze_wall_hor"} end
 			-- right side
-			if maze[x][y][2] then area_list[#area_list+1] = {area={x1=area.x1+(wall_width+corridor_width)*x,
-															 	   y1=area.y1+wall_width+(wall_width+corridor_width)*(y-1),
-															 	   x2=area.x1+wall_width+(wall_width+corridor_width)*x,
-															 	   y2=area.y1+(wall_width+corridor_width)*y,
+			if maze[x][y][0] then area_list[#area_list+1] = {area={x1=area.x1+(wall_width.x+corridor_width.x)*x,
+															 	   y1=area.y1+wall_width.y+(wall_width.y+corridor_width.y)*(y-1),
+															 	   x2=area.x1+wall_width.x+(wall_width.x+corridor_width.x)*x,
+															 	   y2=area.y1+(wall_width.y+corridor_width.y)*y,
 															 	   }, pattern="maze_wall_ver"} end
 			-- maze post
 			-- if at least one wall is connected to the post then create it
-			if maze[x][y][2] or maze[x][y][3] or ( x<max_x and maze[x+1][y][3]) or (y<max_y and maze[x][y+1][2]) then
-				area_list[#area_list+1] = {area={x1=area.x1+(wall_width+corridor_width)*x,
-										 	   y1=area.y1+(wall_width+corridor_width)*y,
-										 	   x2=area.x1+wall_width+(wall_width+corridor_width)*x,
-										 	   y2=area.y1+wall_width+(wall_width+corridor_width)*y,
+			if maze[x][y][0] or maze[x][y][3] or ( x<max_x and maze[x+1][y][3]) or (y<max_y and maze[x][y+1][0]) then
+				area_list[#area_list+1] = {area={x1=area.x1+(wall_width.x+corridor_width.x)*x,
+										 	   y1=area.y1+(wall_width.y+corridor_width.y)*y,
+										 	   x2=area.x1+wall_width.x+(wall_width.x+corridor_width.x)*x,
+										 	   y2=area.y1+wall_width.y+(wall_width.y+corridor_width.y)*y,
 										 	   }, pattern="maze_post"} end
 		end
 	end
@@ -148,12 +242,12 @@ end
 function maze_generator.initialize_maze( maze, area, wall_width, corridor_width )
 	local width = area.x2-area.x1
 	local height = area.y2-area.y1
-	local x_amount = math.floor((width-wall_width)/(wall_width+corridor_width))
-	local y_amount = math.floor((height-wall_width)/(wall_width+corridor_width))
+	local x_amount = math.floor((width-wall_width.x)/(wall_width.x+corridor_width.x))
+	local y_amount = math.floor((height-wall_width.y)/(wall_width.y+corridor_width.y))
 	for x=1,x_amount do
 		maze[x]={}
 		for y=1, y_amount do
-			maze[x][y] = {[1]=true, [2]=true, [3]=true, [4]=true, visited = false} 
+			maze[x][y] = {[1]=true, [2]=true, [3]=true, [0]=true, visited = false} 
 		end
 	end
 end
@@ -164,10 +258,10 @@ function maze_generator.open_exits( maze, exit_areas, area, wall_width, corridor
 	local exits = {}
 	for _, v in ipairs(exit_areas) do
 		-- identify in which node the exit area is located
-		local x1 = (v.x1-area.x1)/(wall_width+corridor_width)
-		local y1 = (v.y1-area.y1)/(wall_width+corridor_width)
-		local x2 = (v.x2-area.x1-wall_width)/(wall_width+corridor_width)
-		local y2 = (v.y2-area.y1-wall_width)/(wall_width+corridor_width)
+		local x1 = (v.x1-area.x1)/(wall_width.x+corridor_width.x)
+		local y1 = (v.y1-area.y1)/(wall_width.y+corridor_width.y)
+		local x2 = (v.x2-area.x1-wall_width.x)/(wall_width.x+corridor_width.x)
+		local y2 = (v.y2-area.y1-wall_width.y)/(wall_width.y+corridor_width.y)
 
 		local selected_x_min = num_util.clamp(math.ceil(x1), 1, #maze)
 		local selected_x_max = num_util.clamp(math.ceil(x2), 1, #maze)
@@ -175,11 +269,11 @@ function maze_generator.open_exits( maze, exit_areas, area, wall_width, corridor
 		local selected_y_max = num_util.clamp(math.ceil(y2), 1, #maze[1])
 		
 		local direction 
-		-- directions 1:north, 2:east, 3:south, 4:west
+		-- direction (number): Direction of the door, between 0 (East of the room) and 3 (South of the room).
 		if v.y2 <= area.y1 and v.x1 < area.x2 and v.x2 > area.x1 then direction = 1 end
 		if v.y1 >= area.y2 and v.x1 < area.x2 and v.x2 > area.x1 then direction = 3 end
-		if v.x2 <= area.x1 and v.y1 < area.y2 and v.y2 > area.y1 then direction = 4 end
-		if v.x1 >= area.x2 and v.y1 < area.y2 and v.y2 > area.y1 then direction = 2 end
+		if v.x2 <= area.x1 and v.y1 < area.y2 and v.y2 > area.y1 then direction = 2 end
+		if v.x1 >= area.x2 and v.y1 < area.y2 and v.y2 > area.y1 then direction = 0 end
 		for x=selected_x_min, selected_x_max do
 			for y=selected_y_min, selected_y_max do
 				maze[x][y][direction] = false
@@ -190,11 +284,11 @@ function maze_generator.open_exits( maze, exit_areas, area, wall_width, corridor
 	return exits
 end
 
--- directions 1:north, 2:east, 3:south, 4:west
+-- direction (number): Direction of the door, between 0 (East of the room) and 3 (South of the room).
 function maze_generator.get_neighbors(maze, position, only_get_unvisited)
 	local neighbors={}
-	if position.x < #maze then neighbors[#neighbors+1]={pos={x=position.x+1, y=position.y}, node=maze[position.x+1][position.y], wall_to=2, wall_from=4} end
-	if position.x > 1 then neighbors[#neighbors+1]={pos={x=position.x-1, y=position.y}, node=maze[position.x-1][position.y], wall_to=4, wall_from=2} end
+	if position.x < #maze then neighbors[#neighbors+1]={pos={x=position.x+1, y=position.y}, node=maze[position.x+1][position.y], wall_to=0, wall_from=2} end
+	if position.x > 1 then neighbors[#neighbors+1]={pos={x=position.x-1, y=position.y}, node=maze[position.x-1][position.y], wall_to=2, wall_from=0} end
 	if position.y < #maze[1] then neighbors[#neighbors+1]={pos={x=position.x, y=position.y+1},node=maze[position.x][position.y+1], wall_to=3, wall_from=1} end
 	if position.y > 1 then neighbors[#neighbors+1]={pos={x=position.x, y=position.y-1},node=maze[position.x][position.y-1], wall_to=1, wall_from=3} end
 	if only_get_unvisited then
@@ -283,8 +377,8 @@ function maze_generator.create_maze_puzzle( maze, exits, complexity )
 	local distance_to_exit
 	local branches = {}
 	local correct_paths = maze_generator.create_initial_paths( maze, exits ) -- the first correct path from end to beginning is the entry point
-	log.debug(correct_paths)
-	log.debug("correct_paths")
+	-- log.debug(correct_paths)
+	-- log.debug("correct_paths")
 	-- so we reverse that one so we can always go forward with each path
 	correct_paths[1] = table_util.reverse_table(correct_paths[1])
 	-- deform and create branches
@@ -309,7 +403,7 @@ function maze_generator.create_maze_puzzle( maze, exits, complexity )
 end
 
 function maze_generator.deform( maze, correct_path )
-	log.debug("start deforming")
+	-- log.debug("start deforming")
 	--deformation of the path: placing a wall between two positions and connect via a path of nodes which have not been visited yet
 	-- first select a node to travel to
 	local first_node = math.random(#correct_path)
@@ -321,8 +415,8 @@ function maze_generator.deform( maze, correct_path )
 	-- IF FOUND
 	local new_branches = {}
 	if path then
-		log.debug("found path")
-		log.debug(path)
+		-- log.debug("found path")
+		-- log.debug(path)
 		-- place the wall somewhere in between the two selected nodes (random)
 		local wall_node = math.random(first_node, second_node-1)
 		maze_generator.place_wall_between(correct_path[wall_node], correct_path[wall_node+1], maze)
@@ -349,7 +443,7 @@ function maze_generator.deform( maze, correct_path )
 		-- open path
 		maze_generator.open_path(maze, path)
 	end
-	log.debug("deform success")
+	-- log.debug("deform success")
 	return new_branches
 end
 
@@ -396,10 +490,10 @@ function maze_generator.create_teleport_junction( maze, correct_path, branches, 
 end
 
 function maze_generator.pos_to_area( pos )
-	local x1 = room.x1 + room.wall_width + (pos.x-1)*(room.wall_width+room.corridor_width)
-	local y1 = room.y1 + room.wall_width + (pos.y-1)*(room.wall_width+room.corridor_width)
-	local x2 = room.x1 + pos.x*(room.wall_width+room.corridor_width)
-	local y2 = room.y1 + pos.y*(room.wall_width+room.corridor_width)
+	local x1 = room.x1 + room.wall_width.x + (pos.x-1)*(room.wall_width.x+room.corridor_width.x)
+	local y1 = room.y1 + room.wall_width.y + (pos.y-1)*(room.wall_width.y+room.corridor_width.y)
+	local x2 = room.x1 + pos.x*(room.wall_width.x+room.corridor_width.x)
+	local y2 = room.y1 + pos.y*(room.wall_width.y+room.corridor_width.y)
 	return {x1=x1, x2=x2, y1=y1, y2=y2}
 end
 
@@ -465,11 +559,11 @@ function maze_generator.check_straight_length( maze, branch )
 end
 
 function maze_generator.create_straight_branch( maze, correct_path, length, from )
-	log.debug("creating straight branch")
+	-- log.debug("creating straight branch")
 	local possible_branches = {}
 	-- random, but exhaustive, until one has been found
 	local pos_list = table_util.copy(correct_path) 
-	log.debug(pos_list)
+	-- log.debug(pos_list)
 	table_util.shuffleTable( pos_list )
 	if from then table.insert(pos_list, 1, from) end
 	for _,pos in ipairs(pos_list) do
@@ -485,7 +579,7 @@ function maze_generator.create_straight_branch( maze, correct_path, length, from
 		if next(possible_branches) ~= nil then break end
 	end
 	if next(possible_branches) == nil then
-		log.debug("failed to create")
+		-- log.debug("failed to create")
 	 	return nil 
 	end
 	-- IF FOUND
@@ -493,7 +587,7 @@ function maze_generator.create_straight_branch( maze, correct_path, length, from
 	local branch = possible_branches[math.random(#possible_branches)]
 	-- open path
 	maze_generator.open_path(maze, branch)
-	log.debug("create straight branch success")
+	-- log.debug("create straight branch success")
 	return branch
 end
 
@@ -578,7 +672,7 @@ function maze_generator.create_initial_paths( maze, exits )
 			end
 			found_path = maze_generator.create_direct_path( next_start, exit , maze )
 			-- sanity check
-			if not found_path then log.debug("maze_generator no found path... what, why not?!")	end	
+			-- if not found_path then log.debug("maze_generator no found path... what, why not?!")	end	
 		end
 		table.insert(paths, found_path)
 	end
@@ -588,16 +682,16 @@ function maze_generator.create_initial_paths( maze, exits )
 	return paths
 end
 
--- directions 1:north, 2:east, 3:south, 4:west
-function maze_generator.open_path( maze, path )
+-- direction (number): Direction of the door, between 0 (East of the room) and 3 (South of the room).
+function maze_generator.open_path( maze, path, custom_value )
 	for i = 1, #path-1, 1 do
 		local from, to
-		if path[i+1].x > path[i].x then from, to = 4, 2
-		elseif path[i+1].x < path[i].x then from, to = 2, 4
+		if path[i+1].x > path[i].x then from, to = 2, 0
+		elseif path[i+1].x < path[i].x then from, to = 0, 2
 		elseif path[i+1].y > path[i].y then from, to = 1, 3
 		elseif path[i+1].y < path[i].y then from, to = 3, 1 end
-		maze[path[i].x][path[i].y][to]=false
- 		maze[path[i+1].x][path[i+1].y][from]=false
+		maze[path[i].x][path[i].y][to]= custom_value or false
+ 		maze[path[i+1].x][path[i+1].y][from]=custom_value or false
         maze[path[i+1].x][path[i+1].y].visited = true
 	end
 end

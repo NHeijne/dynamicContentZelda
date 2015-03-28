@@ -3,7 +3,7 @@ properties{
   y = 0,
   width = 4000,
   height = 4000,
-  tileset = "1",
+  tileset = "4",
 }
 
 destination{

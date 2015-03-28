@@ -28,7 +28,7 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 					local split_table = split_table
 					
 					for enemy in map:get_entities("generatedEnemy") do enemy:remove() end
-					local spawnArea = areas["walkable"][tonumber(split_table[3])]
+					local spawnArea = areas["walkable"][tonumber(split_table[3])][1]
 					
 					local diff = difficultyOfFights
 					local f = sol.file.open("userExperience.txt","a+"); f:write(diff .. "-difficulty\n"); f:flush(); f:close()

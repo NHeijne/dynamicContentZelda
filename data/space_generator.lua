@@ -2,6 +2,7 @@ local log = require("log")
 local table_util = require("table_util")
 local area_util = require("area_util")
 local num_util = require("num_util")
+local maze_generator = require("maze_generator")
 
 local space_gen = {}
 
@@ -35,6 +36,7 @@ local space_gen = {}
 
 local map
 
+-- OLD Too complicated for the purpose
 function space_gen.generate_space(area_details, given_map)
 	map = given_map
 	-- initialize all reused variables
@@ -49,8 +51,12 @@ function space_gen.generate_space(area_details, given_map)
 	local x = math.floor(math.random(boundary_width, width-boundary_width)/16)*16
 	local y = math.floor(math.random(boundary_width, height-boundary_width)/16)*16
 	local starting_origin = {256, 1024, "normal"}
-	
-	local new_walkable_area_list = space_gen.create_new_walkable_areas(area_details, areas, boundary_width, starting_origin)
+	local new_walkable_area_list
+	if area_details.outside then 
+		new_walkable_area_list = space_gen.create_outside_walkable_areas(area_details, boundary_width, starting_origin)
+	else
+		new_walkable_area_list = space_gen.create_dungeon_walkable_areas(area_details, starting_origin)
+	end
 	log.debug("new walkable areas")
 	log.debug(new_walkable_area_list)
 
@@ -139,7 +145,7 @@ end
 -- Return value (separator): The separator created.
 
 -- direction = 0:east, 1:north, 2:west, 3:south
--- OLD
+-- OLD Also too complicated for the purpose
 function space_gen.create_area_separators_with_sensors( connected_at, path_type, from, to, connection_nr)
 	log.debug("create_area_separators_with_sensors")
 	log.debug(connected_at)
@@ -215,7 +221,7 @@ function space_gen.create_area_sensors( area, areanumber, area_details )
 		layer=0, x=area.x1-24, y=area.y1-24, width=area.x2-area.x1+2*24, height=area.y2-area.y1+2*24})
 end
 
-
+-- OLD probably don't need this anymore
 function space_gen.rectify_area_details(existing_areas, areanumber, new_area, area_details, transition_bool)
 	log.debug("space_gen.rectify_area_details areanumber "..areanumber)
 	log.debug("new_area")
@@ -351,7 +357,8 @@ function space_gen.expand_transition_connected_at( connected_at, area_details )
 	return links, to_transition
 end
 
-function space_gen.create_new_walkable_areas(area_details, existing_areas, boundary_width, starting_origin)
+-- OLD takes up too much room
+function space_gen.create_new_walkable_areas(area_details, boundary_width, starting_origin)
 	-- area details contains the direction of the map where it should be headed
 	-- for example if the from_direction == west, and the to_direction is east,
 	-- then the probability of selecting a new direction for the next walkable area 
@@ -392,25 +399,10 @@ function space_gen.create_new_walkable_areas(area_details, existing_areas, bound
 		bounding_area = area_util.merge_areas(bounding_area, new_area)
 		new_area_list[#new_area_list+1] = new_area
 	end
-	-- make sure that the areas are clear of the border of the map
-	-- TODO use this to change the map size
-	--[[
-	for i=1, area_details.nr_of_areas do
-		if new_area_list[i].x1 < boundary_width then
-			local diff_x = boundary_width - new_area_list[i].x1 
-			for i=1, area_details.nr_of_areas do
-				new_area_list[i] = area_util.move_area(new_area_list[i], diff_x, 0)
-			end
-		end
-		if new_area_list[i].y1 < boundary_width then
-			local diff_y = boundary_width - new_area_list[i].y1 
-			for i=1, area_details.nr_of_areas do
-				new_area_list[i] = area_util.move_area(new_area_list[i], 0, diff_y)
-			end
-		end
-	end]]--
+
 	return new_area_list
 end
+
 
 
 -- path contains nodes from space_gen.check_for_direct_path
@@ -986,6 +978,67 @@ function space_gen.conflict_resolution(new_area, existing_areas, boundary_width,
 	table_util.remove_false(existing_areas["boundary"])
 	return new_area
 end
+
+-----------------------------------------------------------------------------------------------------------------------------------------------
+-----==================================================    Overhaul starts here =========================================----------------------
+-----------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+-- Zelda 1 style
+function space_gen.generate_simple_space( area_details, given_map )
+	map = given_map
+	local width, height = map:get_size()
+	local new_area_list = {} -- contains walkable, openings and exits
+	-- wall width represents either the cave wall or the treelines areas
+	-- dimensions 336 x 256 ALLWAYS
+	-- this includes the wall width
+	-- dimensions for inside rooms: -- ground 256 x 176 -- wallwidth 32
+	-- dimensions for outside rooms: -- ground 224 x 160 -- wallwidth 56 x 64
+	-- if the plan contains more than one task, we place the other ones at proper distance as if we place a new area
+	-- we then place openings that connect with each other
+	maze_generator.set_map( map )
+	if area_details.outside then maze_generator.set_room( {x1=128, y1=128, x2=width-128, y2=height-128}, {x=224, y=224}, {x=112, y=160} )
+							else maze_generator.set_room( {x1=128, y1=128, x2=width-128, y2=height-128}, {x=256, y=176}, 32*2 ) end
+	local areas = maze_generator.generate_rooms( area_details )
+	space_gen.create_simple_area_sensors( area_details, areas )
+	space_gen.create_simple_enemy_stoppers( areas )
+	return areas
+end
+
+function space_gen.create_simple_enemy_stoppers( areas )
+	log.debug("creating walls for enemies")
+	for areanumber, a in pairs(areas["walkable"]) do
+		for _, area in ipairs(a) do	
+			for _, dir in ipairs({0, 1, 2, 3}) do
+				local side = area_util.get_side(area, dir, 16, 16)
+				local details = {layer=0, x=side.x1, y=side.y1, width=side.x2-side.x1, height=side.y2-side.y1, stops_enemies=true}		
+				map:create_wall(details)		
+			end
+		end
+	end
+end
+
+function space_gen.create_simple_area_sensors( area_details, areas )
+	log.debug("creating area sensors")
+	for areanumber, a in pairs(areas["walkable"]) do
+		for _, area in ipairs(a) do	
+			local details = {name="areasensor_inside_"..areanumber.."_type_"..area_details[areanumber].area_type, 
+				layer=0, x=area.x1-8, y=area.y1-8, width=area.x2-area.x1+16, height=area.y2-area.y1+16}
+			-- log.debug(details)
+			map:create_sensor(details)
+		end
+	end
+	for areanumber, a in pairs(areas["nodes"]) do
+		for _, area in ipairs(a) do	
+			local details = {name="areasensor_outside_"..areanumber.."_type_"..area_details[areanumber].area_type, 
+				layer=0, x=area.x1+8, y=area.y1+8, width=area.x2-area.x1-16, height=area.y2-area.y1-16}
+			-- log.debug(details)
+			map:create_sensor(details)
+		end
+	end
+end
+
 
 
 

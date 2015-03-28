@@ -132,9 +132,7 @@ function mission_grammar.initialize_graph( task_length )
 	edges[task_length+2][task_length+3]="undir_fw"
 	edges[task_length+3]={[task_length+2]="undir_bk"}
 	table.insert(nodes, "goal")
-	mission_grammar.produced_graph = {nodes=nodes, edges=edges, non_terminals=non_terminals}
-	log.debug("produced_graph")
-	log.debug(mission_grammar.produced_graph)
+	mission_grammar.produced_graph = {nodes=nodes, edges=edges, non_terminals=non_terminals, branching={}} -- max one branch per NT
 end
 
 function mission_grammar.update_keys_and_barriers( game )
@@ -155,16 +153,18 @@ end
 function mission_grammar.produce_graph( map_type, length, branches, puzzles, fights)
 	mission_grammar.initialize_graph( length )
 	if map_type == "dungeon" then
-
-	elseif map_type == "outside_normal" then
 		-- adding single key and lock at the beginning for testing
 		local matches = mission_grammar.match( 13 )
 		if next(matches) ~= nil then mission_grammar.apply_rule( matches[math.random(#matches)], 13 ) end
+
+	elseif map_type == "outside" then
 		-- lets start off simple using nothing but tasks and branches
 		for i=1, branches do
-			local matches = mission_grammar.match( 1 )
+			local matches = mission_grammar.match( 1, mission_grammar.produced_graph.branching )
 			if next(matches) == nil then break end
-			mission_grammar.apply_rule( matches[math.random(#matches)], 1 )
+			local selected_match = matches[math.random(#matches)]
+			table.insert( mission_grammar.produced_graph.branching, selected_match[1] )
+			mission_grammar.apply_rule( selected_match, 1 )
 		end
 		-- place barriers
 		local bar = mission_grammar.available_barriers
@@ -198,7 +198,7 @@ end
 
 -- brute force matching of subset of graph
 -- non-terminal and pattern node [1] should be the same otherwise skip
-function mission_grammar.match( rule_number )
+function mission_grammar.match( rule_number, except_non_terminals )
 	-- check each non-terminal whether it is the starting point of the given pattern
 	local pattern = mission_grammar.grammar[rule_number].lhs
 	local matches = {}
@@ -206,45 +206,47 @@ function mission_grammar.match( rule_number )
 	local edges = mission_grammar.produced_graph.edges
 	local non_terminals = mission_grammar.produced_graph.non_terminals
 	for _,nt in ipairs(non_terminals) do
-		local split_node = table_util.split(nodes[nt], ":")
-		local split_node_pattern = table_util.split(pattern.nodes[1], ":")
-		if split_node[1] == split_node_pattern[1] and (split_node[2] == nil or split_node[2] == split_node_pattern[2]) then 
-			log.debug("starting recursive_search on node "..nt)
-			local new_matches = mission_grammar.recursive_search( nodes, edges, pattern, {[1]=nt}, {[1]=nt})
-			if new_matches then table_util.add_table_to_table(new_matches, matches) end
+		if not table_util.contains(except_non_terminals, nt) then
+			local split_node = table_util.split(nodes[nt], ":")
+			local split_node_pattern = table_util.split(pattern.nodes[1], ":")
+			if split_node[1] == split_node_pattern[1] and (split_node[2] == nil or split_node[2] == split_node_pattern[2]) then 
+				-- log.debug("starting recursive_search on node "..nt)
+				local new_matches = mission_grammar.recursive_search( nodes, edges, pattern, {[1]=nt}, {[1]=nt})
+				if new_matches then table_util.add_table_to_table(new_matches, matches) end
+			end
 		end
 	end
 	return matches
 end
 
 function mission_grammar.recursive_search( nodes, edges, pattern, candidates, current_match)
-	log.debug("candidates")
-	log.debug(candidates)
+	-- log.debug("candidates")
+	-- log.debug(candidates)
 	local new_candidates = {}
 	for pattern_index, candidate in pairs(candidates) do
-		log.debug("pattern_index")
-		log.debug(pattern_index)
-		log.debug("candidate")
-		log.debug(candidate)
+		-- log.debug("pattern_index")
+		-- log.debug(pattern_index)
+		-- log.debug("candidate")
+		-- log.debug(candidate)
 		if pattern.edges[pattern_index] ~= nil then
-			log.debug("edges found for pattern_index in pattern")
-			log.debug(pattern.edges[pattern_index])
-			log.debug("existing edges")
-			log.debug(edges)
-			log.debug("existing nodes")
-			log.debug(nodes)
+			-- log.debug("edges found for pattern_index in pattern")
+			-- log.debug(pattern.edges[pattern_index])
+			-- log.debug("existing edges")
+			-- log.debug(edges)
+			-- log.debug("existing nodes")
+			-- log.debug(nodes)
 			for index,edge in pairs(pattern.edges[pattern_index]) do -- pattern edges
 				local found = false
 				for i,v in pairs(edges[candidate]) do -- existing edges
-					log.debug("checking existing edge "..candidate.." to "..i)
+					-- log.debug("checking existing edge "..candidate.." to "..i)
 					-- we need to check whether the edge and the non-terminal type 
 					-- are the same for each node connected to the current node
 					local split_node = table_util.split(nodes[i], ":")
 					local split_node_pattern = table_util.split(pattern.nodes[index], ":")
 					if edge == v and (pattern.nodes[index]== "?" or split_node[1] == split_node_pattern[1]) and (split_node[2]==nil or split_node[2] == split_node_pattern[2]) then 
 						-- edge types and node types are the same 
-						log.debug("found a node that is connected in the right way")
-						log.debug("candidate "..candidate.." is connected with "..edge.." to node "..i)
+						-- log.debug("found a node that is connected in the right way")
+						-- log.debug("candidate "..candidate.." is connected with "..edge.." to node "..i)
 						-- we have found our next candidate for the current node index
 						-- add to result list
 						if current_match[index] == nil then 
@@ -262,26 +264,26 @@ function mission_grammar.recursive_search( nodes, edges, pattern, candidates, cu
 					end
 				end
 				if not found then 
-					log.debug("did not find any edges that had the required type")
-					log.debug("returning false, going backward")
+					-- log.debug("did not find any edges that had the required type")
+					-- log.debug("returning false, going backward")
 					return false 
 				end
 			end
 		end
 	end
-	log.debug("finished checking the candidates")
-	log.debug(new_candidates)
+	-- log.debug("finished checking the candidates")
+	-- log.debug(new_candidates)
 	if next(new_candidates) == nil then
-		log.debug("new_candidates is empty returning candidates")
+		-- log.debug("new_candidates is empty returning candidates")
 		return {candidates}
 	else
 		-- after checking each edge and connected node in the current node index
 		-- we go into the recursion
 		-- after creating a combination list of the found candidates
-		log.debug("creating combinations")
+		-- log.debug("creating combinations")
 		local combinations = table_util.combinations(new_candidates)
-		log.debug("creating combinations done")
-		log.debug(table_util.tostring(combinations))
+		-- log.debug("creating combinations done")
+		-- log.debug(table_util.tostring(combinations))
 		local result = {}
 		local r = 0
 		for nr,combi in ipairs(combinations) do
@@ -289,23 +291,23 @@ function mission_grammar.recursive_search( nodes, edges, pattern, candidates, cu
 			local output = mission_grammar.recursive_search( nodes, edges, pattern, combi, new_match)
 			if output then
 				for _, out in ipairs(output) do
-				log.debug(candidates)
-				log.debug("+")
-				log.debug(out)
-				log.debug("becomes")
+				-- log.debug(candidates)
+				-- log.debug("+")
+				-- log.debug(out)
+				-- log.debug("becomes")
 				-- output is good, so we create an entry in the results containing every used node on the right position
 				r = r+1
 				result[r] = {}
 				for k,v in pairs(candidates) do result[r][k]=v end
 				for k,v in pairs(out) do result[r][k]=v end
-				log.debug(result[r])
+				-- log.debug(result[r])
 				end
 			else
 				-- skip that output
 			end
 		end
-		log.debug("result")
-		log.debug(result)
+		-- log.debug("result")
+		-- log.debug(result)
 		-- if there are no nodes added because the recursion didn't find anything then we can conclude that we didn't find anything
 		if next(result)==nil then return false end
 		return result
@@ -313,14 +315,14 @@ function mission_grammar.recursive_search( nodes, edges, pattern, candidates, cu
 end
 
 function mission_grammar.apply_rule( match, rule_number, custom_terminal )
-	log.debug("applying rule number "..rule_number)
-	log.debug("using match:")
-	log.debug(match)
+	-- log.debug("applying rule number "..rule_number)
+	-- log.debug("using match:")
+	-- log.debug(match)
 	rule = mission_grammar.grammar[rule_number]
 	-- remove the listed connections in the lhs from edges
 	for index_from, v in pairs(rule.lhs.edges) do
 		for index_to, _ in pairs(v) do
-			log.debug(index_from.." to "..index_to)
+			-- log.debug(index_from.." to "..index_to)
 			mission_grammar.produced_graph.edges[match[index_from]][match[index_to]]=nil
 			mission_grammar.produced_graph.edges[match[index_to]][match[index_from]]=nil
 		end
@@ -344,11 +346,11 @@ function mission_grammar.apply_rule( match, rule_number, custom_terminal )
 		table.insert(mission_grammar.produced_graph.non_terminals, last_node)
 		used_nodes[i] = last_node
 	end
-	log.debug("used_nodes")
-	log.debug(used_nodes)
+	-- log.debug("used_nodes")
+	-- log.debug(used_nodes)
 	-- create new edges by applying the rhs edges
 	for index_from, v in pairs(rule.rhs.edges) do
-		log.debug(v)
+		-- log.debug(v)
 		for index_to, edge in pairs(v) do
 			mission_grammar.produced_graph.edges[used_nodes[index_from]] = mission_grammar.produced_graph.edges[used_nodes[index_from]] or {}
 			mission_grammar.produced_graph.edges[used_nodes[index_from]][used_nodes[index_to]]=edge
@@ -393,7 +395,9 @@ function mission_grammar.transform_to_space( params )
 								from_direction=params.from_direction,
 								to_direction=params.to_direction,
 								preferred_area_surface=params.preferred_area_surface,
-								path_width=params.path_width 
+								path_width=params.path_width,
+								["start"]={area_type="E", nr_of_connections=1, contains_items={}, [1]={type="twoway", areanumber=1}},
+								["goal"]={area_type="E", nr_of_connections=0, contains_items={}},
 							  }
 		if params.outside then area_details.wall_width = 0
 		else area_details.wall_width = 24 end -- dungeon wall = (wall 24)
@@ -403,7 +407,7 @@ function mission_grammar.transform_to_space( params )
 		local areas_assigned = 0
 		-- for each node in the graph we check in forward direction
 		for index, node in ipairs(graph.nodes) do
-			-- but only if the current node is an area, and not a modifier or start or goal TODO integrate start and goal transitions
+			-- but only if the current node is an area, and not a modifier or start or goal
 			if visited_nodes[index] == nil and table_util.contains(mission_grammar.area_types, node) then
 				visited_nodes[index]=true
 				if area_assignment[index] == nil then
@@ -419,11 +423,11 @@ function mission_grammar.transform_to_space( params )
 					if (v == "undir_fw" or v == "dir_fw") then -- only in forward direction
 						local connected_node = graph.nodes[k]
 						local split_node = table_util.split(connected_node, ":")
-						log.debug("edge "..index.."-->"..k.." "..v)
-						log.debug(connected_node)
-						log.debug(split_node)
+						-- log.debug("edge "..index.."-->"..k.." "..v)
+						-- log.debug(connected_node)
+						-- log.debug(split_node)
 						if table_util.contains(mission_grammar.area_types, split_node[1]) then
-							log.debug("new area found")
+							-- log.debug("new area found")
 							-- it's an area: look no further, assign the area an area number and continue
 							current_area.nr_of_connections=current_area.nr_of_connections+1
 							if area_assignment[k] == nil then
@@ -434,7 +438,7 @@ function mission_grammar.transform_to_space( params )
 							if v == "dir_fw" then connection = "oneway" end
 							current_area[current_area.nr_of_connections] = {type=connection, areanumber=area_assignment[k]}
 						elseif table_util.contains(mission_grammar.barrier_types, split_node[1]) then
-							log.debug("barrier found, searching for next area")
+							-- log.debug("barrier found, searching for next area")
 							-- it's a barrier type, that means that after this should eventually come a single area
 							current_area.nr_of_connections=current_area.nr_of_connections+1
 							current_area[current_area.nr_of_connections] = {barriers={connected_node}}
@@ -445,7 +449,7 @@ function mission_grammar.transform_to_space( params )
 								for connected_node_id,edge in pairs(graph.edges[next_node_id]) do
 									local possible_next_node = table_util.split(graph.nodes[connected_node_id], ":")
 									if edge == "undir_fw" or edge == "dir_fw" then
-										log.debug("edge "..next_node_id.."-->"..connected_node_id.." "..edge)
+										-- log.debug("edge "..next_node_id.."-->"..connected_node_id.." "..edge)
 										-- ofcourse only check in forward direction
 										if table_util.contains(mission_grammar.area_types, possible_next_node[1]) then
 											-- we found it, now we add it like any normal connection
@@ -469,13 +473,16 @@ function mission_grammar.transform_to_space( params )
 									end
 								end
 							until done
-							log.debug("next area found")
+							-- log.debug("next area found")
 						elseif table_util.contains(mission_grammar.key_types, split_node[1]) then
-							log.debug("key area mod found")
+							-- log.debug("key area mod found")
 							-- a key type is a modifier for the area, not a connection
 							visited_nodes[k]=true
 							-- so we add the specific key type
 							table.insert(current_area.contains_items, connected_node)
+						elseif split_node[1] == "goal" then
+							 current_area.nr_of_connections=current_area.nr_of_connections+1
+							 table.insert(current_area, 1, {type="twoway", areanumber="goal"})
 						end
 					end
 				end

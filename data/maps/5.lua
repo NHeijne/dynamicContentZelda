@@ -374,3 +374,16 @@ something...
 		quest_block_a:set_enabled(false)
 	end
 end
+
+function quest_reminder_c:on_activated()
+	if not game:get_value("quest_flower") then
+		game:start_dialog("test.variable", 
+[[
+I have to get the
+Cure Flower as soon
+as possible!
+]])
+	else
+		quest_block_c:set_enabled(false)
+	end
+end
