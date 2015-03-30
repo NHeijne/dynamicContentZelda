@@ -22,7 +22,8 @@ local difficultyOfFights = lowestDifficulty
 0.68   * hardhat +
 0.8188 * bullblin +
 3.8072
-]]--
+]]
+
 local allowedVariance = 0.1
 local startLifeDifficulty = -0.1209
 local monsterAmountDifficulty = 0.2244
@@ -162,7 +163,9 @@ function analyseGameplaySoFar(map)
 		end	
 	end
 	
-	room.percentageStanding = room.standing/(room.moving+room.standing)
+	if (room.moving+room.standing) != 0 then
+		room.percentageStanding = room.standing/(room.moving+room.standing)
+	end
 	
 	f:flush(); f:close()
 	logTheRoom (room)
@@ -175,9 +178,6 @@ function logTheRoom (room)
 	--globul,tentacle,snap,greenKnight,mandible,redKnight,egg,hardhat,bullblin
 	--free,freezed,grabbing,hurt,stairs,loading,spin,swinging,tapping
 	
-	--swordHits=0, monsters=0, timeInRoom=0, directionChange=0, 
-	--lifeLostInRoom=0, uselessKeys=0, moving=0, standing=0, 
-	--percentageStanding=0, startingLife=0
 	f:write(room.swordHits .. ",")
 	f:write(room.monsters .. ",")
 	f:write(room.timeInRoom .. ",")
@@ -189,9 +189,6 @@ function logTheRoom (room)
 	f:write(room.percentageStanding .. ",")
 	f:write(room.startingLife .. ",")
 	
-	--["globul"]=3,["tentacle"]=1,["snap_dragon"]=3,
-	--["green_knight_soldier"]=2,["mandible"]=2,["red_knight_soldier"]=3,
-	--["minillosaur_egg_fixed"]=2,["blue_hardhat_beetle"]=3,["blue_bullblin"]=3
 	f:write(room.monsterTypes.globul or 0); f:write(",")
 	f:write(room.monsterTypes.tentacle or 0); f:write(",")
 	f:write(room.monsterTypes.snap_dragon or 0); f:write(",")
@@ -202,7 +199,6 @@ function logTheRoom (room)
 	f:write(room.monsterTypes.blue_hardhat_beetle or 0); f:write(",")
 	f:write(room.monsterTypes.blue_bullblin or 0); f:write(",")
 
-	--"free", "freezed", "grabbing", "hurt", "stairs", "sword loading", "sword spin attack", "sword swinging", "sword tapping",
 	f:write(room.heroStates.free or 0); f:write(",")
 	f:write(room.heroStates.freezed or 0); f:write(",")
 	f:write(room.heroStates.grabbing or 0); f:write(",")
@@ -215,6 +211,16 @@ function logTheRoom (room)
 	-- The following aren't being logged because they are not very useful for now.
 	--"back to solid ground", "boomerang", "bow", "carrying", "falling", "forced walking", "hookshot", "jumping", 
 	--"lifting", "plunging", "pulling", "pushing", "running", "stream", "swimming", "treasure", "using item", "victory"
+	
+--[[
+0.1652 * hits +
+-0.0269 * standing +
+0.499  * hurt +
+0.0412 * swinging +
+1.3787
+]]
+
+	f:write( 0.1652*room.swordHits + -0.0269*room.standing + 0.499*room.heroStates.hurt + 0.0412*room.heroStates["sword swinging"] + 1.3787 )
 	
 	f:write("\n")
 	f:flush(); f:close()
