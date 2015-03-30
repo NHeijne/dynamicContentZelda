@@ -478,10 +478,6 @@ enemy{ id = "slow_pike_auto", description = "Slow Pike (always moves)" }
 
 entity{ id = "fireball_statue", description = "Fireball Statue" }
 
-language{ id = "de", description = "Deutsch" }
 language{ id = "en", description = "English" }
-language{ id = "es", description = "Espa?" }
-language{ id = "fr", description = "Fran?s" }
-language{ id = "zh_CN", description = "??????" }
-language{ id = "zh_TW", description = "??????" }
+
 

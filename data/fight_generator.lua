@@ -163,7 +163,7 @@ function analyseGameplaySoFar(map)
 		end	
 	end
 	
-	if (room.moving+room.standing) != 0 then
+	if (room.moving+room.standing) ~= 0 then
 		room.percentageStanding = room.standing/(room.moving+room.standing)
 	end
 	

@@ -265,16 +265,20 @@ function savegame_menu:read_savegames()
   end
 end
 
-function savegame_menu:set_bottom_buttons(key1, key2)
+function savegame_menu:set_bottom_buttons(key1, key2, customtext)
 
-  if key1 ~= nil then
+  if not customtext and key1 ~= nil then
     self.option1_text:set_text_key(key1)
+  elseif customtext then
+    self.option1_text:set_text(key1)
   else
     self.option1_text:set_text("")
   end
 
-  if key2 ~= nil then
+  if not customtext and key2 ~= nil then
     self.option2_text:set_text_key(key2)
+  elseif customtext then
+    self.option2_text:set_text(key2)
   else
     self.option2_text:set_text("")
   end
@@ -376,6 +380,7 @@ function savegame_menu:key_pressed_phase_select_file(key)
       else
         -- It's a new savegame: choose the player's name.
         self:init_phase_choose_name()
+        self.savegame_number = self.cursor_position
       end
     end
     handled = true
@@ -873,7 +878,7 @@ function savegame_menu:key_pressed_phase_choose_name(key)
   end
 
   if finished then
-    self:init_phase_select_file()
+    self:init_phase_profile()
   end
 
   return handled
@@ -968,7 +973,7 @@ function savegame_menu:add_letter_player_name()
 
   if letter_to_add ~= nil then
     -- A letter was selected.
-    if size < 6 then
+    if size < 10 then
       sol.audio.play_sound("danger")
       self.player_name = self.player_name .. letter_to_add
     else
@@ -1006,6 +1011,272 @@ function savegame_menu:set_initial_values(savegame)
   savegame:get_item("tunic"):set_variant(1)
   savegame:set_ability("tunic", 1)
   savegame:get_item("rupee_bag"):set_variant(1)
+end
+
+-------------------------------------------
+-- Phase "Player Profile Settings" --
+-------------------------------------------
+function savegame_menu:init_phase_profile()
+
+  self.phase = "profile"
+  self.title_text:set_text("selection_menu.phase.options")
+  self.modifying_profile = false
+  self.profile_cursor_position = 1
+
+  -- Option texts and values.
+  self.profile = {
+    {
+      name = "Openness",
+      values = {"Very low", "Low", "Average", "High", "Very high"},
+      initial_value = "Average",
+      current_index = nil,
+      label_text = sol.text_surface.create{
+        font = sol.language.get_menu_font(),
+        text = "Openness"
+      },
+      value_text = sol.text_surface.create{
+        font = sol.language.get_menu_font(),
+        horizontal_alignment = "right"
+      },
+    },
+    {
+      name = "Conscientiousness",
+      values = {"Very low", "Low", "Average", "High", "Very high"},
+      initial_value = "Average",
+      current_index = nil,
+      label_text = sol.text_surface.create{
+        font = sol.language.get_menu_font(),
+        text = "Conscientiousness"
+      },
+      value_text = sol.text_surface.create{
+        font = sol.language.get_menu_font(),
+        horizontal_alignment = "right"
+      },
+ 
+    },
+    {
+      name = "Extroversion",
+      values = {"Very low", "Low", "Average", "High", "Very high"},
+      initial_value = "Average",
+      current_index = nil,
+      label_text = sol.text_surface.create{
+        font = sol.language.get_menu_font(),
+        text = "Extroversion"
+      },
+      value_text = sol.text_surface.create{
+        font = sol.language.get_menu_font(),
+        horizontal_alignment = "right"
+      },
+ 
+    },
+    {
+      name = "Agreeableness",
+      values = {"Very low", "Low", "Average", "High", "Very high"},
+      initial_value = "Average",
+      current_index = nil,
+      label_text = sol.text_surface.create{
+        font = sol.language.get_menu_font(),
+        text = "Agreeableness"
+      },
+      value_text = sol.text_surface.create{
+        font = sol.language.get_menu_font(),
+        horizontal_alignment = "right"
+      },
+ 
+    },
+    {
+      name = "Neuroticism",
+      values = {"Very low", "Low", "Average", "High", "Very high"},
+      initial_value = "Average",
+      current_index = nil,
+      label_text = sol.text_surface.create{
+        font = sol.language.get_menu_font(),
+        text = "Neuroticism"
+      },
+      value_text = sol.text_surface.create{
+        font = sol.language.get_menu_font(),
+        horizontal_alignment = "right"
+      },
+ 
+    },
+  }
+
+  for _, option in ipairs(self.profile) do
+    -- Initial value.
+    for i, value in ipairs(option.values) do
+      if value == option.initial_value then
+  self:set_profile_value(option, i)
+      end
+    end
+  end
+
+  -- Sprites.
+  self.left_arrow_sprite = sol.sprite.create("menus/arrow")
+  self.left_arrow_sprite:set_animation("blink")
+  self.left_arrow_sprite:set_direction(2)
+
+  self.right_arrow_sprite = sol.sprite.create("menus/arrow")
+  self.right_arrow_sprite:set_animation("blink")
+  self.right_arrow_sprite:set_direction(0)
+
+  self:set_bottom_buttons("Done", nil, true)
+  self:set_options_cursor_position(1)
+end
+
+function savegame_menu:key_pressed_phase_profile(key)
+
+  local handled = true
+  if key == "space" or key == "return" then
+    if self.profile_cursor_position > #self.profile then
+      -- Back.
+      sol.audio.play_sound("ok")
+      local savegame = self.slots[self.savegame_number].savegame
+      savegame:save()
+      self:init_phase_select_file()
+    else
+      -- Set an option.
+      local option = self.profile[self.profile_cursor_position]
+      if not self.modifying_profile then
+  sol.audio.play_sound("ok")
+  self.left_arrow_sprite:set_frame(0)
+  self.right_arrow_sprite:set_frame(0)
+  option.label_text:set_color{255, 255, 255}
+  option.value_text:set_color{255, 255, 0}
+  self.title_text:set_text_key("selection_menu.phase.options.changing")
+  self.modifying_profile = true
+      else
+  sol.audio.play_sound("danger")
+  option.label_text:set_color{255, 255, 0}
+  option.value_text:set_color{255, 255, 255}
+  self.left_arrow_sprite:set_frame(0)
+  self.right_arrow_sprite:set_frame(0)
+  self.title_text:set_text_key("selection_menu.phase.options")
+  self.modifying_profile = false
+      end
+    end
+  else
+    handled = false
+  end
+  return handled
+end
+
+function savegame_menu:joypad_button_pressed_phase_profile(button)
+  return self:key_pressed_phase_profile("space")
+end
+
+function savegame_menu:direction_pressed_phase_profile(direction8)
+
+  local handled = false
+  if not self.modifying_profile then
+    -- Just moving the profile cursor (not modifying any option).
+
+    if direction8 == 2 then  -- Up.
+      sol.audio.play_sound("cursor")
+      self.left_arrow_sprite:set_frame(0)
+      local position = self.profile_cursor_position - 1
+      if position == 0 then
+        position = #self.profile + 1
+      end
+      self:set_profile_cursor_position(position)
+      handled = true
+
+    elseif direction8 == 6 then  -- Down.
+      sol.audio.play_sound("cursor")
+      self.left_arrow_sprite:set_frame(0)
+      local position = self.profile_cursor_position + 1
+      if position > #self.profile + 1 then
+        position = 1
+      end
+      self:set_profile_cursor_position(position)
+      handled = true
+    end
+
+  else
+    -- An option is currently being modified.
+
+    if direction8 == 0 then  -- Right.
+      local option = self.profile[self.profile_cursor_position]
+      local index = (option.current_index % #option.values) + 1
+      self:set_profile_value(option, index)
+      sol.audio.play_sound("cursor")
+      self.left_arrow_sprite:set_frame(0)
+      self.right_arrow_sprite:set_frame(0)
+      handled = true
+
+    elseif direction8 == 4 then  -- Left.
+      local option = self.profile[self.profile_cursor_position]
+      local index = (option.current_index + #option.values - 2) % #option.values + 1
+      self:set_profile_value(option, index)
+      sol.audio.play_sound("cursor")
+      self.left_arrow_sprite:set_frame(0)
+      self.right_arrow_sprite:set_frame(0)
+      handled = true
+
+    end
+  end
+  return handled
+end
+
+function savegame_menu:draw_phase_profile()
+
+  -- All profile.
+  for i, option in ipairs(self.profile) do
+    local y = 70 + i * 16
+    option.label_text:draw(self.surface, 64, y)
+    option.value_text:draw(self.surface, 266, y)
+  end
+
+  -- Bottom buttons.
+  self:draw_bottom_buttons()
+
+  -- Cursor.
+  if self.profile_cursor_position > #self.profile then
+    -- The cursor is on the bottom button.
+    self:draw_savegame_cursor()
+  else
+    -- The cursor is on an option line.
+    local y = 64 + self.profile_cursor_position * 16
+    if self.modifying_profile then
+      local option = self.profile[self.profile_cursor_position]
+      local width, _ = option.value_text:get_size()
+      self.left_arrow_sprite:draw(self.surface, 256 - width, y)
+      self.right_arrow_sprite:draw(self.surface, 268, y)
+    else
+      self.right_arrow_sprite:draw(self.surface, 54, y)
+    end
+  end
+end
+
+function savegame_menu:set_profile_cursor_position(position)
+
+  if self.profile_cursor_position <= #self.profile then
+    -- An option line was previously selected.
+    local option = self.profile[self.profile_cursor_position]
+    option.label_text:set_color{255, 255, 255}
+  end
+
+  self.profile_cursor_position = position
+  if position > #self.profile then
+    self:set_cursor_position(4)
+  end
+
+  if position <= #self.profile then
+    -- An option line is now selected.
+    local option = self.profile[self.profile_cursor_position]
+    option.label_text:set_color{255, 255, 0}
+  end
+end
+
+-- Sets the value of an option.
+function savegame_menu:set_profile_value(option, index)
+
+  if option.current_index ~= index then
+    option.current_index = index
+    local value = option.values[index]
+    local savegame = self.slots[self.savegame_number].savegame
+    option.value_text:set_text(value)
+    savegame:set_value(option.name, index)
+  end
 end
 
 return savegame_menu

@@ -650,13 +650,13 @@ function content.create_simple_forest_map(areas, area_details)
 					map:create_destination{name="start_here",layer=0, x=area.x1+16, y=area.y1+16, direction=0}
 					hero:teleport(map:get_id(), "start_here")
 				end
-				if areanumber == "goal" and direction == 0 then 
-					map:create_teletransporter{layer=0, x=area.x2-16, y=area.y1, width=16, height=32, destination_map="5", destination="dungeon_entrance_left"}
+				if areanumber == "goal" then
+					local side = area_util.get_side(area, direction, -16, 0)
+					map:create_teletransporter{layer=0, x=side.x1, y=side.y1, width=side.x2-side.x1, height=side.y2-side.y1, destination_map="5", destination="dungeon_entrance_left"}
 				end
 				-- displaying transition areas
-				if (areanumber == "start" and direction == 2) or (areanumber == "goal" and direction == 0) then
-					local adjusted_area = area_util.resize_area(area, {-16, 0, 16, 0})
-					adjusted_area.x2 = adjusted_area.x2 - (adjusted_area.x2-adjusted_area.x1)%16
+				if areanumber == "start" or areanumber == "goal" then
+					local adjusted_area = area_util.get_side(area, (direction+2)%4, -64, 0)
 					content.place_tile(adjusted_area, 49, "walkable", 0)
 					content.place_edge_tiles(adjusted_area, 8, "floor")
 				end
