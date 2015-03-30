@@ -220,7 +220,7 @@ function logTheRoom (room)
 1.3787
 ]]
 
-	f:write( 0.1652*room.swordHits + -0.0269*room.standing + 0.499*room.heroStates.hurt + 0.0412*room.heroStates["sword swinging"] + 1.3787 )
+	f:write( 0.1652*room.swordHits + -0.0269*room.standing + 0.499*(room.heroStates.hurt or 0) + 0.0412*(room.heroStates["sword swinging"] or 0) + 1.3787 )
 	
 	f:write("\n")
 	f:flush(); f:close()
