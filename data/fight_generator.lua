@@ -52,8 +52,9 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 					
 					local diff = difficultyOfFights
 					local f = sol.file.open("userExperience.txt","a+"); f:write(diff .. "-difficulty\n"); f:flush(); f:close()
-					
-					local enemiesInEncounter = fight_generator.make(spawnArea, diff, map, game:get_life()) 
+					local enemiesInEncounter, resultingDiff = fight_generator.make(spawnArea, diff, map, game:get_life()) 
+					local f = sol.file.open("userExperience.txt","a+"); f:write(resultingDiff .. "-intendedDifficulty\n"); f:flush(); f:close()
+
 					for _,enemy in pairs(enemiesInEncounter) do
 						local theEnemyIJustMade = map:create_enemy(enemy)
 						theEnemyIJustMade:set_treasure("random")
@@ -110,7 +111,7 @@ function analyseGameplaySoFar(map)
 	local f = sol.file.open("userExperience.txt","r")
 	local nothing = {swordHits=0, monsters=0, timeInRoom=0, directionChange=0, 
 			lifeLostInRoom=0, uselessKeys=0, monsterTypes={}, heroStates={}, 
-			moving=0, standing=0, percentageStanding=0, startingLife=0}
+			moving=0, standing=0, percentageStanding=0, startingLife=0, intendedDifficulty=0}
 	local room = table_util.copy( nothing )
 
 	while true do
@@ -161,6 +162,10 @@ function analyseGameplaySoFar(map)
 		if string.find(line, "areasensor") or string.find(line, "A NEW GAME IS STARTING NOW") then 
 			room = table_util.copy( nothing )
 		end	
+		
+		if splitLine[2] == "intendedDifficulty" then
+			room.intendedDifficulty = tonumber (splitLine[1]) 
+		end
 	end
 	
 	if (room.moving+room.standing) ~= 0 then
@@ -207,7 +212,7 @@ function logTheRoom (room)
 	f:write(room.heroStates["sword loading"] or 0); f:write(",")
 	f:write(room.heroStates["sword spin attack"] or 0); f:write(",")
 	f:write(room.heroStates["sword swinging"] or 0); f:write(",")
-	f:write(room.heroStates["sword tapping"] or 0)
+	f:write(room.heroStates["sword tapping"] or 0); f:write(",")
 	-- The following aren't being logged because they are not very useful for now.
 	--"back to solid ground", "boomerang", "bow", "carrying", "falling", "forced walking", "hookshot", "jumping", 
 	--"lifting", "plunging", "pulling", "pushing", "running", "stream", "swimming", "treasure", "using item", "victory"
@@ -220,7 +225,12 @@ function logTheRoom (room)
 1.3787
 ]]
 
-	f:write( 0.1652*room.swordHits + -0.0269*room.standing + 0.499*(room.heroStates.hurt or 0) + 0.0412*(room.heroStates["sword swinging"] or 0) + 1.3787 )
+	f:write( 0.1652 * room.swordHits + 
+			-0.0269 * room.standing + 
+			 0.499 * (room.heroStates.hurt or 0) + 
+			 0.0412 * (room.heroStates["sword swinging"] or 0) + 
+			 1.3787 ); f:write(",")
+	f:write( room.intendedDifficulty )
 	
 	f:write("\n")
 	f:flush(); f:close()
@@ -251,7 +261,7 @@ function fight_generator.make(area, maxDiff, map, currentLife)
 		table.insert(enemiesInFight,{name="generatedEnemy_thisOne", layer=0, x=xPos, y=yPos, direction=0, breed=chosenBreed})
 		difficulty = difficulty + breedDifficulties[chosenBreed] + monsterAmountDifficulty
 	end
-	return enemiesInFight
+	return enemiesInFight, difficulty
 end
 
 return fight_generator
