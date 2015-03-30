@@ -364,7 +364,15 @@ something...
 end
 
 function quest_reminder_a:on_activated()
-	if not game:get_value("mine_key") then
+	if game:get_value("quest_flower") then
+		quest_block_a:set_enabled(true)
+		game:start_dialog("test.variable", 
+[[
+I have to turn
+this Cure Flower
+into a potion!
+]])
+	elseif not game:get_value("mine_key") then
 		game:start_dialog("test.variable", 
 [[
 I think I'm forgetting 
@@ -372,6 +380,21 @@ something...
 ]])
 	else
 		quest_block_a:set_enabled(false)
+	end
+	
+end
+
+function quest_reminder_d:on_activated()
+	if game:get_value("quest_flower") then
+		quest_block_d:set_enabled(true)
+		game:start_dialog("test.variable", 
+[[
+I have to turn
+this Cure Flower
+into a potion!
+]])
+	else
+		quest_block_d:set_enabled(false)
 	end
 end
 

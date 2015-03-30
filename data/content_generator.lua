@@ -34,8 +34,7 @@ function content.start_test(given_map)
 	log.debug("test")
 	log.debug("end test")
 	-- Initialize the pseudo random number generator
-	local seed = --280295
-			--783166 -- transition bug
+	local seed = 419327
 			tonumber(tostring(os.time()):reverse():sub(1,6)) -- good random seeds
 	log.debug("random seed = " .. seed)
 	math.randomseed( seed )
@@ -361,8 +360,8 @@ function content.place_door( details, direction, area, optional )
 	details.direction = direction
 	details.x, details.y = area.x1, area.y1
 	-- log.debug(details)
-	map:create_door(details)
-
+	local door = map:create_door(details)
+	door:bring_to_front()
 end
 
 -- barrier type is already concluded when the mission grammar is formed
@@ -633,10 +632,6 @@ function content.create_simple_forest_map(areas, area_details)
 		-- log.debug(connections)
 		for _, connection in ipairs(connections) do
 			for direction, area in pairs(connection) do
-				if areanumber == "start" and direction == 2 then 
-					map:create_destination{name="start_here",layer=0, x=area.x1+100, y=area.y1+16, direction=0}
-					hero:teleport(map:get_id(), "start_here")
-				end
 				ex=ex+1
 				exclusion_areas_trees[ex] = area
 				table.insert(exit_areas[areanumber], area_util.get_side(area, (direction+2)%4))
@@ -647,7 +642,44 @@ function content.create_simple_forest_map(areas, area_details)
 		end
 	end
 
+	for areanumber,connections in pairs(areas["other_map"]) do
+		for _, connection in ipairs(connections) do
+			for direction, area in pairs(connection) do
+				if areanumber == "start" and direction == 2 then 
+					map:create_wall{layer=0, x=area.x1, y=area.y1, width=8, height=32, stops_hero=true}
+					map:create_destination{name="start_here",layer=0, x=area.x1+16, y=area.y1+16, direction=0}
+					hero:teleport(map:get_id(), "start_here")
+				end
+				if areanumber == "goal" and direction == 0 then 
+					map:create_teletransporter{layer=0, x=area.x2-16, y=area.y1, width=16, height=32, destination_map="5", destination="dungeon_entrance_left"}
+				end
+				-- displaying transition areas
+				if (areanumber == "start" and direction == 2) or (areanumber == "goal" and direction == 0) then
+					local adjusted_area = area_util.resize_area(area, {-16, 0, 16, 0})
+					adjusted_area.x2 = adjusted_area.x2 - (adjusted_area.x2-adjusted_area.x1)%16
+					content.place_tile(adjusted_area, 49, "walkable", 0)
+					content.place_edge_tiles(adjusted_area, 8, "floor")
+				end
+				ex=ex+1
+				exclusion_areas_trees[ex] = area
+				table.insert(exit_areas[areanumber], area_util.get_side(area, (direction+2)%4))
+			end
+		end
+	end
+
 	content.plant_trees(bounding_area, exclusion_areas_trees)
+
+end
+
+
+function content.place_edge_tiles(area, width, type, layer, custom_name)
+	local tileset = tonumber(map:get_tileset())
+	local layer = layer or 0; local name = custom_name or "edge"
+	local edges, corners = area_util.create_walls(area, width)
+	for _, dir in ipairs({0, 1, 2, 3}) do
+		content.place_tile(edges[dir], lookup.wall_tiling[type.."tile"][dir][tileset], name.."tile", 0)
+		content.place_tile(corners[dir], lookup.wall_tiling[type.."corner"][dir][tileset], name.."corner", 0)
+	end
 
 end
 
@@ -660,12 +692,7 @@ function content.create_simple_dungeon_map(areas, area_details)
 		for _, area in ipairs(a) do	
 			log.debug("placing floor")
 			content.place_tile(area, lookup.tiles["dungeon_floor"][tileset], "walkable", 0)
-			local floortiles, corners = area_util.create_walls(area, 8)
-			for _, dir in ipairs({0, 1, 2, 3}) do
-				log.debug("placing edgetile in direction "..dir)
-				content.place_tile(floortiles[dir], lookup.wall_tiling["floortile"][dir][tileset], "walkable", 0)
-				content.place_tile(corners[dir], lookup.wall_tiling["floorcorner"][dir][tileset], "walkable", 0)
-			end
+			content.place_edge_tiles(area, 8, "floor")
 		end 
 
     end
@@ -674,13 +701,10 @@ function content.create_simple_dungeon_map(areas, area_details)
     for areanumber, a in pairs(areas["nodes"]) do
 
 		for _, area in ipairs(a) do	
-			local walls, corners = area_util.create_walls(area_util.resize_area(area, {8, 8, -8, -8}), 24)
-
+			content.place_edge_tiles(area_util.resize_area(area, {8, 8, -8, -8}), 24, "wall")
 			for _, dir in ipairs({0, 1, 2, 3}) do
 				local side = area_util.get_side(area, dir, -8, 0)				
 				content.place_tile(side, lookup.tiles["dungeon_spacer"][tileset], "spacer", 1)
-				content.place_tile(walls[dir], lookup.wall_tiling["wall"][dir][tileset], "wall", 0)
-				content.place_tile(corners[dir], lookup.wall_tiling["corner"][dir][tileset], "wall", 0)
 			end
 		end -- filling in the otherwise empty areas
 
@@ -696,27 +720,48 @@ function content.create_simple_dungeon_map(areas, area_details)
 		-- log.debug(connections)
 		for _, connection in ipairs(connections) do
 			for direction, area in pairs(connection) do
-				if areanumber == "start" and direction == 2 then 
-					map:create_destination{name="start_here",layer=0, x=area.x1+100, y=area.y1+16, direction=0}
-					hero:teleport(map:get_id(), "start_here")
-					content.place_prop("edge_doors_0", area_util.get_side(area, 2, 32, 0), 0, tileset, lookup.transitions)
-				end
-				table.insert(exit_areas[areanumber], area_util.get_side(area, (direction+2)%4))
 				if direction == 3 or direction == 0 then
 					content.place_prop("edge_doors_"..direction, area, 0, tileset, lookup.transitions)
 				end
+				table.insert(exit_areas[areanumber], area_util.get_side(area, (direction+2)%4))
+				
 				content.create_simple_barriers( area_details, area_util.get_side(area, (direction+2)%4, 32, 0), direction, areanumber, area.to_area )
+			end
+		end
+	end
+	for areanumber,connections in pairs(areas["exit"]) do
+		for _, connection in ipairs(connections) do
+			for direction, area in pairs(connection) do
 				content.create_simple_door( area, areanumber, direction )
 			end
 		end
 	end
-	
+	for areanumber,connections in pairs(areas["other_map"]) do
+		for _, connection in ipairs(connections) do
+			for direction, area in pairs(connection) do
+				if areanumber == "start" and direction == 3 then 
+					map:create_destination{name="start_here",layer=0, x=area.x1+16, y=area.y1+8, direction=1}
+					hero:teleport(map:get_id(), "start_here")
+					content.place_prop("cave_entrance", area, 0, tileset, lookup.transitions)
+				elseif areanumber == "goal" then 
+					map:create_teletransporter{layer=0, x=area.x1+8, y=area.y1, width=16, height=32, destination_map="5", destination="dungeon_exit"}
+					if direction == 3 then
+						content.place_prop("cave_entrance", area, 0, tileset, lookup.transitions)
+					elseif direction == 1 then
+						local adjusted_area = area_util.resize_area(area,{0, 8, 0, 0})
+						content.place_prop("cave_stairs_up", adjusted_area, 0, tileset, lookup.transitions)
+						map:create_stairs{layer=0, x=adjusted_area.x1+8, y=adjusted_area.y1+8, direction=1, subtype=0}
+					end
+				end
+			end
+		end
+	end
 	return exit_areas, exclusion_areas
 end
 
 function content.create_simple_door( area, areanumber, direction )
 	local object_details = lookup.doors["door_normal"]
-	local name = "door_normal_area_"..areanumber.."_1"
+	local name = "door_normal_area_"..areanumber.."_"..direction
 	local position
 	local temp_area
 	if direction == 1 or direction == 3 then 		

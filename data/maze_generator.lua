@@ -59,9 +59,15 @@ function maze_generator.generate_rooms( area_details )
 	local width, height = map:get_size(); local corridor_width = room.corridor_width; local wall_width = room.wall_width
 	local maze = {}
 	maze_generator.initialize_maze( maze, room, wall_width, corridor_width )
-	local start_node = {x=1, y=1}--y=math.floor(#maze[1]/2)}-- entrance is always west center
+	local start_node = {x=1, y=math.floor(#maze[1]/2)}-- entrance is always west center
 	maze[start_node.x][start_node.y].visited = true
-	maze[start_node.x][start_node.y][2] = "exit"
+	if not area_details.outside then
+		maze[start_node.x][start_node.y+1].visited = true
+	end	if area_details.outside then 
+		maze[start_node.x][start_node.y][2] = "other_map" -- exit to the left because the witch hut exit is to the right
+	else
+		maze[start_node.x][start_node.y][3] = "other_map" -- exit to the bottom because of the tile for the exit
+	end
 	maze_generator.recursive_rooms( maze, area_details, "start", start_node, 2 )
 	return maze_generator.create_room_list( maze, corridor_width, {x=wall_width.x/2, y=wall_width.y/2} )
 end
@@ -91,23 +97,37 @@ function maze_generator.recursive_rooms( maze, area_details, areanumber, pos, la
 			maze_generator.open_path(maze, {cur_pos, selected_nb.pos}, "exit")
 			maze_generator.recursive_rooms( maze, area_details, connection.areanumber, selected_nb.pos, selected_nb.wall_to )
 		end
+	elseif area_details.outside then
+		for _,i in ipairs({0, 1, 2, 3}) do
+			if maze[pos.x][pos.y][i] == true then -- exit to the right to the mine entrance
+				maze[pos.x][pos.y][i]="other_map" 
+				break
+			end
+		end
+	else
+		for _,i in ipairs({3, 1}) do -- exit to the bottom because of the tile for the exit
+			if maze[pos.x][pos.y][i] == true then
+				maze[pos.x][pos.y][i]="other_map" -- exit to the right to the mine entrance
+				break
+			end
+		end
 	end
 end
 
 
 function maze_generator.create_room_list ( maze, corridor_width, wall_width )
-	result = {["walkable"]={}, ["opening"]={}, ["exit"]={}, ["nodes"]={}}
-	local w = result["walkable"]; local o = result["opening"]; local e = result["exit"]; local n = result["nodes"];
+	result = {["walkable"]={}, ["opening"]={}, ["exit"]={}, ["nodes"]={}, ["other_map"]={}}
+	local w = result["walkable"]; local o = result["opening"]; local e = result["exit"]; local n = result["nodes"]; local m = result["other_map"]
 	for x=1, #maze do
 		for y=1, #maze[1] do
 			-- add corridor to walkable, walls which are false to opening and exits to exit
 			if maze[x][y].areanumber ~= nil then
 				local a_nr = maze[x][y].areanumber
-				w[a_nr] = w[a_nr] or {}; o[a_nr] = o[a_nr] or {}; e[a_nr] = e[a_nr] or {}; n[a_nr] = n[a_nr] or {}
+				w[a_nr] = w[a_nr] or {}; o[a_nr] = o[a_nr] or {}; e[a_nr] = e[a_nr] or {}; n[a_nr] = n[a_nr] or {}; m[a_nr]= m[a_nr] or {}
 				local walkable = maze_generator.pos_to_area({x=x, y=y})
 				local node = area_util.resize_area(walkable, {-wall_width.x, -wall_width.y, wall_width.x, wall_width.y})
-				local exits, openings = maze_generator.maze_wall_to_areas( maze, {x=x, y=y}, corridor_width, wall_width, node)
-				table.insert(w[a_nr], walkable); table.insert(n[a_nr], node);table.insert(e[a_nr], exits); table.insert(o[a_nr], openings)
+				local p = maze_generator.maze_wall_to_areas( maze, {x=x, y=y}, corridor_width, wall_width, node)
+				table.insert(w[a_nr], walkable); table.insert(n[a_nr], node);table.insert(e[a_nr], p.exit); table.insert(o[a_nr], p.opening); table.insert(m[a_nr], p.other_map)
 			end
 		end
 	end
@@ -121,20 +141,20 @@ function maze_generator.maze_wall_to_areas( maze, pos, corridor_width, wall_widt
 				   [0]={x1=node.x2-wall_width.x, x2=node.x2, y1=node.y1+wall_width.y, y2=node.y2-wall_width.y},
 				   [2]={x1=node.x1, x2=node.x1+wall_width.x, y1=node.y1+wall_width.y, y2=node.y2-wall_width.y},
 				   [3]={x1=node.x1+wall_width.x, x2=node.x2-wall_width.x, y1=node.y2-wall_width.y, y2=node.y2}}
-
-	if maze[pos.x][pos.y][0] == "exit" or maze[pos.x][pos.y][0] == false then
-		exits[0] = area_util.from_center( walls[0], wall_width.x, 32) 
-		exits[0].to_area = table_util.get(maze, {pos.x+1, pos.y, "areanumber"}) end
-	if maze[pos.x][pos.y][1] == "exit" or maze[pos.x][pos.y][1] == false then
-		exits[1] = area_util.from_center( walls[1], 32, wall_width.y) 
-		exits[1].to_area = table_util.get(maze, {pos.x, pos.y-1, "areanumber"}) end
-	if maze[pos.x][pos.y][2] == "exit" or maze[pos.x][pos.y][2] == false then	
-		exits[2] = area_util.from_center( walls[2], wall_width.x, 32) 
-		exits[2].to_area = table_util.get(maze, {pos.x-1, pos.y, "areanumber"}) end
-	if maze[pos.x][pos.y][3] == "exit" or maze[pos.x][pos.y][3] == false then
-		exits[3] = area_util.from_center( walls[3], 32, wall_width.y) 
-		exits[3].to_area = table_util.get(maze, {pos.x, pos.y+1, "areanumber"}) end
-	return exits, openings
+	local result = {["exit"]={}, ["opening"]={}, ["other_map"]={}}
+	if type(maze[pos.x][pos.y][0]) == "string" then
+		result[maze[pos.x][pos.y][0]][0] = area_util.from_center( walls[0], wall_width.x, 32) 
+		result[maze[pos.x][pos.y][0]][0].to_area = table_util.get(maze, {pos.x+1, pos.y, "areanumber"}) end
+	if type(maze[pos.x][pos.y][1]) == "string" then
+		result[maze[pos.x][pos.y][1]][1] = area_util.from_center( walls[1], 32, wall_width.y) 
+		result[maze[pos.x][pos.y][1]][1].to_area = table_util.get(maze, {pos.x, pos.y-1, "areanumber"}) end
+	if type(maze[pos.x][pos.y][2]) == "string"  then	
+		result[maze[pos.x][pos.y][2]][2] = area_util.from_center( walls[2], wall_width.x, 32) 
+		result[maze[pos.x][pos.y][2]][2].to_area = table_util.get(maze, {pos.x-1, pos.y, "areanumber"}) end
+	if type(maze[pos.x][pos.y][3]) == "string"  then
+		result[maze[pos.x][pos.y][3]][3] = area_util.from_center( walls[3], 32, wall_width.y) 
+		result[maze[pos.x][pos.y][3]][3].to_area = table_util.get(maze, {pos.x, pos.y+1, "areanumber"}) end
+	return result
 end
 
 

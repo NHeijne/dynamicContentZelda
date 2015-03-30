@@ -72,4 +72,10 @@ function log.printGlobalVariables ()
   log.debug(string)
 end
 
+function log.entities(begins_with, map)
+  for entity in map:get_entities(begins_with) do
+    log.debug(entity:get_name())
+  end
+end
+
 return log
