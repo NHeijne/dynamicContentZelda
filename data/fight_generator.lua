@@ -9,6 +9,7 @@ local lowestDifficulty = 1
 local highestDifficulty = 5
 local difficultyOfFights = lowestDifficulty
 
+--OLD:
 --[[
 0.2244 * monsters +
 -0.1209 * startLife +
@@ -23,7 +24,7 @@ local difficultyOfFights = lowestDifficulty
 0.8188 * bullblin +
 3.8072
 ]]
-
+--[[
 local allowedVariance = 0.1
 local startLifeDifficulty = -0.1209
 local monsterAmountDifficulty = 0.2244
@@ -31,6 +32,26 @@ local baseDifficulty = 3.8072
 local breedDifficulties = {["globul"]=0.8654,["tentacle"]=-0.0779,["snap_dragon"]=-0.2317,--["pike_auto"]=2,["fireball_statue"]=2,
 							["green_knight_soldier"]=1.0567,["mandible"]=-0.1819,["red_knight_soldier"]=0.4246,
 							["minillosaur_egg_fixed"]=-0.1387,["blue_hardhat_beetle"]=0.68,["blue_bullblin"]=0.8188}
+]]
+	
+--NEW:	
+--[[
+0.7312 * monsters +
+-1.1636 * tentacle +
+0.3998 * sna7yp +
+-0.1424 * mandible +
+0.9962 * redKnight +
+-0.233  * egg +
+0.5852 * hardhat +
+1.3709
+]]
+local allowedVariance = 0.1
+local startLifeDifficulty = 0
+local monsterAmountDifficulty = 0.7312
+local baseDifficulty = 1.3709
+local breedDifficulties = {["globul"]=0,["tentacle"]=-1.1636,["snap_dragon"]=0.3998,
+							["green_knight_soldier"]=0,["mandible"]=-0.1424,["red_knight_soldier"]=0.9962,
+							["minillosaur_egg_fixed"]=-0.233,["blue_hardhat_beetle"]=0.5852,["blue_bullblin"]=0}
 
 function fight_generator.add_effects_to_sensors (map, areas, area_details)
 	for sensor in map:get_entities("areasensor_inside_") do
