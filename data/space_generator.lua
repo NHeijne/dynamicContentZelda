@@ -1024,7 +1024,7 @@ function space_gen.create_simple_area_sensors( area_details, areas )
 	for areanumber, a in pairs(areas["walkable"]) do
 		for _, area in ipairs(a) do	
 			local details = {name="areasensor_inside_"..areanumber.."_type_"..area_details[areanumber].area_type, 
-				layer=0, x=area.x1-8, y=area.y1-8, width=area.x2-area.x1+16, height=area.y2-area.y1+16}
+				layer=0, x=area.x1-8, y=area.y1-8, width=area.x2-area.x1+16, height=area.y2-area.y1+24}
 			-- log.debug(details)
 			map:create_sensor(details)
 		end

@@ -9,6 +9,7 @@ local lowestDifficulty = 1
 local highestDifficulty = 5
 local difficultyOfFights = lowestDifficulty
 
+--OLD:
 --[[
 0.2244 * monsters +
 -0.1209 * startLife +
@@ -23,7 +24,7 @@ local difficultyOfFights = lowestDifficulty
 0.8188 * bullblin +
 3.8072
 ]]
-
+--[[
 local allowedVariance = 0.1
 local startLifeDifficulty = -0.1209
 local monsterAmountDifficulty = 0.2244
@@ -31,6 +32,26 @@ local baseDifficulty = 3.8072
 local breedDifficulties = {["globul"]=0.8654,["tentacle"]=-0.0779,["snap_dragon"]=-0.2317,--["pike_auto"]=2,["fireball_statue"]=2,
 							["green_knight_soldier"]=1.0567,["mandible"]=-0.1819,["red_knight_soldier"]=0.4246,
 							["minillosaur_egg_fixed"]=-0.1387,["blue_hardhat_beetle"]=0.68,["blue_bullblin"]=0.8188}
+]]
+	
+--NEW:	
+--[[
+0.7312 * monsters +
+-1.1636 * tentacle +
+0.3998 * sna7yp +
+-0.1424 * mandible +
+0.9962 * redKnight +
+-0.233  * egg +
+0.5852 * hardhat +
+1.3709
+]]
+local allowedVariance = 0.1
+local startLifeDifficulty = 0
+local monsterAmountDifficulty = 0.7312
+local baseDifficulty = 1.3709
+local breedDifficulties = {["globul"]=0,["tentacle"]=-1.1636,["snap_dragon"]=0.3998,
+							["green_knight_soldier"]=0,["mandible"]=-0.1424,["red_knight_soldier"]=0.9962,
+							["minillosaur_egg_fixed"]=-0.233,["blue_hardhat_beetle"]=0.5852,["blue_bullblin"]=0}
 
 function fight_generator.add_effects_to_sensors (map, areas, area_details)
 	for sensor in map:get_entities("areasensor_inside_") do
@@ -52,8 +73,9 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 					
 					local diff = difficultyOfFights
 					local f = sol.file.open("userExperience.txt","a+"); f:write(diff .. "-difficulty\n"); f:flush(); f:close()
-					
-					local enemiesInEncounter = fight_generator.make(spawnArea, diff, map, game:get_life()) 
+					local enemiesInEncounter, resultingDiff = fight_generator.make(spawnArea, diff, map, game:get_life()) 
+					local f = sol.file.open("userExperience.txt","a+"); f:write(resultingDiff .. "-intendedDifficulty\n"); f:flush(); f:close()
+
 					for _,enemy in pairs(enemiesInEncounter) do
 						local theEnemyIJustMade = map:create_enemy(enemy)
 						theEnemyIJustMade:set_treasure("random")
@@ -110,7 +132,7 @@ function analyseGameplaySoFar(map)
 	local f = sol.file.open("userExperience.txt","r")
 	local nothing = {swordHits=0, monsters=0, timeInRoom=0, directionChange=0, 
 			lifeLostInRoom=0, uselessKeys=0, monsterTypes={}, heroStates={}, 
-			moving=0, standing=0, percentageStanding=0, startingLife=0}
+			moving=0, standing=0, percentageStanding=0, startingLife=0, intendedDifficulty=0}
 	local room = table_util.copy( nothing )
 
 	while true do
@@ -161,6 +183,10 @@ function analyseGameplaySoFar(map)
 		if string.find(line, "areasensor") or string.find(line, "A NEW GAME IS STARTING NOW") then 
 			room = table_util.copy( nothing )
 		end	
+		
+		if splitLine[2] == "intendedDifficulty" then
+			room.intendedDifficulty = tonumber (splitLine[1]) 
+		end
 	end
 	
 	if (room.moving+room.standing) ~= 0 then
@@ -207,7 +233,7 @@ function logTheRoom (room)
 	f:write(room.heroStates["sword loading"] or 0); f:write(",")
 	f:write(room.heroStates["sword spin attack"] or 0); f:write(",")
 	f:write(room.heroStates["sword swinging"] or 0); f:write(",")
-	f:write(room.heroStates["sword tapping"] or 0)
+	f:write(room.heroStates["sword tapping"] or 0); f:write(",")
 	-- The following aren't being logged because they are not very useful for now.
 	--"back to solid ground", "boomerang", "bow", "carrying", "falling", "forced walking", "hookshot", "jumping", 
 	--"lifting", "plunging", "pulling", "pushing", "running", "stream", "swimming", "treasure", "using item", "victory"
@@ -220,7 +246,12 @@ function logTheRoom (room)
 1.3787
 ]]
 
-	f:write( 0.1652*room.swordHits + -0.0269*room.standing + 0.499*room.heroStates.hurt + 0.0412*room.heroStates["sword swinging"] + 1.3787 )
+	f:write( 0.1652 * room.swordHits + 
+			-0.0269 * room.standing + 
+			 0.499 * (room.heroStates.hurt or 0) + 
+			 0.0412 * (room.heroStates["sword swinging"] or 0) + 
+			 1.3787 ); f:write(",")
+	f:write( room.intendedDifficulty )
 	
 	f:write("\n")
 	f:flush(); f:close()
@@ -251,7 +282,7 @@ function fight_generator.make(area, maxDiff, map, currentLife)
 		table.insert(enemiesInFight,{name="generatedEnemy_thisOne", layer=0, x=xPos, y=yPos, direction=0, breed=chosenBreed})
 		difficulty = difficulty + breedDifficulties[chosenBreed] + monsterAmountDifficulty
 	end
-	return enemiesInFight
+	return enemiesInFight, difficulty
 end
 
 return fight_generator
