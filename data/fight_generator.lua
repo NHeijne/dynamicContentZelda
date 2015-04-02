@@ -2,49 +2,15 @@ local log 				= require("log")
 local table_util 		= require("table_util")
 local area_util 		= require("area_util")
 local num_util 			= require("num_util")
-local matrix			= require("matrix")
 
 local fight_generator = {}
 local lowestDifficulty = 1
 local highestDifficulty = 5
 local difficultyOfFights = lowestDifficulty
 
---OLD:
---[[
-0.2244 * monsters +
--0.1209 * startLife +
-0.8654 * globul +
--0.0779 * tentacle +
--0.2317 * snap +
-1.0567 * greenKnight +
--0.1819 * mandible +
-0.4246 * redKnight +
--0.1387 * egg +
-0.68   * hardhat +
-0.8188 * bullblin +
-3.8072
-]]
---[[
-local allowedVariance = 0.1
-local startLifeDifficulty = -0.1209
-local monsterAmountDifficulty = 0.2244
-local baseDifficulty = 3.8072
-local breedDifficulties = {["globul"]=0.8654,["tentacle"]=-0.0779,["snap_dragon"]=-0.2317,--["pike_auto"]=2,["fireball_statue"]=2,
-							["green_knight_soldier"]=1.0567,["mandible"]=-0.1819,["red_knight_soldier"]=0.4246,
-							["minillosaur_egg_fixed"]=-0.1387,["blue_hardhat_beetle"]=0.68,["blue_bullblin"]=0.8188}
-]]
-	
---NEW:	
---[[
-0.7312 * monsters +
--1.1636 * tentacle +
-0.3998 * sna7yp +
--0.1424 * mandible +
-0.9962 * redKnight +
--0.233  * egg +
-0.5852 * hardhat +
-1.3709
-]]
+local roomContentsData = {}
+local roomDifficulties = {}
+
 local allowedVariance = 0.1
 local startLifeDifficulty = 0
 local monsterAmountDifficulty = 0.7312
@@ -198,62 +164,77 @@ function analyseGameplaySoFar(map)
 end
 
 function logTheRoom (room) 
-	local f = sol.file.open("roomSummaries.csv","a+")
+	local fightRoomData = {}
+	local playerBehaviourData = {}
 	
-	--hits,monsters,time,dirChange,lostLife,useless,moving,standing,percStand,startLife,
 	--globul,tentacle,snap,greenKnight,mandible,redKnight,egg,hardhat,bullblin
+	--monsters,startLife
+	--hits,time,dirChange,lostLife,useless,moving,standing,percStand
 	--free,freezed,grabbing,hurt,stairs,loading,spin,swinging,tapping
+	--predictedDifficulty
 	
-	f:write(room.swordHits .. ",")
-	f:write(room.monsters .. ",")
-	f:write(room.timeInRoom .. ",")
-	f:write(room.directionChange .. ",")
-	f:write(room.lifeLostInRoom .. ",")
-	f:write(room.uselessKeys .. ",")
-	f:write(room.moving .. ",")
-	f:write(room.standing .. ",")
-	f:write(room.percentageStanding .. ",")
-	f:write(room.startingLife .. ",")
+	fightRoomData[#fightRoomData+1] = room.monsterTypes.globul or 0
+	fightRoomData[#fightRoomData+1] = room.monsterTypes.tentacle or 0
+	fightRoomData[#fightRoomData+1] = room.monsterTypes.snap_dragon or 0
+	fightRoomData[#fightRoomData+1] = room.monsterTypes.green_knight_soldier or 0
+	fightRoomData[#fightRoomData+1] = room.monsterTypes.mandible or 0
+	fightRoomData[#fightRoomData+1] = room.monsterTypes.red_knight_soldier or 0
+	fightRoomData[#fightRoomData+1] = room.monsterTypes.minillosaur_egg_fixed or 0
+	fightRoomData[#fightRoomData+1] = room.monsterTypes.blue_hardhat_beetle or 0
+	fightRoomData[#fightRoomData+1] = room.monsterTypes.blue_bullblin or 0
 	
-	f:write(room.monsterTypes.globul or 0); f:write(",")
-	f:write(room.monsterTypes.tentacle or 0); f:write(",")
-	f:write(room.monsterTypes.snap_dragon or 0); f:write(",")
-	f:write(room.monsterTypes.green_knight_soldier or 0); f:write(",")
-	f:write(room.monsterTypes.mandible or 0); f:write(",")
-	f:write(room.monsterTypes.red_knight_soldier or 0); f:write(",")
-	f:write(room.monsterTypes.minillosaur_egg_fixed or 0); f:write(",")
-	f:write(room.monsterTypes.blue_hardhat_beetle or 0); f:write(",")
-	f:write(room.monsterTypes.blue_bullblin or 0); f:write(",")
+	fightRoomData[#fightRoomData+1] = room.monsters
+	fightRoomData[#fightRoomData+1] = room.startingLife
+	
+	playerBehaviourData[#playerBehaviourData+1] = room.swordHits
+	playerBehaviourData[#playerBehaviourData+1] = room.timeInRoom
+	playerBehaviourData[#playerBehaviourData+1] = room.directionChange
+	playerBehaviourData[#playerBehaviourData+1] = room.lifeLostInRoom
+	playerBehaviourData[#playerBehaviourData+1] = room.uselessKeys
+	playerBehaviourData[#playerBehaviourData+1] = room.moving
+	playerBehaviourData[#playerBehaviourData+1] = room.standing
+	playerBehaviourData[#playerBehaviourData+1] = room.percentageStanding
 
-	f:write(room.heroStates.free or 0); f:write(",")
-	f:write(room.heroStates.freezed or 0); f:write(",")
-	f:write(room.heroStates.grabbing or 0); f:write(",")
-	f:write(room.heroStates.hurt or 0); f:write(",")
-	f:write(room.heroStates.stairs or 0); f:write(",")
-	f:write(room.heroStates["sword loading"] or 0); f:write(",")
-	f:write(room.heroStates["sword spin attack"] or 0); f:write(",")
-	f:write(room.heroStates["sword swinging"] or 0); f:write(",")
-	f:write(room.heroStates["sword tapping"] or 0); f:write(",")
+	playerBehaviourData[#playerBehaviourData+1] = room.heroStates.free or 0
+	playerBehaviourData[#playerBehaviourData+1] = room.heroStates.freezed or 0
+	playerBehaviourData[#playerBehaviourData+1] = room.heroStates.grabbing or 0
+	playerBehaviourData[#playerBehaviourData+1] = room.heroStates.hurt or 0
+	playerBehaviourData[#playerBehaviourData+1] = room.heroStates.stairs or 0
+	playerBehaviourData[#playerBehaviourData+1] = room.heroStates["sword loading"] or 0
+	playerBehaviourData[#playerBehaviourData+1] = room.heroStates["sword spin attack"] or 0
+	playerBehaviourData[#playerBehaviourData+1] = room.heroStates["sword swinging"] or 0
+	playerBehaviourData[#playerBehaviourData+1] = room.heroStates["sword tapping"] or 0
+	
 	-- The following aren't being logged because they are not very useful for now.
 	--"back to solid ground", "boomerang", "bow", "carrying", "falling", "forced walking", "hookshot", "jumping", 
 	--"lifting", "plunging", "pulling", "pushing", "running", "stream", "swimming", "treasure", "using item", "victory"
 	
---[[
-0.1652 * hits +
--0.0269 * standing +
-0.499  * hurt +
-0.0412 * swinging +
-1.3787
-]]
-
-	f:write( 0.1652 * room.swordHits + 
+	roomDifficultyPrediction = { 0.1652 * room.swordHits + 
 			-0.0269 * room.standing + 
 			 0.499 * (room.heroStates.hurt or 0) + 
 			 0.0412 * (room.heroStates["sword swinging"] or 0) + 
-			 1.3787 ); f:write(",")
-	f:write( room.intendedDifficulty )
+			 1.3787 }
 	
-	f:write("\n")
+	writeTableToFile (fightRoomData, "roomSummaries.csv")
+	local f = sol.file.open("roomSummaries.csv","a+"); f:write(","); f:flush(); f:close()
+	writeTableToFile (playerBehaviourData, "roomSummaries.csv")
+	local f = sol.file.open("roomSummaries.csv","a+"); f:write(","); f:flush(); f:close()
+	writeTableToFile (roomDifficultyPrediction, "roomSummaries.csv")
+	local f = sol.file.open("roomSummaries.csv","a+"); f:write("\n"); f:flush(); f:close()
+	
+	roomContentsData[#roomContentsData+1] = fightRoomData
+	roomDifficulties[#roomDifficulties+1] = roomDifficultyPrediction
+	
+end
+
+function writeTableToFile (dataTable, file) 
+	local f = sol.file.open(file,"a+")
+	for k,v in pairs(dataTable) do
+		f:write(v); 
+		if k ~= #dataTable then
+			f:write(",") 
+		end
+	end
 	f:flush(); f:close()
 end
 
