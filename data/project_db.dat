@@ -473,11 +473,8 @@ enemy{ id = "ganon", description = "Ganon" }
 enemy{ id = "fire_bat", description = "Fire bat" }
 enemy{ id = "red_projectile", description = "Red Projectile" }
 enemy{ id = "fireball_statue", description = "Fireball Statue" }
-enemy{ id = "slow_pike_detect", description = "Slow Pike (move near hero)" }
-enemy{ id = "slow_pike_auto", description = "Slow Pike (always moves)" }
 
 entity{ id = "fireball_statue", description = "Fireball Statue" }
 
 language{ id = "en", description = "English" }
-
 

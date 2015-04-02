@@ -34,7 +34,7 @@ function content.start_test(given_map)
 	log.debug("test")
 	log.debug("end test")
 	-- Initialize the pseudo random number generator
-	local seed = 419327
+	local seed =
 			tonumber(tostring(os.time()):reverse():sub(1,6)) -- good random seeds
 	log.debug("random seed = " .. seed)
 	math.randomseed( seed )
@@ -93,7 +93,7 @@ function content.start_test(given_map)
 			log.debug("creating area_type " .. content.area_details[k].area_type)
 			if content.area_details[k].area_type == "P" or content.area_details[k].area_type == "PF" then 
 				maze_generator.set_room(a, 16, 8, "mazeprop_area_"..k)
-				content.makeSingleMaze(area_util.resize_area(a,{24+16, 24+16, -24-16, -24-16}), exit_areas[k], content.area_details, {}, layer)
+				content.makeSingleMaze(a, exit_areas[k], content.area_details, {}, layer)
 			end
 		end
     end
@@ -668,7 +668,7 @@ function content.create_simple_forest_map(areas, area_details)
 	end
 
 	content.plant_trees(bounding_area, exclusion_areas_trees)
-
+	return exit_areas, exclusion_areas
 end
 
 

@@ -8,115 +8,19 @@ properties{
   music = "same",
 }
 
-tile{
+enemy{
   layer = 0,
-  x = 88,
-  y = 72,
-  width = 112,
-  height = 64,
-  pattern = "14",
-}
-
-tile{
-  layer = 0,
-  x = 112,
-  y = 112,
-  width = 8,
-  height = 8,
-  pattern = "13",
-}
-
-tile{
-  layer = 0,
-  x = 128,
-  y = 96,
-  width = 8,
-  height = 8,
-  pattern = "13",
-}
-
-tile{
-  layer = 0,
-  x = 168,
-  y = 96,
-  width = 8,
-  height = 8,
-  pattern = "13",
-}
-
-tile{
-  layer = 0,
-  x = 160,
-  y = 120,
-  width = 8,
-  height = 8,
-  pattern = "13",
-}
-
-tile{
-  layer = 0,
-  x = 144,
-  y = 88,
-  width = 8,
-  height = 8,
-  pattern = "13",
-}
-
-tile{
-  layer = 0,
-  x = 112,
-  y = 80,
-  width = 8,
-  height = 8,
-  pattern = "13",
-}
-
-tile{
-  layer = 0,
-  x = 96,
-  y = 104,
-  width = 8,
-  height = 8,
-  pattern = "13",
-}
-
-tile{
-  layer = 0,
-  x = 144,
-  y = 128,
-  width = 8,
-  height = 8,
-  pattern = "13",
-}
-
-tile{
-  layer = 0,
-  x = 184,
-  y = 88,
-  width = 8,
-  height = 8,
-  pattern = "13",
+  x = 80,
+  y = 77,
+  direction = 3,
+  breed = "pike_detect",
 }
 
 destination{
   layer = 0,
-  x = 208,
-  y = 101,
-  name = "default",
+  x = 8,
+  y = 13,
   direction = 3,
-  sprite = "entities/sign",
   default = true,
-}
-
-teletransporter{
-  layer = 0,
-  x = 72,
-  y = 96,
-  width = 16,
-  height = 16,
-  name = "to_start",
-  sprite = "entities/sign",
-  destination_map = "0",
-  destination = "start_position",
 }
 

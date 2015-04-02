@@ -4,7 +4,7 @@ local enemy = ...
 
 local state = "stopped"  -- "stopped", "moving", "going_back" or "paused".
 local initial_xy = {}
-local activation_distance = 24
+local activation_distance = 64
 
 local hero_found = false
 
@@ -35,14 +35,13 @@ function enemy:on_update()
     local hero_x, hero_y = hero:get_position()
     local dx, dy = hero_x - x, hero_y - y
 
-    if not hero_found and math.abs(dy) < activation_distance and math.abs(dx) < 16 then
+    if not hero_found and math.abs(dx) < activation_distance and math.abs(dy) < 16 then
       if dx > 0 then
 	self:go(0)
       else
 	self:go(2)
       end
-    end
-    if not hero_found and math.abs(dx) < activation_distance and math.abs(dy) < 16 then
+    elseif not hero_found and math.abs(dy) < activation_distance and math.abs(dx) < 16 then
       if dy > 0 then
 	self:go(3)
       else
@@ -69,7 +68,7 @@ function enemy:go(direction4)
 
   -- Check that we can make the move.
   local index = direction4 + 1
-  if not self:test_obstacles(dxy[index].x * 2, dxy[index].y * 2) then
+  --if not self:test_obstacles(dxy[index].x * 2, dxy[index].y * 2) then
 
     state = "moving"
 
@@ -78,10 +77,10 @@ function enemy:go(direction4)
     local m = sol.movement.create("straight")
     m:set_speed(80)
     m:set_angle(angle)
-    m:set_max_distance(104)
+    m:set_max_distance(64)
     m:set_smooth(false)
     m:start(self)
-  end
+  --end
 end
 
 function enemy:on_obstacle_reached()

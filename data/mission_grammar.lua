@@ -118,7 +118,7 @@ mission_grammar.grammar = {
 mission_grammar.produced_graph = {}
 
 function mission_grammar.initialize_graph( task_length )
-	local nodes = {[1]="start", [2]="E"}
+	local nodes = {[1]="start", [2]="P"}
 	local edges = {[1]={[2]="undir_fw"}, [2]={[1]="undir_bk"}}
 	local non_terminals = {2}
 	for i=3, task_length+2 do
