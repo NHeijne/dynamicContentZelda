@@ -14,11 +14,10 @@ local roomDifficulties = {}
 
 local allowedVariance = 0.1
 local startLifeDifficulty = 0
-local monsterAmountDifficulty = 0.7312
-local baseDifficulty = 1.3709
-local breedDifficulties = {["globul"]=0,["tentacle"]=-1.1636,["snap_dragon"]=0.3998,
-							["green_knight_soldier"]=0,["mandible"]=-0.1424,["red_knight_soldier"]=0.9962,
-							["minillosaur_egg_fixed"]=-0.233,["blue_hardhat_beetle"]=0.5852,["blue_bullblin"]=0}
+local monsterAmountDifficulty = 0.5
+local baseDifficulty = 0
+local breedDifficulties = {["green_knight_soldier"]=0,["mandible"]=0,
+							["minillosaur_egg_fixed"]=0,["blue_hardhat_beetle"]=0}
 
 function fight_generator.add_effects_to_sensors (map, areas, area_details)
 	for sensor in map:get_entities("areasensor_inside_") do
@@ -175,15 +174,10 @@ function logTheRoom (room)
 	--free,freezed,grabbing,hurt,stairs,loading,spin,swinging,tapping
 	--predictedDifficulty
 	
-	fightRoomData[#fightRoomData+1] = room.monsterTypes.globul or 0
-	fightRoomData[#fightRoomData+1] = room.monsterTypes.tentacle or 0
-	fightRoomData[#fightRoomData+1] = room.monsterTypes.snap_dragon or 0
 	fightRoomData[#fightRoomData+1] = room.monsterTypes.green_knight_soldier or 0
 	fightRoomData[#fightRoomData+1] = room.monsterTypes.mandible or 0
-	fightRoomData[#fightRoomData+1] = room.monsterTypes.red_knight_soldier or 0
 	fightRoomData[#fightRoomData+1] = room.monsterTypes.minillosaur_egg_fixed or 0
 	fightRoomData[#fightRoomData+1] = room.monsterTypes.blue_hardhat_beetle or 0
-	fightRoomData[#fightRoomData+1] = room.monsterTypes.blue_bullblin or 0
 	
 	fightRoomData[#fightRoomData+1] = room.monsters
 	fightRoomData[#fightRoomData+1] = room.startingLife
