@@ -2,6 +2,7 @@ local log 				= require("log")
 local table_util 		= require("table_util")
 local area_util 		= require("area_util")
 local num_util 			= require("num_util")
+local learningAlgorithms = require("learningAlgorithms")
 
 local fight_generator = {}
 local lowestDifficulty = 1
@@ -161,6 +162,7 @@ function analyseGameplaySoFar(map)
 	
 	f:flush(); f:close()
 	logTheRoom (room)
+	learningAlgorithms.linearRegression(roomContentsData, roomDifficulties)
 end
 
 function logTheRoom (room) 
