@@ -3,6 +3,7 @@ local table_util 		= require("table_util")
 local area_util 		= require("area_util")
 local num_util 			= require("num_util")
 local learningAlgorithms = require("learningAlgorithms")
+local matrix			= require("matrix")
 
 local fight_generator = {}
 local lowestDifficulty = 1
@@ -167,6 +168,7 @@ end
 function logTheRoom (room) 
 	local fightRoomData = {}
 	local playerBehaviourData = {}
+	local bias = 1
 	
 	--globul,tentacle,snap,greenKnight,mandible,redKnight,egg,hardhat,bullblin
 	--monsters,startLife
@@ -181,6 +183,8 @@ function logTheRoom (room)
 	
 	fightRoomData[#fightRoomData+1] = room.monsters
 	fightRoomData[#fightRoomData+1] = room.startingLife
+	
+	fightRoomData[#fightRoomData+1] = bias
 	
 	playerBehaviourData[#playerBehaviourData+1] = room.swordHits
 	playerBehaviourData[#playerBehaviourData+1] = room.timeInRoom
