@@ -15,10 +15,10 @@ local roomDifficulties = {}
 
 local allowedVariance = 0.1
 local startLifeDifficulty = 0
-local monsterAmountDifficulty = 0.5
-local baseDifficulty = 0
-local breedDifficulties = {["green_knight_soldier"]=0,["mandible"]=0,
-							["minillosaur_egg_fixed"]=0,["blue_hardhat_beetle"]=0}
+local monsterAmountDifficulty = 31.9555625
+local baseDifficulty = 0.24105891472878
+local breedDifficulties = {["green_knight_soldier"]=-35.150038889264,["mandible"]=-33.739052007842,
+							["minillosaur_egg_fixed"]=-29.326765041915,["blue_hardhat_beetle"]=-30.636686458897}
 
 function fight_generator.add_effects_to_sensors (map, areas, area_details)
 	for sensor in map:get_entities("areasensor_inside_") do
@@ -45,6 +45,8 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 
 					for _,enemy in pairs(enemiesInEncounter) do
 						local theEnemyIJustMade = map:create_enemy(enemy)
+						theEnemyIJustMade:set_life(2)
+						theEnemyIJustMade:set_damage(2)
 						theEnemyIJustMade:set_treasure("random")
 						local f = sol.file.open("userExperience.txt","a+") 
 						f:write(theEnemyIJustMade:get_breed() .. "-spawned\n")
@@ -162,7 +164,28 @@ function analyseGameplaySoFar(map)
 	
 	f:flush(); f:close()
 	logTheRoom (room)
-	learningAlgorithms.linearRegression(roomContentsData, roomDifficulties)
+	
+	log.debug( matrix.tostring( roomContentsData ) )
+	log.debug( matrix.tostring( roomDifficulties ) ); log.debug('\n')
+	local weights = learningAlgorithms.linearRegression(roomContentsData, roomDifficulties)
+	if weights then updateWeights( weights ) end
+end
+
+function updateWeights (weights)
+	log.debug( weights )
+	log.debug( weights[1][1] )
+	log.debug( weights[2][1] )
+	log.debug( weights[3][1] )
+	log.debug( weights[4][1] )
+	log.debug( weights[5][1] )
+	log.debug( weights[6][1] ); log.debug('\n')
+	breedDifficulties["green_knight_soldier"] = weights[1][1] --room.monsterTypes.green_knight_soldier
+	breedDifficulties["mandible"] = weights[2][1] --room.monsterTypes.mandible
+	breedDifficulties["minillosaur_egg_fixed"] = weights[3][1] --room.monsterTypes.minillosaur_egg_fixed
+	breedDifficulties["blue_hardhat_beetle"] = weights[4][1] --room.monsterTypes.blue_hardhat_beetle
+	monsterAmountDifficulty = weights[5][1] --room.monsters
+	--startLifeDifficulty = weights[6][1] --room.startingLife
+	baseDifficulty = weights[6][1]--bias
 end
 
 function logTheRoom (room) 
@@ -182,7 +205,7 @@ function logTheRoom (room)
 	fightRoomData[#fightRoomData+1] = room.monsterTypes.blue_hardhat_beetle or 0
 	
 	fightRoomData[#fightRoomData+1] = room.monsters
-	fightRoomData[#fightRoomData+1] = room.startingLife
+	--fightRoomData[#fightRoomData+1] = room.startingLife
 	
 	fightRoomData[#fightRoomData+1] = bias
 	
@@ -240,7 +263,7 @@ end
 
 function fight_generator.make(area, maxDiff, map, currentLife) 
 
-	local difficulty = baseDifficulty + startLifeDifficulty * currentLife
+	local difficulty = baseDifficulty -- + startLifeDifficulty * currentLife
 	local enemiesInFight = {}
 	
 	local breedOptions={}
