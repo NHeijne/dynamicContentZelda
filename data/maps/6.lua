@@ -24,7 +24,7 @@ state of delerium.
 
 local feed_cure=[[
 You feed him the
-Cure potion!
+Medicine!
 ]]
 
 local finale1 = [[
@@ -78,18 +78,18 @@ doubt.
 local dad_talk_after = [[
 Go to the witch in the 
 woods to the east, ask
-her for a cure potion!
+her for some Medicine!
 Now go! Good luck!
 ]]
 -----------------------
 --Mom:
 --<question 1>
 local mom_talk_q1 = [[
+Your brother's still
+sick. I'm so worried!
 Ohw my dear boy...
-I'm worried sick, have
-you spoken to your
-father? 
-
+have you spoken to your
+father?
 
 I think he has a plan.
 I will!
@@ -98,8 +98,8 @@ Father's plan?
 --<q1 answer 1>
 local mom_talk_q1_ans1 =[[
 Hurry back, I don't
-know how long he can 
-hold out...
+know how long your 
+brother can hold out...
 ]]
 
 --<q1 answer 2> <q2>
@@ -107,13 +107,24 @@ local mom_talk_q2 =[[
 Your father seems to
 want to ask the witch
 for help and try to
-get the cure from her.
-Why?
+get Medicine from her.
 The witch?
+Why not the brewer?
 ]]
 
 --<q2 answer 1>
 local mom_talk_q2_ans1 =[[
+The witch lives in the 
+woods to the east, 
+there have been rumors 
+going around, I don't
+know the details though
+and neither does your 
+father...
+]]
+
+--<q2 answer 2>
+local mom_talk_q2_ans2 =[[
 He seems to hold a 
 grudge against the old
 brewer now that your 
@@ -124,39 +135,31 @@ been much worse if
 not for the brewer.
 ]]
 
---<q2 answer 2>
-local mom_talk_q2_ans2 =[[
-The witch lives in the 
-woods to the east, 
-there have been rumors 
-going around, I don't
-know the details though
-and neither does your 
-father...
-]]
-
-
-local function walk(npc)
-  local m = sol.movement.create("path")
-  m:set_path{0, 0,0, 0,0, 0, 2,2, 4, 4,4, 4,4, 4, 6, 6}
-  m:set_speed(32)
-  m:set_loop()
-  m:start(npc)
+local function step_in_front_of_door(mom)
+	local m = sol.movement.create("path")
+	m:set_path{0, 0}
+	m:set_speed(32)
+	m.on_finished = function ( )
+		mom:get_sprite():set_direction(1)
+	end
+	m:start(mom)
 end
 
-local function random_walk(npc)
-
-  local m = sol.movement.create("random_path")
-  m:set_speed(32)
-  m:start(npc)
+local function step_away_from_door(mom)
+	local m = sol.movement.create("path")
+	m:set_speed(32)
+	m:set_path{4, 4}
+	m.on_finished = function ( )
+  	  	mom:get_sprite():set_direction(1)
+  	end
+	m:start(mom)
 end
-
 
 function map:on_started(destination)
 	if destination == start_position then
 		sol.audio.play_music("beginning")
+		step_in_front_of_door(mom)
 	end
-  	walk(mom)
 end
 
 function dad:on_interaction( ... )
@@ -165,14 +168,18 @@ function dad:on_interaction( ... )
 			if answer == 1 then
 				game:start_dialog("test.variable", dad_talk_q1_ans1, function() 
 					hero:start_treasure("wooden_key", 1, "shed_key", function()
-		            	game:start_dialog("test.variable", dad_talk_after)
+		            	game:start_dialog("test.variable", dad_talk_after, function()
+		            		step_away_from_door(mom)
+		            	end)
 		          	end)
 				end)
 			else
 				game:start_dialog("test.variable", dad_talk_q1_ans2, function() 
 					game:start_dialog("test.variable", dad_talk_q1_ans1, function() 
 						hero:start_treasure("wooden_key", 1, "shed_key", function()
-			            	game:start_dialog("test.variable", dad_talk_after)
+			            	game:start_dialog("test.variable", dad_talk_after, function ( )
+			            		step_away_from_door(mom)
+			            	end)
 			          	end)
 					end)
 				end)
@@ -184,7 +191,6 @@ function dad:on_interaction( ... )
 end
 
 function mom:on_interaction( ... )
-	mom:stop_movement()
 	game:start_dialog("test.question", mom_talk_q1, function(answer) 
 		if answer == 1 then
 			game:start_dialog("test.variable", mom_talk_q1_ans1)

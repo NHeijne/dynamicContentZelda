@@ -93,8 +93,8 @@ How can you help?
 --<answer 1>
 local brewer_talk_q1_ans1=[[
 The witch probably 
-knows how to brew the
-Cure Potion as well.
+knows how to make 
+the Medicine as well.
 I hope your father will
 forgive me for my 
 negligence.
@@ -208,11 +208,7 @@ local righttwin_talk_1=[[
 Dad says the witch
 is like... really old!
 That she keeps herself
-alive with magic!
-]]
-
---<second time talking>
-local righttwin_talk_2=[[
+alive with magic!$0
 But with magic she
 keeps for herself...
 ]]
@@ -222,19 +218,17 @@ local lefttwin_talk_1=[[
 Mom says the witch
 is like... real smart!
 There's so much stuff
-that only she knows.
-]]
---<second time talking>
-local lefttwin_talk_2=[[
+that only she knows.$0
 But she doesn't want
 to share any of it...
 ]]
+
 -----------------------
 --little guy at bushes:
 local littleguy_talk=[[
-I lost my milk bottle 
-in the bushes, can you 
-help me find it?
+I lost my bottle while
+playing in the bushes, 
+please help me find it?
 ]]
 
 --IF bottle_1 then:
@@ -246,21 +240,11 @@ keep the bottle.
 -----------------------
 
 function lefttwin:on_interaction()
-	if game:get_value("lefttwin_talked") then
-		game:start_dialog("test.variable", lefttwin_talk_2)
-	else
-		game:set_value("lefttwin_talked", true)
-		game:start_dialog("test.variable", lefttwin_talk_1)
-	end
+	game:start_dialog("test.variable", lefttwin_talk_1)
 end
 
 function righttwin:on_interaction()
-	if game:get_value("righttwin_talked") then
-		game:start_dialog("test.variable", righttwin_talk_2)
-	else
-		game:set_value("righttwin_talked", true)
-		game:start_dialog("test.variable", righttwin_talk_1)
-	end
+	game:start_dialog("test.variable", righttwin_talk_1)
 end
 
 function glassesguy:on_interaction()

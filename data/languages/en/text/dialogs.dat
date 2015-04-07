@@ -1770,9 +1770,7 @@ dialog{
   id = "_treasure.cure.1",
   icon = 99,
   text = [[
-You created the
-Cure Potion!$0
-
+You got the Medicine!$0
 Hurry to your 
 brother!
 ]]

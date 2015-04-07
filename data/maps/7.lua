@@ -5,14 +5,14 @@ local game = map:get_game()
 
 local witch_talk_a = [[
 What do you want? If
-you want any potions
-you can buy them from
-me as long as you have 
+you want a Red potion
+you can buy it from
+me as long as you have
 an empty bottle.
 
 So what do you want?
-I'll be going.
-Cure Potion!
+I need Medicine!
+Red Potion?
 ]]
 
 local witch_talk_a_ans1 = [[
@@ -32,6 +32,14 @@ I can make a Cure
 Potion for you.
 ]]
 
+local witch_talk_a_ans2 = [[
+Made from a local 
+mushroom. It will 
+restore lots of hearts.
+Hehehe...
+]]
+
+
 local witch_talk_a_ans1_after=[[
 Go through the mines
 to get to where the
@@ -44,7 +52,7 @@ Hehehe...
 ]]
 
 local witch_talk_end = [[
-Here's the cure sonny.
+Here's your Medicine.
 I hope he gets better 
 soon...
 Hehehe...
@@ -94,14 +102,14 @@ diluted_red_potion.on_buying = potion_buying
 function witch:on_interaction( ... )
 	if not game:get_value("mine_key") then
 		game:start_dialog("test.question", witch_talk_a, function(answer) 
-			if answer == 2 then
+			if answer == 1 then
 				game:start_dialog("test.variable", witch_talk_a_ans1, function ()
 					hero:start_treasure("rock_key", 1, "mine_key", function()
 						game:start_dialog("test.variable", witch_talk_a_ans1_after)
 	          		end)
 				end)
 			else
-				game:start_dialog("test.variable", witch_talk_after)
+				game:start_dialog("test.variable", witch_talk_a_ans2)
 			end
 		end)
     elseif game:get_value("mine_key") and not game:get_value("quest_flower") and not game:get_value("diluted_cure") then
