@@ -10,10 +10,12 @@ local lowestDifficulty = 1
 local highestDifficulty = 5
 local difficultyOfFights = lowestDifficulty
 
-local roomContentsData = {}
-local roomDifficulties = {}
+local roomContentsData = {}	--{0,0,0,0,1},{0,0,0,2,1},{1,1,1,2,1},
+							--{0,4,3,2,1},{3,4,1,1,1},{2,2,1,3,1},
+							--{3,1,1,1,1},{0,3,4,3,1},{4,3,1,1,1}}
+local roomDifficulties = {} --{1.3787,1.6806,3.7767,4.9803,5.4531,3.7716,3.4438,4.8868,5.6419}
 
-local allowedVariance = 0.5 -- What should this be?
+local allowedVariance = 0.19304433520175
 local startLifeDifficulty = 0
 local monsterAmountDifficulty = 0
 local baseDifficulty = 1.2527816115033
@@ -165,11 +167,11 @@ function analyseGameplaySoFar(map)
 	f:flush(); f:close()
 	logTheRoom (room)
 	local weights = learningAlgorithms.linearRegression(roomContentsData, roomDifficulties)
+	
 	if weights then updateWeights( weights ) end
 end
 
 function updateWeights (weights)
-	log.debug( matrix.tostring( weights ) )
 	breedDifficulties["green_knight_soldier"] = weights[1][1] --room.monsterTypes.green_knight_soldier
 	breedDifficulties["mandible"] = weights[2][1] --room.monsterTypes.mandible
 	breedDifficulties["minillosaur_egg_fixed"] = weights[3][1] --room.monsterTypes.minillosaur_egg_fixed
@@ -177,12 +179,28 @@ function updateWeights (weights)
 	--monsterAmountDifficulty = weights[5][1] --room.monsters
 	--startLifeDifficulty = weights[6][1] --room.startingLife
 	baseDifficulty = weights[5][1]--bias
+	allowedVariance = smallestAbsoluteNumber( {weights[1][1],weights[2][1],weights[3][1],weights[4][1]} )
 	
-	--allowedVariance = breedDifficulties["green_knight_soldier"]
-	--if breedDifficulties["mandible"] > allowedVariance then allowedVariance = breedDifficulties["mandible"] end
-	--if breedDifficulties["minillosaur_egg_fixed"] > allowedVariance then allowedVariance = breedDifficulties["minillosaur_egg_fixed"] end
-	--if breedDifficulties["blue_hardhat_beetle"] > allowedVariance then allowedVariance = breedDifficulties["blue_hardhat_beetle"] end
-	--allowedVariance = allowedVariance + monsterAmountDifficulty
+	log.debug( weights )
+	log.debug( allowedVariance )
+end
+
+function smallestAbsoluteNumber ( list )
+	log.debug(list)
+	
+	local smallest = 1000
+	for _,weight in pairs(list) do
+		if absolute( weight ) < smallest then smallest = absolute( weight ) end
+	end
+	return smallest
+end
+
+function absolute( number )
+	if number < 0 then
+		return -number
+	else
+		return number
+	end
 end
 
 function logTheRoom (room) 
