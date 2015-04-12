@@ -6,21 +6,23 @@ local learningAlgorithms = require("learningAlgorithms")
 local matrix			= require("matrix")
 
 local fight_generator = {}
-local lowestDifficulty = 1
+local lowestDifficulty = 2
 local highestDifficulty = 5
 local difficultyOfFights = lowestDifficulty
 
-local roomContentsData = {}	--{0,0,0,0,1},{0,0,0,2,1},{1,1,1,2,1},
-							--{0,4,3,2,1},{3,4,1,1,1},{2,2,1,3,1},
-							--{3,1,1,1,1},{0,3,4,3,1},{4,3,1,1,1}}
-local roomDifficulties = {} --{1.3787,1.6806,3.7767,4.9803,5.4531,3.7716,3.4438,4.8868,5.6419}
+local roomContentsData = {}
+local roomDifficulties = {}
 
-local allowedVariance = 0.19304433520175
+local allowedVariance = 0
 local startLifeDifficulty = 0
 local monsterAmountDifficulty = 0
-local baseDifficulty = 1.2527816115033
-local breedDifficulties = {["green_knight_soldier"]=0.58598689621007,["mandible"]=0.30693506462374,
-							["minillosaur_egg_fixed"]=0.19304433520175,["blue_hardhat_beetle"]=0.38543618364107}
+local baseDifficulty = 0
+local breedDifficulties = {	["minillosaur_egg_fixed"]	= 0,
+							["mandible"]				= 0,
+							["blue_hardhat_beetle"]		= 0,
+							["green_knight_soldier"]	= 0}
+		
+local enemyTried = 0 -- To initialize the training data, we need to try every enemy.
 
 function fight_generator.add_effects_to_sensors (map, areas, area_details)
 	for sensor in map:get_entities("areasensor_inside_") do
@@ -172,10 +174,10 @@ function analyseGameplaySoFar(map)
 end
 
 function updateWeights (weights)
-	breedDifficulties["green_knight_soldier"] = weights[1][1] --room.monsterTypes.green_knight_soldier
+	breedDifficulties["minillosaur_egg_fixed"] = weights[1][1] --room.monsterTypes.minillosaur_egg_fixed
 	breedDifficulties["mandible"] = weights[2][1] --room.monsterTypes.mandible
-	breedDifficulties["minillosaur_egg_fixed"] = weights[3][1] --room.monsterTypes.minillosaur_egg_fixed
-	breedDifficulties["blue_hardhat_beetle"] = weights[4][1] --room.monsterTypes.blue_hardhat_beetle
+	breedDifficulties["blue_hardhat_beetle"] = weights[3][1] --room.monsterTypes.blue_hardhat_beetle
+	breedDifficulties["green_knight_soldier"] = weights[4][1] --room.monsterTypes.green_knight_soldier
 	--monsterAmountDifficulty = weights[5][1] --room.monsters
 	--startLifeDifficulty = weights[6][1] --room.startingLife
 	baseDifficulty = weights[5][1]--bias
@@ -213,15 +215,12 @@ function logTheRoom (room)
 	--hits,time,dirChange,lostLife,useless,moving,standing,percStand
 	--free,freezed,grabbing,hurt,stairs,loading,spin,swinging,tapping
 	--predictedDifficulty
-	
-	fightRoomData[#fightRoomData+1] = room.monsterTypes.green_knight_soldier or 0
-	fightRoomData[#fightRoomData+1] = room.monsterTypes.mandible or 0
 	fightRoomData[#fightRoomData+1] = room.monsterTypes.minillosaur_egg_fixed or 0
+	fightRoomData[#fightRoomData+1] = room.monsterTypes.mandible or 0
 	fightRoomData[#fightRoomData+1] = room.monsterTypes.blue_hardhat_beetle or 0
-	
+	fightRoomData[#fightRoomData+1] = room.monsterTypes.green_knight_soldier or 0
 	--fightRoomData[#fightRoomData+1] = room.monsters
 	--fightRoomData[#fightRoomData+1] = room.startingLife
-	
 	fightRoomData[#fightRoomData+1] = bias
 	
 	playerBehaviourData[#playerBehaviourData+1] = room.swordHits
@@ -278,13 +277,29 @@ end
 
 function fight_generator.make(area, maxDiff, map, currentLife) 
 
-	local difficulty = baseDifficulty -- + startLifeDifficulty * currentLife
-	local enemiesInFight = {}
-	
 	local breedOptions={}
 	for k,_ in pairs(breedDifficulties) do
 		table.insert( breedOptions, k )
 	end
+
+	if enemyTried <= 4 then 
+		if enemyTried == 0 then enemyTried=enemyTried+1; return {},1 end
+		local hero = map:get_hero()
+		local xPos,yPos = hero:get_position()
+		while hero:get_distance(xPos,yPos) < 100 do
+			xPos = math.random(area.x1+40, area.x2-40)
+			yPos = math.random(area.y1+40, area.y2-40)
+		end
+		local chosenBreed = breedOptions[enemyTried]
+		enemyTried=enemyTried+1
+		return {{name="generatedEnemy_thisOne", layer=0, x=xPos, y=yPos, direction=0, breed=chosenBreed}}, 1
+	end
+	
+	if enemyTried == 5 then enemyTried=6; difficultyOfFights = lowestDifficulty end
+
+	local difficulty = baseDifficulty -- + startLifeDifficulty * currentLife
+	local enemiesInFight = {}
+	
 	while difficulty < maxDiff - allowedVariance do
 		local hero = map:get_hero()
 		local xPos,yPos = hero:get_position()
