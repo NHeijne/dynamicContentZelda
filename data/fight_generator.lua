@@ -10,9 +10,7 @@ local lowestDifficulty = 2
 local highestDifficulty = 5
 local difficultyOfFights = lowestDifficulty
 
-local roomContentsData = {}
-local roomDifficulties = {}
-
+local baseStress = 1.3787
 local allowedVariance = 0
 local startLifeDifficulty = 0
 local monsterAmountDifficulty = 0
@@ -21,8 +19,11 @@ local breedDifficulties = {	["minillosaur_egg_fixed"]	= 0,
 							["mandible"]				= 0,
 							["blue_hardhat_beetle"]		= 0,
 							["green_knight_soldier"]	= 0}
+							
+local roomContentsData = {{0,0,0,0,1}}
+local roomDifficulties = {{baseStress}}
 		
-local enemyTried = 0 -- To initialize the training data, we need to try every enemy.
+local enemyTried = 1 -- To initialize the training data, we need to try every enemy.
 
 function fight_generator.add_effects_to_sensors (map, areas, area_details)
 	for sensor in map:get_entities("areasensor_inside_") do
@@ -283,7 +284,6 @@ function fight_generator.make(area, maxDiff, map, currentLife)
 	end
 
 	if enemyTried <= 4 then 
-		if enemyTried == 0 then enemyTried=enemyTried+1; return {},1 end
 		local hero = map:get_hero()
 		local xPos,yPos = hero:get_position()
 		while hero:get_distance(xPos,yPos) < 100 do
