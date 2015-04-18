@@ -26,7 +26,10 @@ local roomDifficulties = {{baseStress}}
 local enemyTried = 1 -- To initialize the training data, we need to try every enemy.
 
 function fight_generator.add_effects_to_sensors (map, areas, area_details)
-	for sensor in map:get_entities("areasensor_inside_") do
+	sensorSide = "areasensor_inside_"
+	if area_details.outside then sensorSide = "areasensor_outside_" end
+
+	for sensor in map:get_entities(sensorSide) do
 		-- areasensor_<inside/outside>_5_type_<F for fights>
 		local sensorname = sensor:get_name()
 		local split_table = table_util.split(sensorname, "_")
