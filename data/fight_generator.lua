@@ -68,6 +68,10 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 						end
 						
 						function theEnemyIJustMade:on_dead()
+							local f = sol.file.open("userExperience.txt","a+") 
+							f:write(theEnemyIJustMade:get_breed() .. "-waskilled\n")
+							f:flush(); f:close()
+							
 							if not map:has_entities("generatedEnemy") then 
 								map:open_doors("door_normal_area_"..split_table[3])
 								
@@ -119,8 +123,8 @@ end
 
 function analyseGameplaySoFar(map)
 	local f = sol.file.open("userExperience.txt","r")
-	local nothing = {swordHits=0, monsters=0, timeInRoom=0, directionChange=0, 
-			lifeLostInRoom=0, uselessKeys=0, monsterTypes={}, heroStates={}, 
+	local nothing = {swordHits=0, monsters=0, monstersKilled=0, timeInRoom=0, directionChange=0, 
+			lifeLostInRoom=0, uselessKeys=0, monsterTypes={}, monsterTypesKilled={}, heroStates={}, 
 			moving=0, standing=0, percentageStanding=0, startingLife=0, intendedDifficulty=0}
 	local room = table_util.copy( nothing )
 
@@ -146,6 +150,14 @@ function analyseGameplaySoFar(map)
 				room.monsterTypes[splitLine[1]] = 1
 			else
 				room.monsterTypes[splitLine[1]] = room.monsterTypes[splitLine[1]] + 1
+			end
+		end
+		if splitLine[2] == "waskilled" then 
+			room.monstersKilled = room.monstersKilled + 1 
+			if room.monsterTypesKilled[splitLine[1]] == nil then
+				room.monsterTypesKilled[splitLine[1]] = 1
+			else
+				room.monsterTypesKilled[splitLine[1]] = room.monsterTypesKilled[splitLine[1]] + 1
 			end
 		end
 		if line == "moving around" then 
@@ -226,11 +238,6 @@ function logTheRoom (room)
 	local playerBehaviourData = {}
 	local bias = 1
 	
-	--globul,tentacle,snap,greenKnight,mandible,redKnight,egg,hardhat,bullblin
-	--monsters,startLife
-	--hits,time,dirChange,lostLife,useless,moving,standing,percStand
-	--free,freezed,grabbing,hurt,stairs,loading,spin,swinging,tapping
-	--predictedDifficulty
 	fightRoomData[#fightRoomData+1] = room.monsterTypes.minillosaur_egg_fixed or 0
 	fightRoomData[#fightRoomData+1] = room.monsterTypes.mandible or 0
 	fightRoomData[#fightRoomData+1] = room.monsterTypes.blue_hardhat_beetle or 0
@@ -247,6 +254,11 @@ function logTheRoom (room)
 	playerBehaviourData[#playerBehaviourData+1] = room.moving
 	playerBehaviourData[#playerBehaviourData+1] = room.standing
 	playerBehaviourData[#playerBehaviourData+1] = room.percentageStanding
+	
+	playerBehaviourData[#playerBehaviourData+1] = room.monsterTypesKilled.minillosaur_egg_fixed or 0
+	playerBehaviourData[#playerBehaviourData+1] = room.monsterTypesKilled.mandible or 0
+	playerBehaviourData[#playerBehaviourData+1] = room.monsterTypesKilled.blue_hardhat_beetle or 0
+	playerBehaviourData[#playerBehaviourData+1] = room.monsterTypesKilled.green_knight_soldier or 0
 
 	playerBehaviourData[#playerBehaviourData+1] = room.heroStates.free or 0
 	playerBehaviourData[#playerBehaviourData+1] = room.heroStates.freezed or 0
