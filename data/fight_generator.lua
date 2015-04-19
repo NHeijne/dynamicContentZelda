@@ -108,13 +108,15 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 				
 			sensor.on_left = 
 				function()
-					analyseGameplaySoFar(map)
-					difficultyOfFights = difficultyOfFights + 1
-					if difficultyOfFights > highestDifficulty then difficultyOfFights = lowestDifficulty end
-					local game = map:get_game()
-					local f = sol.file.open("userExperience.txt","a+"); f:write(game:get_life() .. "-life\n"); f:flush(); f:close()
-					local f = sol.file.open("userExperience.txt","a+"); f:write(os.time() .. "-time\n"); f:flush(); f:close()
-					local f = sol.file.open("userExperience.txt","a+"); f:write("ran away from the fight\n"); f:flush(); f:close()
+					if map:has_entities("generatedEnemy") then
+						analyseGameplaySoFar(map)
+						difficultyOfFights = difficultyOfFights + 1
+						if difficultyOfFights > highestDifficulty then difficultyOfFights = lowestDifficulty end
+						local game = map:get_game()
+						local f = sol.file.open("userExperience.txt","a+"); f:write(game:get_life() .. "-life\n"); f:flush(); f:close()
+						local f = sol.file.open("userExperience.txt","a+"); f:write(os.time() .. "-time\n"); f:flush(); f:close()
+						local f = sol.file.open("userExperience.txt","a+"); f:write("ran away from the fight\n"); f:flush(); f:close()
+					end
 				end
 		end
 				
