@@ -15,15 +15,15 @@ local allowedVariance = 0
 local startLifeDifficulty = 0
 local monsterAmountDifficulty = 0
 local baseDifficulty = 0
-local breedDifficulties = {	["minillosaur_egg_fixed"]	= 0,
-							["mandible"]				= 0,
-							["blue_hardhat_beetle"]		= 0,
-							["green_knight_soldier"]	= 0}
+local breedDifficulties = {	["minillosaur_egg_fixed"]	= 1,
+							["mandible"]				= 1,
+							["blue_hardhat_beetle"]		= 1,
+							["green_knight_soldier"]	= 1}
 							
 local roomContentsData = {{0,0,0,0,1}}
 local roomDifficulties = {{baseStress}}
 		
-local enemyTried = 1 -- To initialize the training data, we need to try every enemy.
+local enemyTried = 5 -- To initialize the training data, we need to try every enemy.
 
 function fight_generator.add_effects_to_sensors (map, areas, area_details)
 	sensorSide = "areasensor_inside_"
@@ -290,12 +290,15 @@ function logTheRoom (room)
 			 0.499 * (room.heroStates.hurt or 0) + 
 			 0.0412 * (room.heroStates["sword swinging"] or 0) + 
 			 1.3787 }
+	roomDifficultyIntention = { room.intendedDifficulty }
 	
 	writeTableToFile (fightRoomData, "roomSummaries.csv")
 	local f = sol.file.open("roomSummaries.csv","a+"); f:write(","); f:flush(); f:close()
 	writeTableToFile (playerBehaviourData, "roomSummaries.csv")
 	local f = sol.file.open("roomSummaries.csv","a+"); f:write(","); f:flush(); f:close()
 	writeTableToFile (roomDifficultyPrediction, "roomSummaries.csv")
+	local f = sol.file.open("roomSummaries.csv","a+"); f:write(","); f:flush(); f:close()
+	writeTableToFile (roomDifficultyIntention, "roomSummaries.csv")
 	local f = sol.file.open("roomSummaries.csv","a+"); f:write("\n"); f:flush(); f:close()
 	
 	roomContentsData[#roomContentsData+1] = fightRoomData
@@ -330,7 +333,7 @@ function fight_generator.make(area, maxDiff, map, currentLife)
 		end
 		local chosenBreed = breedOptions[enemyTried]
 		enemyTried=enemyTried+1
-		return {{name="generatedEnemy_thisOne", layer=0, x=xPos, y=yPos, direction=0, breed=chosenBreed}}, 1
+		return {{name="generatedEnemy_thisOne", layer=0, x=xPos, y=yPos, direction=0, breed=chosenBreed}}, breedDifficulties[chosenBreed]
 	end
 	
 	if enemyTried == 5 then enemyTried=6; difficultyOfFights = lowestDifficulty end
