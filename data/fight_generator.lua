@@ -39,6 +39,7 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 			sensor.on_activated = 
 				function()
 					local f = sol.file.open("userExperience.txt","a+"); f:write(sensor:get_name() .. "\n"); f:flush(); f:close()
+					local f = sol.file.open("userExperience.txt","a+"); f:write(split_table[2] .. "-ofADungeon\n"); f:flush(); f:close()
 					local game = map:get_game()
 					local f = sol.file.open("userExperience.txt","a+"); f:write(game:get_life() .. "-beginlife\n"); f:flush(); f:close()
 					local f = sol.file.open("userExperience.txt","a+"); f:write(os.time() .. "-starttime\n"); f:flush(); f:close()
@@ -126,7 +127,7 @@ function analyseGameplaySoFar(map)
 	local f = sol.file.open("userExperience.txt","r")
 	local nothing = {fightFinished=0, swordHits=0, monsters=0, monstersKilled=0, timeInRoom=0, directionChange=0, 
 			lifeLostInRoom=0, uselessKeys=0, monsterTypes={}, monsterTypesKilled={}, heroStates={}, 
-			moving=0, standing=0, percentageStanding=0, startingLife=0, intendedDifficulty=0}
+			moving=0, standing=0, percentageStanding=0, startingLife=0, intendedDifficulty=0, insideDungeon=0}
 	local room = table_util.copy( nothing )
 
 	while true do
@@ -174,6 +175,9 @@ function analyseGameplaySoFar(map)
 		end
 		if string.find(line, "thefight") then 
 			room.fightFinished = (splitLine[1] == "finished") and 1 or 0
+		end
+		if string.find(line, "ofADungeon") then 
+			room.insideDungeon = (splitLine[1] == "inside") and 1 or 0
 		end
 		if string.find(line, "starttime") then 
 			room.timeInRoom = os.time() - tonumber (splitLine[1])
@@ -250,6 +254,8 @@ function logTheRoom (room)
 	--fightRoomData[#fightRoomData+1] = room.startingLife
 	fightRoomData[#fightRoomData+1] = bias
 	
+	
+	playerBehaviourData[#playerBehaviourData+1] = room.insideDungeon
 	playerBehaviourData[#playerBehaviourData+1] = room.fightFinished
 	playerBehaviourData[#playerBehaviourData+1] = room.swordHits
 	playerBehaviourData[#playerBehaviourData+1] = room.timeInRoom
