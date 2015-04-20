@@ -40,8 +40,8 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 				function()
 					local f = sol.file.open("userExperience.txt","a+"); f:write(sensor:get_name() .. "\n"); f:flush(); f:close()
 					local game = map:get_game()
-					local f = sol.file.open("userExperience.txt","a+"); f:write(game:get_life() .. "-life\n"); f:flush(); f:close()
-					local f = sol.file.open("userExperience.txt","a+"); f:write(os.time() .. "-time\n"); f:flush(); f:close()
+					local f = sol.file.open("userExperience.txt","a+"); f:write(game:get_life() .. "-beginlife\n"); f:flush(); f:close()
+					local f = sol.file.open("userExperience.txt","a+"); f:write(os.time() .. "-starttime\n"); f:flush(); f:close()
 					local split_table = split_table
 					
 					for enemy in map:get_entities("generatedEnemy") do enemy:remove() end
@@ -75,14 +75,13 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 							if not map:has_entities("generatedEnemy") then 
 								map:open_doors("door_normal_area_"..split_table[3])
 								
-								analyseGameplaySoFar(map)
 								difficultyOfFights = difficultyOfFights + 1
 								if difficultyOfFights > highestDifficulty then difficultyOfFights = lowestDifficulty end
 								local game = map:get_game()
-								local f = sol.file.open("userExperience.txt","a+"); f:write(game:get_life() .. "-life\n"); f:flush(); f:close()
-								local f = sol.file.open("userExperience.txt","a+"); f:write(os.time() .. "-time\n"); f:flush(); f:close()
-								local f = sol.file.open("userExperience.txt","a+"); f:write("finished the fight\n"); f:flush(); f:close()
-								
+								local f = sol.file.open("userExperience.txt","a+"); f:write(game:get_life() .. "-endlife\n"); f:flush(); f:close()
+								local f = sol.file.open("userExperience.txt","a+"); f:write(os.time() .. "-endtime\n"); f:flush(); f:close()
+								local f = sol.file.open("userExperience.txt","a+"); f:write("finished-thefight\n"); f:flush(); f:close()
+								analyseGameplaySoFar(map)
 							end
 							return false
 						end
@@ -93,13 +92,13 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 					if not map:has_entities("generatedEnemy") then 
 						map:open_doors("door_normal_area_"..split_table[3])
 						
-						analyseGameplaySoFar(map)
 						difficultyOfFights = difficultyOfFights + 1
 						if difficultyOfFights > highestDifficulty then difficultyOfFights = lowestDifficulty end
 						local game = map:get_game()
-						local f = sol.file.open("userExperience.txt","a+"); f:write(game:get_life() .. "-life\n"); f:flush(); f:close()
-						local f = sol.file.open("userExperience.txt","a+"); f:write(os.time() .. "-time\n"); f:flush(); f:close()
-						local f = sol.file.open("userExperience.txt","a+"); f:write("finished the fight\n"); f:flush(); f:close()
+						local f = sol.file.open("userExperience.txt","a+"); f:write(game:get_life() .. "-endlife\n"); f:flush(); f:close()
+						local f = sol.file.open("userExperience.txt","a+"); f:write(os.time() .. "-endtime\n"); f:flush(); f:close()
+						local f = sol.file.open("userExperience.txt","a+"); f:write("finished-thefight\n"); f:flush(); f:close()
+						analyseGameplaySoFar(map)
 						
 					end
 					return false
@@ -109,13 +108,13 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 			sensor.on_left = 
 				function()
 					if map:has_entities("generatedEnemy") then
-						analyseGameplaySoFar(map)
 						difficultyOfFights = difficultyOfFights + 1
 						if difficultyOfFights > highestDifficulty then difficultyOfFights = lowestDifficulty end
 						local game = map:get_game()
-						local f = sol.file.open("userExperience.txt","a+"); f:write(game:get_life() .. "-life\n"); f:flush(); f:close()
-						local f = sol.file.open("userExperience.txt","a+"); f:write(os.time() .. "-time\n"); f:flush(); f:close()
-						local f = sol.file.open("userExperience.txt","a+"); f:write("ran away from the fight\n"); f:flush(); f:close()
+						local f = sol.file.open("userExperience.txt","a+"); f:write(game:get_life() .. "-endlife\n"); f:flush(); f:close()
+						local f = sol.file.open("userExperience.txt","a+"); f:write(os.time() .. "-endtime\n"); f:flush(); f:close()
+						local f = sol.file.open("userExperience.txt","a+"); f:write("ranawayfrom-thefight\n"); f:flush(); f:close()
+						analyseGameplaySoFar(map)
 					end
 				end
 		end
@@ -125,7 +124,7 @@ end
 
 function analyseGameplaySoFar(map)
 	local f = sol.file.open("userExperience.txt","r")
-	local nothing = {swordHits=0, monsters=0, monstersKilled=0, timeInRoom=0, directionChange=0, 
+	local nothing = {fightFinished=0, swordHits=0, monsters=0, monstersKilled=0, timeInRoom=0, directionChange=0, 
 			lifeLostInRoom=0, uselessKeys=0, monsterTypes={}, monsterTypesKilled={}, heroStates={}, 
 			moving=0, standing=0, percentageStanding=0, startingLife=0, intendedDifficulty=0}
 	local room = table_util.copy( nothing )
@@ -168,12 +167,15 @@ function analyseGameplaySoFar(map)
 		if line == "standing still" then 
 			room.standing = room.standing + 1
 		end
-		if string.find(line, "life") then 
+		if string.find(line, "beginlife") then 
 			local game = map:get_game()
 			room.lifeLostInRoom = tonumber (splitLine[1]) - game:get_life()
 			room.startingLife = tonumber (splitLine[1])
 		end
-		if string.find(line, "time") then 
+		if string.find(line, "thefight") then 
+			room.fightFinished = (splitLine[1] == "finished") and 1 or 0
+		end
+		if string.find(line, "starttime") then 
 			room.timeInRoom = os.time() - tonumber (splitLine[1])
 		end
 		if line=="right-keypress" or line=="left-keypress" or line=="up-keypress" or line=="down-keypress" then 
@@ -248,6 +250,7 @@ function logTheRoom (room)
 	--fightRoomData[#fightRoomData+1] = room.startingLife
 	fightRoomData[#fightRoomData+1] = bias
 	
+	playerBehaviourData[#playerBehaviourData+1] = room.fightFinished
 	playerBehaviourData[#playerBehaviourData+1] = room.swordHits
 	playerBehaviourData[#playerBehaviourData+1] = room.timeInRoom
 	playerBehaviourData[#playerBehaviourData+1] = room.directionChange
