@@ -11,7 +11,6 @@ local highestDifficulty = 5
 local difficultyOfFights = lowestDifficulty
 
 local baseStress = 1.3787
-local allowedVariance = 0
 local startLifeDifficulty = 0
 local monsterAmountDifficulty = 0
 local baseDifficulty = 0
@@ -125,16 +124,14 @@ end
 
 function analyseGameplaySoFar(map)
 	local f = sol.file.open("userExperience.txt","r")
-	local nothing = {fightFinished=0, swordHits=0, monsters=0, monstersKilled=0, timeInRoom=0, directionChange=0, 
+	local nothing = {fightFinished=0, swordHits=0, monstersKilled=0, timeInRoom=0, directionChange=0, 
 			lifeLostInRoom=0, uselessKeys=0, monsterTypes={}, monsterTypesKilled={}, heroStates={}, 
 			moving=0, standing=0, percentageStanding=0, startingLife=0, intendedDifficulty=0, insideDungeon=0}
 	local room = table_util.copy( nothing )
 
 	while true do
 		local line = f:read("*line")
-		if not line then 
-			break 
-		end
+		if not line then break end
 		
 		local splitLine = table_util.split(line, "-")
 		if line=="sword-enemy" then room.swordHits = room.swordHits + 1 end
@@ -147,7 +144,6 @@ function analyseGameplaySoFar(map)
 		end
 
 		if splitLine[2] == "spawned" then 
-			room.monsters = room.monsters + 1 
 			if room.monsterTypes[splitLine[1]] == nil then
 				room.monsterTypes[splitLine[1]] = 1
 			else
@@ -215,13 +211,10 @@ function updateWeights (weights)
 	breedDifficulties["mandible"] = weights[2][1] --room.monsterTypes.mandible
 	breedDifficulties["blue_hardhat_beetle"] = weights[3][1] --room.monsterTypes.blue_hardhat_beetle
 	breedDifficulties["green_knight_soldier"] = weights[4][1] --room.monsterTypes.green_knight_soldier
-	--monsterAmountDifficulty = weights[5][1] --room.monsters
 	--startLifeDifficulty = weights[6][1] --room.startingLife
 	baseDifficulty = weights[5][1]--bias
-	allowedVariance = smallestAbsoluteNumber( {weights[1][1],weights[2][1],weights[3][1],weights[4][1]} )
 	
 	log.debug( weights )
-	log.debug( allowedVariance )
 end
 
 function smallestAbsoluteNumber ( list )
@@ -259,7 +252,6 @@ function logTheRoom (room)
 	fightRoomData[#fightRoomData+1] = room.monsterTypes.mandible or 0
 	fightRoomData[#fightRoomData+1] = room.monsterTypes.blue_hardhat_beetle or 0
 	fightRoomData[#fightRoomData+1] = room.monsterTypes.green_knight_soldier or 0
-	--fightRoomData[#fightRoomData+1] = room.monsters
 	--fightRoomData[#fightRoomData+1] = room.startingLife
 	fightRoomData[#fightRoomData+1] = bias
 	
@@ -347,10 +339,10 @@ function fight_generator.make(area, maxDiff, map, currentLife)
 	
 	if enemyTried == 5 then enemyTried=6; difficultyOfFights = lowestDifficulty end
 
-	local difficulty = baseDifficulty -- + startLifeDifficulty * currentLife
+	local difficulty = baseDifficulty + startLifeDifficulty * currentLife
 	local enemiesInFight = {}
 	
-	while difficulty < maxDiff - allowedVariance do
+	while difficulty < maxDiff do
 		local hero = map:get_hero()
 		local xPos,yPos = hero:get_position()
 		while hero:get_distance(xPos,yPos) < 100 do
@@ -361,14 +353,19 @@ function fight_generator.make(area, maxDiff, map, currentLife)
 		local chosenBreed = breedOptions[math.random(1,#breedOptions)] 
 		local chosenDifficulty = breedDifficulties[chosenBreed]
 		if chosenDifficulty <= 0 then chosenDifficulty = 1 end
-		while breedDifficulties[chosenBreed] + monsterAmountDifficulty + difficulty > maxDiff + allowedVariance  do 
+		
+		local iterations = 0
+		while absolute( maxDiff - (difficulty+chosenDifficulty+monsterAmountDifficulty) ) >= absolute( maxDiff - difficulty ) do
+			iterations = iterations + 1
+			if iterations > 40 then break end
 			chosenBreed = breedOptions[math.random(1,#breedOptions)] 
 			chosenDifficulty = breedDifficulties[chosenBreed]
 			if chosenDifficulty <= 0 then chosenDifficulty = 1 end
 		end
+		
 		-- monster = {name, layer, x,y, direction, breed,rank,savegame_variable, treasure_name,treasure_variant,treasure_savegame_variable}
 		table.insert(enemiesInFight,{name="generatedEnemy_thisOne", layer=0, x=xPos, y=yPos, direction=0, breed=chosenBreed})
-		difficulty = difficulty + breedDifficulties[chosenBreed] + monsterAmountDifficulty
+		difficulty = difficulty + chosenDifficulty + monsterAmountDifficulty
 	end
 	return enemiesInFight, difficulty
 end
