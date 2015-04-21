@@ -113,8 +113,8 @@ in the wild.
 
 local brewer_talk_cure = [[
 You've found the 
-flower! I'll make you 
-the cure right away!
+flower! I'll make the 
+Medicine right away!$0
 ]]
 
 local brewer_talk_after = [[
@@ -354,7 +354,7 @@ function quest_reminder_a:on_activated()
 [[
 I have to turn
 this Cure Flower
-into a potion!
+into Medicine!
 ]])
 	elseif not game:get_value("mine_key") then
 		game:start_dialog("test.variable", 
@@ -375,7 +375,7 @@ function quest_reminder_d:on_activated()
 [[
 I have to turn
 this Cure Flower
-into a potion!
+into Medicine!
 ]])
 	else
 		quest_block_d:set_enabled(false)

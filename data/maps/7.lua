@@ -28,8 +28,8 @@ other side of the mines
 to the east.
 If you bring me that
 flower and 15 rupees
-I can make a Cure
-Potion for you.
+I can make some
+Medicine for you.
 ]]
 
 local witch_talk_a_ans2 = [[
