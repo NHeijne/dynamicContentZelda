@@ -37,9 +37,10 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 		
 			sensor.on_activated = 
 				function()
+				
+					local game = map:get_game()
 					local f = sol.file.open("userExperience.txt","a+"); f:write(sensor:get_name() .. "\n"); f:flush(); f:close()
 					local f = sol.file.open("userExperience.txt","a+"); f:write(split_table[2] .. "-ofADungeon\n"); f:flush(); f:close()
-					local game = map:get_game()
 					local f = sol.file.open("userExperience.txt","a+"); f:write(game:get_life() .. "-beginlife\n"); f:flush(); f:close()
 					local f = sol.file.open("userExperience.txt","a+"); f:write(os.time() .. "-starttime\n"); f:flush(); f:close()
 					local split_table = split_table
@@ -228,14 +229,14 @@ function logTheRoom (room)
 	local playerBehaviourData = {}
 	local bias = 1
 	
+	-- egg,mandible,hardhat,knight,startLife
 	fightRoomData[#fightRoomData+1] = room.monsterTypes.minillosaur_egg_fixed or 0
 	fightRoomData[#fightRoomData+1] = room.monsterTypes.mandible or 0
 	fightRoomData[#fightRoomData+1] = room.monsterTypes.blue_hardhat_beetle or 0
 	fightRoomData[#fightRoomData+1] = room.monsterTypes.green_knight_soldier or 0
-	--fightRoomData[#fightRoomData+1] = room.startingLife
-	fightRoomData[#fightRoomData+1] = bias
+	fightRoomData[#fightRoomData+1] = room.startingLife
 	
-	
+	-- inside,finished,swordHits,time,dirChange,lifeLost,uselessKeys,moving,standing,percStanding
 	playerBehaviourData[#playerBehaviourData+1] = room.insideDungeon
 	playerBehaviourData[#playerBehaviourData+1] = room.fightFinished
 	playerBehaviourData[#playerBehaviourData+1] = room.swordHits
@@ -247,11 +248,13 @@ function logTheRoom (room)
 	playerBehaviourData[#playerBehaviourData+1] = room.standing
 	playerBehaviourData[#playerBehaviourData+1] = room.percentageStanding
 	
+	-- killEgg,killMandible,killHardhat,killKnight
 	playerBehaviourData[#playerBehaviourData+1] = room.monsterTypesKilled.minillosaur_egg_fixed or 0
 	playerBehaviourData[#playerBehaviourData+1] = room.monsterTypesKilled.mandible or 0
 	playerBehaviourData[#playerBehaviourData+1] = room.monsterTypesKilled.blue_hardhat_beetle or 0
 	playerBehaviourData[#playerBehaviourData+1] = room.monsterTypesKilled.green_knight_soldier or 0
 
+	-- free,freezed,grabbing,hurt,stairs,loading,spin,swing,tap
 	playerBehaviourData[#playerBehaviourData+1] = room.heroStates.free or 0
 	playerBehaviourData[#playerBehaviourData+1] = room.heroStates.freezed or 0
 	playerBehaviourData[#playerBehaviourData+1] = room.heroStates.grabbing or 0
@@ -273,6 +276,7 @@ function logTheRoom (room)
 			 1.3787 }
 	roomDifficultyIntention = { room.intendedDifficulty }
 	
+	-- egg,mandible,hardhat,knight,startLife,inside,finished,swordHits,time,dirChange,lifeLost,uselessKeys,moving,standing,percStanding,killEgg,killMandible,killHardhat,killKnight,free,freezed,grabbing,hurt,stairs,loading,spin,swing,tap,measuredStress,intendedStress
 	writeTableToFile (fightRoomData, "roomSummaries.csv")
 	local f = sol.file.open("roomSummaries.csv","a+"); f:write(","); f:flush(); f:close()
 	writeTableToFile (playerBehaviourData, "roomSummaries.csv")
@@ -282,7 +286,9 @@ function logTheRoom (room)
 	writeTableToFile (roomDifficultyIntention, "roomSummaries.csv")
 	local f = sol.file.open("roomSummaries.csv","a+"); f:write("\n"); f:flush(); f:close()
 	
-	roomContentsData[#roomContentsData+1] = fightRoomData
+	roomContentsData[#roomContentsData+1] = {room.monsterTypes.minillosaur_egg_fixed or 0, room.monsterTypes.mandible or 0, 
+											room.monsterTypes.blue_hardhat_beetle or 0, room.monsterTypes.green_knight_soldier or 0,
+											bias}
 	roomDifficulties[#roomDifficulties+1] = roomDifficultyPrediction
 	
 end
