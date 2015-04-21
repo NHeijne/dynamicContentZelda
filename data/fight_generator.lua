@@ -9,7 +9,8 @@ local fight_generator = {}
 local lowestDifficulty = 2
 local highestDifficulty = 5
 local difficultyOfFights = lowestDifficulty
-
+local everyEnemyDealsDamage = 2
+local everyEnemyHasHealth = 3
 local baseStress = 1.3787
 local startLifeDifficulty = 0
 local monsterAmountDifficulty = 0
@@ -37,8 +38,22 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 		
 			sensor.on_activated = 
 				function()
-				
+					
 					local game = map:get_game()
+					local hero = map:get_hero()
+					function hero:on_state_changed(state)
+						local f = sol.file.open("userExperience.txt","a+"); f:write(state .. "-hero\n"); f:flush(); f:close()
+						if state == "hurt" and game:get_life() <= 2 then
+							-- player is dying now, log the room.
+							local game = map:get_game()
+							local f = sol.file.open("userExperience.txt","a+"); f:write(game:get_life() .. "-endlife\n"); f:flush(); f:close()
+							local f = sol.file.open("userExperience.txt","a+"); f:write(os.time() .. "-endtime\n"); f:flush(); f:close()
+							local f = sol.file.open("userExperience.txt","a+"); f:write("diedin-thefight\n"); f:flush(); f:close()
+							analyseGameplaySoFar(map)
+						end
+						return false
+					end
+					
 					local f = sol.file.open("userExperience.txt","a+"); f:write(sensor:get_name() .. "\n"); f:flush(); f:close()
 					local f = sol.file.open("userExperience.txt","a+"); f:write(split_table[2] .. "-ofADungeon\n"); f:flush(); f:close()
 					local f = sol.file.open("userExperience.txt","a+"); f:write(game:get_life() .. "-beginlife\n"); f:flush(); f:close()
@@ -55,8 +70,8 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 
 					for _,enemy in pairs(enemiesInEncounter) do
 						local theEnemyIJustMade = map:create_enemy(enemy)
-						theEnemyIJustMade:set_life(3)
-						theEnemyIJustMade:set_damage(2)
+						theEnemyIJustMade:set_life(everyEnemyHasHealth)
+						theEnemyIJustMade:set_damage(everyEnemyDealsDamage)
 						theEnemyIJustMade:set_treasure("random")
 						local f = sol.file.open("userExperience.txt","a+") 
 						f:write(theEnemyIJustMade:get_breed() .. "-spawned\n")
@@ -172,6 +187,7 @@ function analyseGameplaySoFar(map)
 		end
 		if string.find(line, "thefight") then 
 			room.fightFinished = (splitLine[1] == "finished") and 1 or 0
+			room.fightFinished = room.fightFinished - ( (splitLine[1] == "diedin") and 1 or 0 )
 		end
 		if string.find(line, "ofADungeon") then 
 			room.insideDungeon = (splitLine[1] == "inside") and 1 or 0
@@ -210,18 +226,11 @@ function updateWeights (weights)
 	breedDifficulties["mandible"] = weights[2][1] --room.monsterTypes.mandible
 	breedDifficulties["blue_hardhat_beetle"] = weights[3][1] --room.monsterTypes.blue_hardhat_beetle
 	breedDifficulties["green_knight_soldier"] = weights[4][1] --room.monsterTypes.green_knight_soldier
-	--startLifeDifficulty = weights[6][1] --room.startingLife
 	baseDifficulty = weights[5][1]--bias
-	
-	log.debug( weights )
 end
 
 function absolute( number )
-	if number < 0 then
-		return -number
-	else
-		return number
-	end
+	if number < 0 then return -number else return number end
 end
 
 function logTheRoom (room) 
@@ -296,10 +305,8 @@ end
 function writeTableToFile (dataTable, file) 
 	local f = sol.file.open(file,"a+")
 	for k,v in pairs(dataTable) do
-		f:write(v); 
-		if k ~= #dataTable then
-			f:write(",") 
-		end
+		f:write(v)
+		if k ~= #dataTable then f:write(",") end
 	end
 	f:flush(); f:close()
 end
@@ -307,9 +314,7 @@ end
 function fight_generator.make(area, maxDiff, map, currentLife) 
 
 	local breedOptions={}
-	for k,_ in pairs(breedDifficulties) do
-		table.insert( breedOptions, k )
-	end
+	for k,_ in pairs(breedDifficulties) do table.insert( breedOptions, k ) end
 
 	if enemyTried <= 4 then 
 		local hero = map:get_hero()
