@@ -23,7 +23,7 @@ local breedDifficulties = {	["minillosaur_egg_fixed"]	= 1,
 local roomContentsData = {{0,0,0,0,1}}
 local roomDifficulties = {{baseStress}}
 		
-local enemyTried = 5 -- To initialize the training data, we need to try every enemy.
+local enemyTried = 1 -- To initialize the training data, we need to try every enemy.
 
 function fight_generator.add_effects_to_sensors (map, areas, area_details)
 	sensorSide = "areasensor_inside_"
@@ -55,7 +55,7 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 
 					for _,enemy in pairs(enemiesInEncounter) do
 						local theEnemyIJustMade = map:create_enemy(enemy)
-						theEnemyIJustMade:set_life(2)
+						theEnemyIJustMade:set_life(3)
 						theEnemyIJustMade:set_damage(2)
 						theEnemyIJustMade:set_treasure("random")
 						local f = sol.file.open("userExperience.txt","a+") 
@@ -207,6 +207,7 @@ function analyseGameplaySoFar(map)
 	local weights = learningAlgorithms.linearRegression(roomContentsData, roomDifficulties)
 	
 	if weights then updateWeights( weights ) end
+	--if weights and not hasNegativeValues ( weights ) then updateWeights( weights ) end
 end
 
 function updateWeights (weights)
@@ -230,8 +231,16 @@ function smallestAbsoluteNumber ( list )
 	for _,weight in pairs(list) do
 		if absolute( weight ) < smallest then smallest = absolute( weight ) end
 	end
+	if smallest == 0 then smallest = 1 end
 	return smallest
 end
+
+function hasNegativeValues ( list )
+	for _,weight in pairs(list) do
+		if weight < 0 then return true end
+	end
+	return true
+end 
 
 function absolute( number )
 	if number < 0 then
@@ -348,10 +357,14 @@ function fight_generator.make(area, maxDiff, map, currentLife)
 			xPos = math.random(area.x1+40, area.x2-40)
 			yPos = math.random(area.y1+40, area.y2-40)
 		end
+		
 		local chosenBreed = breedOptions[math.random(1,#breedOptions)] 
-
+		local chosenDifficulty = breedDifficulties[chosenBreed]
+		if chosenDifficulty <= 0 then chosenDifficulty = 1 end
 		while breedDifficulties[chosenBreed] + monsterAmountDifficulty + difficulty > maxDiff + allowedVariance  do 
 			chosenBreed = breedOptions[math.random(1,#breedOptions)] 
+			chosenDifficulty = breedDifficulties[chosenBreed]
+			if chosenDifficulty <= 0 then chosenDifficulty = 1 end
 		end
 		-- monster = {name, layer, x,y, direction, breed,rank,savegame_variable, treasure_name,treasure_variant,treasure_savegame_variable}
 		table.insert(enemiesInFight,{name="generatedEnemy_thisOne", layer=0, x=xPos, y=yPos, direction=0, breed=chosenBreed})
