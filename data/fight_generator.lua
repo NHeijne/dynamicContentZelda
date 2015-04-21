@@ -193,7 +193,6 @@ function analyseGameplaySoFar(map)
 			room.intendedDifficulty = tonumber (splitLine[1]) 
 		end
 	end
-	
 	if (room.moving+room.standing) ~= 0 then
 		room.percentageStanding = room.standing/(room.moving+room.standing)
 	end
@@ -203,7 +202,6 @@ function analyseGameplaySoFar(map)
 	local weights = learningAlgorithms.linearRegression(roomContentsData, roomDifficulties)
 	
 	if weights then updateWeights( weights ) end
-	--if weights and not hasNegativeValues ( weights ) then updateWeights( weights ) end
 end
 
 function updateWeights (weights)
@@ -216,24 +214,6 @@ function updateWeights (weights)
 	
 	log.debug( weights )
 end
-
-function smallestAbsoluteNumber ( list )
-	log.debug(list)
-	
-	local smallest = 1000
-	for _,weight in pairs(list) do
-		if absolute( weight ) < smallest then smallest = absolute( weight ) end
-	end
-	if smallest == 0 then smallest = 1 end
-	return smallest
-end
-
-function hasNegativeValues ( list )
-	for _,weight in pairs(list) do
-		if weight < 0 then return true end
-	end
-	return true
-end 
 
 function absolute( number )
 	if number < 0 then
