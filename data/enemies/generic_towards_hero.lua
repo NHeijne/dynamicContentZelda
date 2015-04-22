@@ -28,6 +28,8 @@ local enemy = ...
 
 local properties = {}
 local going_hero = false
+local time_since_disengagement = 0
+local time_at_disengagement = 0
 
 function enemy:set_properties(prop)
 
@@ -97,17 +99,19 @@ end
 function enemy:check_hero()
 
   local hero = self:get_map():get_entity("hero")
-  local _, _, layer = self:get_position()
-  local _, _, hero_layer = hero:get_position()
+  local self_x, self_y, layer = self:get_position()
+  local hero_x, hero_y, hero_layer = hero:get_position()
+  local dx, dy = hero_x-self_x, hero_y-self_y
   local near_hero = layer == hero_layer
     and self:get_distance(hero) < 100
+    and self:line_of_sight(dx, dy)
+    and self:is_in_same_region(hero)
 
   if near_hero and not going_hero then
-    self:go_hero()
+    enemy:engage()
   elseif not near_hero and going_hero then
-    self:go_random()
+    enemy:start_disengaging()
   end
-
   sol.timer.stop_all(self)
   sol.timer.start(self, 100, function() self:check_hero() end)
 end
@@ -126,3 +130,43 @@ function enemy:go_hero()
   going_hero = true
 end
 
+function enemy:go_pathfind_hero()
+  local movement = sol.movement.create("path_finding")
+  movement:set_speed(properties.faster_speed)
+  movement:start(self)
+  going_hero = true
+end
+
+function enemy:line_of_sight(dx, dy)
+  local abs, floor, ceil = math.abs, math.floor, math.ceil
+  local sign_x, sign_y = self:sign(dx), self:sign(dy)
+  local repeats, change_x, change_y = 0, 0, 0
+  if abs(dx) > abs(dy) then
+    repeats = floor(abs(dx)/8)
+    change_x, change_y = 8, ceil(abs(dy)/repeats)
+  else
+    repeats = floor(abs(dy)/8)
+    change_x, change_y = ceil(abs(dx)/repeats), 8
+  end
+  for i= 0, repeats do
+    if self:test_obstacles(change_x*sign_x*i, change_y*sign_y*i) then return false end
+  end
+  return true
+end
+
+function enemy:sign(x)
+  return x>0 and 1 or x<0 and -1 or 0
+end
+
+function enemy:start_disengaging()
+  if time_at_disengagement == 0 then time_at_disengagement = os.clock() end
+  time_since_disengagement = os.clock() - time_at_disengagement
+  if time_since_disengagement > 1.9 then self:go_random() 
+  else self:go_hero() end
+end
+
+function enemy:engage()
+  time_since_disengagement = 0
+  time_at_disengagement = 0
+  self:go_hero()
+end

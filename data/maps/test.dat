@@ -5,7 +5,24 @@ properties{
   height = 240,
   world = "bla",
   tileset = "1",
-  music = "same",
+}
+
+tile{
+  layer = 0,
+  x = 112,
+  y = 16,
+  width = 32,
+  height = 160,
+  pattern = "630",
+}
+
+tile{
+  layer = 0,
+  x = 112,
+  y = -16,
+  width = 32,
+  height = 32,
+  pattern = "630",
 }
 
 enemy{
@@ -22,5 +39,13 @@ destination{
   y = 13,
   direction = 3,
   default = true,
+}
+
+enemy{
+  layer = 0,
+  x = 168,
+  y = 93,
+  direction = 3,
+  breed = "green_knight_soldier",
 }
 

@@ -32,6 +32,9 @@ function content.start_test(given_map)
 	end
 		
 	log.debug("test")
+	local tic = os.clock()
+	log.debug(tic)
+
 	log.debug("end test")
 	-- Initialize the pseudo random number generator
 	local seed =
@@ -97,6 +100,8 @@ function content.start_test(given_map)
 			end
 		end
     end
+    local toc = os.clock()
+    log.debug("time required for level generation = "..toc-tic.." sec")
 
 	--log.debug(printGlobalVariables())
 	hero:unfreeze()
