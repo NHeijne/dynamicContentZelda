@@ -129,11 +129,12 @@ end
 function enemy:check_hero()
 
   local hero = self:get_map():get_entity("hero")
-  local _, _, layer = self:get_position()
-  local _, _, hero_layer = hero:get_position()
+  local self_x, self_y, layer = self:get_position()
+  local hero_x, hero_y, hero_layer = hero:get_position()
+  local dx, dy = hero_x-self_x, hero_y-self_y
   local near_hero = layer == hero_layer
     and self:get_distance(hero) < 100
-    and self:line_of_sight(dx, dy)
+    and (self:line_of_sight(dx, dy) or not awaken)
     and self:is_in_same_region(hero)
 
   if awaken then
