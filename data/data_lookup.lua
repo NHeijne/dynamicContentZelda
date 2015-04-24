@@ -175,6 +175,7 @@ lookup.wall_tiling =
 
 lookup.props = 
 {
+	-- forest props
 	["green_tree"]= { required_size={x=64, y=64},
 					 [{x1=0, y1=-8, x2=8, y2=4*8, layer=2}]=513, -- left canopy
 					 [{x1=8, y1=-16, x2=7*8, y2=0, layer=2}]=512, -- top canopy
@@ -186,6 +187,9 @@ lookup.props =
 					 [{x1=16, y1=7*8, x2=6*8, y2=8*8, layer=0}]=523, -- bottom trunk
 					 [{x1=8, y1=0, x2=7*8, y2=5*8, layer=0}]=502}, -- wall
 	["small_green_tree"]={[{x1=0, y1=0, x2=32, y2=32, layer=0}]=526, required_size={x=32, y=32}},
+	["tiny_yellow_tree"]={	[{x1=0, y1=-8, x2=16, y2=0, layer=1}]=1232,
+							[{x1=0, y1=0, x2=16, y2=16, layer=0}]=951,
+							required_size={x=16, y=16}},
 	["small_lightgreen_tree"]={[{x1=0, y1=0, x2=32, y2=32, layer=0}]=527, required_size={x=32, y=32}},
 	["tree_stump"]={[{x1=0, y1=0, x2=32, y2=32, layer=0}]=630, required_size={x=32, y=32}},
 	["flower1"]={[{x1=0, y1=0, x2=16, y2=16, layer=0}]=42, required_size={x=16, y=16}},
@@ -212,6 +216,155 @@ lookup.props =
 									[{x1=0, y1=8, x2=8, y2=24, layer=0}]=273, 
 									[{x1=8, y1=8, x2=16, y2=24, layer=0}]=274,
 									required_size={x=16, y=32}},
+	["big_statue"]={[{x1=0, y1=-16, x2=32, y2=0, layer=1}]=1230,
+					[{x1=0, y1=0, x2=32, y2=32, layer=0}]=916,
+					required_size={x=32, y=32}},
+	["old_prison"]={required_size={x=48, y=48},
+					[{x1=0, y1=0, x2=8, y2=8, layer=0}]=688, --topleft
+					[{x1=8, y1=0, x2=40, y2=8, layer=0}]=689, --top
+					[{x1=40, y1=0, x2=48, y2=8, layer=0}]=690, --topright
+					[{x1=0, y1=8, x2=8, y2=24, layer=0}]=692, --left
+					[{x1=8, y1=8, x2=40, y2=24, layer=0}]=696, --middle
+					[{x1=40, y1=8, x2=48, y2=24, layer=0}]=691, --right
+					[{x1=0, y1=24, x2=8, y2=32, layer=0}]=693, --bottomleft
+					[{x1=8, y1=24, x2=40, y2=32, layer=0}]=694, --bottom
+					[{x1=40, y1=24, x2=48, y2=32, layer=0}]=695, --bottomright
+					[{x1=0, y1=32, x2=8, y2=48, layer=0}]=697, --leftwall
+					[{x1=8, y1=32, x2=40, y2=48, layer=0}]=698, --windows
+					[{x1=40, y1=32, x2=48, y2=48, layer=0}]=700, --rightwall
+				   },
+	["stone_hedge"]={required_size={x=32, y=32},
+					[1]={	[{x1=8, y1=8, x2=24, y2=24, layer=0}]=696}, --middle
+					[2]={	[{x1=0, y1=0, x2=8, y2=8, layer=0}]=795, --topleft
+							[{x1=8, y1=0, x2=24, y2=8, layer=0}]=796, --top
+							[{x1=24, y1=0, x2=32, y2=8, layer=0}]=797, --topright
+							[{x1=0, y1=8, x2=8, y2=16, layer=0}]=798, --left
+							[{x1=24, y1=8, x2=32, y2=16, layer=0}]=799, --right
+							[{x1=8, y1=16, x2=24, y2=24, layer=0}]=794, --bottom
+							[{x1=0, y1=16, x2=8, y2=32, layer=0}]=791, --leftwall
+							[{x1=8, y1=24, x2=24, y2=32, layer=0}]=793, --middlewall
+							[{x1=24, y1=16, x2=32, y2=32, layer=0}]=792, --rightwall
+						}
+					},
+	["blue_block"]={[{x1=0, y1=0, x2=16, y2=16, layer=0}]=806, required_size={x=16, y=16}},
+
+	-- cave props
+	["bright_rock_64x64"]={required_size={x=64, y=64},
+							[2]={[{x1=0, y1=0, x2=24, y2=24, layer=0}]=53, --topleft
+								[{x1=40, y1=0, x2=64, y2=24, layer=0}]=54, --topright
+								[{x1=0, y1=40, x2=24, y2=64, layer=0}]=55, --bottomleft
+								[{x1=40, y1=40, x2=64, y2=64, layer=0}]=56, --bottomright
+							},
+							[1]={
+								[{x1=16, y1=0, x2=48, y2=24, layer=0}]=52, --top
+								[{x1=0, y1=16, x2=24, y2=48, layer=0}]=50, --left
+								[{x1=24, y1=24, x2=40, y2=40, layer=0}]=170, --middle
+								[{x1=40, y1=16, x2=64, y2=48, layer=0}]=51, --right
+								[{x1=16, y1=40, x2=48, y2=64, layer=0}]=49, --bottom
+							},
+						   },
+	["bright_rock_48x48"]={required_size={x=48, y=48},
+							[2]={[{x1=0, y1=0, x2=24, y2=24, layer=0}]=53, --topleft
+								[{x1=24, y1=0, x2=48, y2=24, layer=0}]=54, --topright
+								[{x1=0, y1=24, x2=24, y2=48, layer=0}]=55, --bottomleft
+								[{x1=24, y1=24, x2=48, y2=48, layer=0}]=56, --bottomright
+							},
+							[1]={
+								[{x1=16, y1=0, x2=32, y2=24, layer=0}]=52, --top
+								[{x1=0, y1=16, x2=24, y2=32, layer=0}]=50, --left
+								[{x1=24, y1=16, x2=48, y2=32, layer=0}]=51, --right
+								[{x1=16, y1=24, x2=32, y2=48, layer=0}]=49, --bottom
+							},
+						   },
+    ["bright_rock_32x32"]={required_size={x=32, y=32},
+							[1]={[{x1=0, y1=0, x2=24, y2=24, layer=0}]=53, --topleft
+								[{x1=8, y1=0, x2=32, y2=24, layer=0}]=54, --topright
+								[{x1=0, y1=8, x2=24, y2=32, layer=0}]=55, --bottomleft
+								[{x1=8, y1=8, x2=32, y2=32, layer=0}]=56, --bottomright
+							},
+							[2]={
+								[{x1=8, y1=8, x2=16, y2=16, layer=0}]=17, --topleft
+								[{x1=16, y1=8, x2=24, y2=16, layer=0}]=16, --topright
+								[{x1=8, y1=16, x2=16, y2=24, layer=0}]=15, --bottomleft
+								[{x1=16, y1=16, x2=24, y2=24, layer=0}]=14, --bottomright
+							},
+						   },
+
+	["dark_rock_64x64"]={required_size={x=64, y=64},
+							[2]={[{x1=0, y1=0, x2=24, y2=24, layer=0}]=65, --topleft
+								[{x1=40, y1=0, x2=64, y2=24, layer=0}]=66, --topright
+								[{x1=0, y1=40, x2=24, y2=64, layer=0}]=67, --bottomleft
+								[{x1=40, y1=40, x2=64, y2=64, layer=0}]=68, --bottomright
+							},
+							[1]={
+								[{x1=16, y1=0, x2=48, y2=24, layer=0}]=226, --top
+								[{x1=0, y1=16, x2=24, y2=48, layer=0}]=225, --left
+								[{x1=24, y1=24, x2=40, y2=40, layer=0}]=481, --middle
+								[{x1=40, y1=16, x2=64, y2=48, layer=0}]=227, --right
+								[{x1=16, y1=40, x2=48, y2=64, layer=0}]=224, --bottom
+							},
+						   },
+    ["dark_rock_48x48"]={required_size={x=48, y=48},
+							[2]={[{x1=0, y1=0, x2=24, y2=24, layer=0}]=65, --topleft
+								[{x1=24, y1=0, x2=48, y2=24, layer=0}]=66, --topright
+								[{x1=0, y1=24, x2=24, y2=48, layer=0}]=67, --bottomleft
+								[{x1=24, y1=24, x2=48, y2=48, layer=0}]=68, --bottomright
+							},
+							[1]={
+								[{x1=16, y1=0, x2=32, y2=24, layer=0}]=226, --top
+								[{x1=0, y1=16, x2=24, y2=32, layer=0}]=225, --left
+								[{x1=24, y1=16, x2=48, y2=32, layer=0}]=227, --right
+								[{x1=16, y1=24, x2=32, y2=48, layer=0}]=224, --bottom
+							},
+						   },
+    ["dark_rock_32x32"]={required_size={x=32, y=32},
+							[1]={[{x1=0, y1=0, x2=24, y2=24, layer=0}]=65, --topleft
+								[{x1=8, y1=0, x2=32, y2=24, layer=0}]=66, --topright
+								[{x1=0, y1=8, x2=24, y2=32, layer=0}]=67, --bottomleft
+								[{x1=8, y1=8, x2=32, y2=32, layer=0}]=68, --bottomright
+							},
+							[2]={
+								[{x1=8, y1=8, x2=16, y2=16, layer=0}]=215, --topleft
+								[{x1=16, y1=8, x2=24, y2=16, layer=0}]=214, --topright
+								[{x1=8, y1=16, x2=16, y2=24, layer=0}]=213, --bottomleft
+								[{x1=16, y1=16, x2=24, y2=24, layer=0}]=212, --bottomright
+							},
+						   },
+	["pipe_16x16_h"]={[{x1=0, y1=0, x2=8, y2=16, layer=0}]=486,
+					[{x1=8, y1=0, x2=16, y2=16, layer=0}]=487,
+					required_size={x=16, y=16}},
+	["pipe_16x16_v"]={[{x1=0, y1=0, x2=16, y2=8, layer=0}]=488,
+					[{x1=0, y1=8, x2=16, y2=16, layer=0}]=489,
+					required_size={x=16, y=16}},
+	["pipe_32x16_h"]={[{x1=0, y1=0, x2=8, y2=16, layer=0}]=486,
+					[{x1=8, y1=0, x2=24, y2=16, layer=0}]=463,
+					[{x1=24, y1=0, x2=32, y2=16, layer=0}]=487,
+					required_size={x=32, y=16}},
+	["pipe_16x32_v"]={[{x1=0, y1=0, x2=16, y2=8, layer=0}]=488,
+					[{x1=0, y1=8, x2=16, y2=24, layer=0}]=464,
+					[{x1=0, y1=24, x2=16, y2=32, layer=0}]=489,
+					required_size={x=16, y=32}},
+	["pipe_32x32_v"]={[1]={	[{x1=0, y1=0, x2=16, y2=16, layer=0}]=459,
+							[{x1=16, y1=0, x2=32, y2=16, layer=0}]=460,
+							[{x1=0, y1=16, x2=16, y2=32, layer=0}]=464,
+							[{x1=16, y1=16, x2=32, y2=32, layer=0}]=464,
+							},
+					  [2]={	[{x1=0, y1=24, x2=16, y2=32, layer=0}]=489,
+							[{x1=16, y1=24, x2=32, y2=32, layer=0}]=489},
+							required_size={x=32, y=32}},
+	["pipe_64x32_h"]={	[1]={	[{x1=0, y1=0, x2=16, y2=16, layer=0}]=464,
+								[{x1=0, y1=16, x2=16, y2=32, layer=0}]=462,
+								[{x1=16, y1=16, x2=32, y2=32, layer=0}]=461,
+								[{x1=16, y1=0, x2=32, y2=16, layer=0}]=459,
+								[{x1=32, y1=0, x2=48, y2=16, layer=0}]=460,
+								[{x1=32, y1=16, x2=48, y2=32, layer=0}]=462,
+								[{x1=48, y1=16, x2=64, y2=32, layer=0}]=461,
+								[{x1=48, y1=0, x2=64, y2=16, layer=0}]=464,
+							},
+						[2]={	[{x1=0, y1=0, x2=16, y2=8, layer=0}]=488,
+					  			[{x1=0, y1=24, x2=16, y2=32, layer=0}]=489},
+						required_size={x=64, y=32}},
+
 }
 
 return lookup

@@ -1008,10 +1008,10 @@ end
 
 function space_gen.create_simple_enemy_stoppers( areas )
 	log.debug("creating walls for enemies")
-	for areanumber, a in pairs(areas["walkable"]) do
+	for areanumber, a in pairs(areas["nodes"]) do
 		for _, area in ipairs(a) do	
 			for _, dir in ipairs({0, 1, 2, 3}) do
-				local side = area_util.get_side(area, dir, 16, 16)
+				local side = area_util.get_side(area, dir, -32, 16)
 				local details = {layer=0, x=side.x1, y=side.y1, width=side.x2-side.x1, height=side.y2-side.y1, stops_enemies=true}		
 				map:create_wall(details)		
 			end

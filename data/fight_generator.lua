@@ -61,11 +61,11 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 					local split_table = split_table
 					
 					for enemy in map:get_entities("generatedEnemy") do enemy:remove() end
-					local spawnArea = areas["walkable"][tonumber(split_table[3])][1]
+					local spawnAreas = areas["walkable"][tonumber(split_table[3])].open_areas
 					
 					local diff = difficultyOfFights
 					local f = sol.file.open("userExperience.txt","a+"); f:write(diff .. "-difficulty\n"); f:flush(); f:close()
-					local enemiesInEncounter, resultingDiff = fight_generator.make(spawnArea, diff, map, game:get_life()) 
+					local enemiesInEncounter, resultingDiff = fight_generator.make(spawnAreas, diff, map, game:get_life()) 
 					local f = sol.file.open("userExperience.txt","a+"); f:write(resultingDiff .. "-intendedDifficulty\n"); f:flush(); f:close()
 
 					for _,enemy in pairs(enemiesInEncounter) do
@@ -311,18 +311,20 @@ function writeTableToFile (dataTable, file)
 	f:flush(); f:close()
 end
 
-function fight_generator.make(area, maxDiff, map, currentLife) 
+function fight_generator.make(areas, maxDiff, map, currentLife) 
 
 	local breedOptions={}
 	for k,_ in pairs(breedDifficulties) do table.insert( breedOptions, k ) end
-
+	
+	local hero = map:get_hero()
+	local spawnAreas = fight_generator.getViableAreasForSpawning(hero, 100, areas)
+	
 	if enemyTried <= 4 then 
-		local hero = map:get_hero()
-		local xPos,yPos = hero:get_position()
-		while hero:get_distance(xPos,yPos) < 100 do
-			xPos = math.random(area.x1+40, area.x2-40)
-			yPos = math.random(area.y1+40, area.y2-40)
-		end
+
+		local chosenArea = table_util.random(spawnAreas)
+		xPos = math.random(chosenArea.x1+13, chosenArea.x2-13)
+		yPos = math.random(chosenArea.y1+13, chosenArea.y2-13)
+
 		local chosenBreed = breedOptions[enemyTried]
 		enemyTried=enemyTried+1
 		return {{name="generatedEnemy_thisOne", layer=0, x=xPos, y=yPos, direction=0, breed=chosenBreed}}, breedDifficulties[chosenBreed]
@@ -334,13 +336,11 @@ function fight_generator.make(area, maxDiff, map, currentLife)
 	local enemiesInFight = {}
 	
 	while difficulty < maxDiff do
-		local hero = map:get_hero()
-		local xPos,yPos = hero:get_position()
-		while hero:get_distance(xPos,yPos) < 100 do
-			xPos = math.random(area.x1+40, area.x2-40)
-			yPos = math.random(area.y1+40, area.y2-40)
-		end
 		
+		local chosenArea = table_util.random(spawnAreas)
+		xPos = math.random(chosenArea.x1+13, chosenArea.x2-13)
+		yPos = math.random(chosenArea.y1+13, chosenArea.y2-13)
+
 		local chosenBreed = breedOptions[math.random(1,#breedOptions)] 
 		local chosenDifficulty = breedDifficulties[chosenBreed]
 		if chosenDifficulty <= 0 then chosenDifficulty = 1 end
@@ -359,6 +359,19 @@ function fight_generator.make(area, maxDiff, map, currentLife)
 		difficulty = difficulty + chosenDifficulty + monsterAmountDifficulty
 	end
 	return enemiesInFight, difficulty
+end
+
+
+function fight_generator.getViableAreasForSpawning(hero, reqDistance, potentialSpawnAreas)
+	local xPos,yPos = hero:get_position()
+	local spawnAreas = {}
+	for _, area in ipairs(potentialSpawnAreas) do
+		local distance = area_util.distance({x1=xPos, x2=xPos, y1=yPos, y2=yPos}, area, 0)
+		if distance >= reqDistance and area_util.get_area_size(area).size > 16*16 then
+			table.insert(spawnAreas, area)
+		end
+	end
+	return spawnAreas
 end
 
 return fight_generator

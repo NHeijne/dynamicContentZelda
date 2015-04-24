@@ -1,4 +1,4 @@
-map{ id = "test", description = "Test_map" }
+map{ id = "8", description = "CaveTest" }
 map{ id = "0", description = "Forest" }
 map{ id = "1", description = "Dungeon" }
 map{ id = "2", description = "Arjen Test" }
@@ -6,6 +6,7 @@ map{ id = "4", description = "Example" }
 map{ id = "5", description = "Questhubs" }
 map{ id = "6", description = "House" }
 map{ id = "7", description = "Witch hut" }
+map{ id = "9", description = "ForestTest" }
 
 tileset{ id = "1", description = "Light World" }
 tileset{ id = "13", description = "Dark World" }

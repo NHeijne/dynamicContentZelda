@@ -37,7 +37,7 @@ function content.start_test(given_map)
 
 	log.debug("end test")
 	-- Initialize the pseudo random number generator
-	local seed =
+	local seed = 
 			tonumber(tostring(os.time()):reverse():sub(1,6)) -- good random seeds
 	log.debug("random seed = " .. seed)
 	math.randomseed( seed )
@@ -96,7 +96,7 @@ function content.start_test(given_map)
 			log.debug("creating area_type " .. content.area_details[k].area_type)
 			if content.area_details[k].area_type == "P" or content.area_details[k].area_type == "PF" then 
 				maze_generator.set_room(a, 16, 8, "mazeprop_area_"..k)
-				content.makeSingleMaze(a, exit_areas[k], content.area_details, {}, layer)
+				content.makeSingleMaze(a, exit_areas[k], content.area_details, exclusion_areas[k], layer)
 			end
 		end
     end
@@ -150,6 +150,7 @@ end
 -- OLD takes too long with larger areas, maybe for internal filling of a walkable area
 function content.spread_props(area, density_offset, prop_names, prop_index)
 	-- place randomly in the areas that are left
+	local left_over_areas = {}
 	local areas_left = {table_util.copy(area)}
 	repeat
 		-- log.debug("areas_left")
@@ -167,7 +168,10 @@ function content.spread_props(area, density_offset, prop_names, prop_index)
 		if area_size.x < min_required_size.x or area_size.y < min_required_size.y then
 			-- pop off last, and try to put in the next prop
 			if prop_index < #prop_names then
-				content.spread_props(current_area, density_offset, prop_names, prop_index+1)
+				local left_overs = content.spread_props(current_area, density_offset, prop_names, prop_index+1)
+				table_util.add_table_to_table(left_overs, left_over_areas)
+			else
+				table.insert(left_over_areas, current_area)
 			end
 		else
 			-- take a random area within the last area
@@ -185,6 +189,7 @@ function content.spread_props(area, density_offset, prop_names, prop_index)
 			-- do this until no areas are left
 		end
 	until next(areas_left) == nil
+	return left_over_areas
 end
 
 function content.create_forest_map(existing_areas, area_details)
@@ -614,22 +619,10 @@ function content.create_simple_forest_map(areas, area_details)
 	local bounding_area 
 	local exclusion_areas_trees={}
 	local ex = 0
-	for areanumber, a in pairs(areas["walkable"]) do
-
-		for _, area in ipairs(a) do	
-			ex=ex+1
-			exclusion_areas_trees[ex] = area
-			content.spread_props(area, 24, {{"flower1","flower2", "fullgrass", "halfgrass"}}, 1) 
-			--content.place_tile(area, 8, "walkable", 0)
-			if bounding_area == nil then bounding_area = area
-			else bounding_area = area_util.merge_areas(bounding_area, area) end
-		end -- filling in the otherwise empty areas
-		
-    end
-    bounding_area = area_util.resize_area(bounding_area, {-152, -128, 256, 256}) 
 
 	local exit_areas={}
     local exclusion_areas={}
+
 	for areanumber,connections in pairs(areas["exit"]) do
 		exit_areas[areanumber]={}
 		exclusion_areas[areanumber]={}
@@ -672,7 +665,74 @@ function content.create_simple_forest_map(areas, area_details)
 		end
 	end
 
-	content.plant_trees(bounding_area, exclusion_areas_trees)
+	for areanumber, a in pairs(areas["walkable"]) do
+
+		for _, area in ipairs(a) do	
+			-- create a path through the area
+			
+			if area_details[areanumber].area_type == "P" then
+				ex=ex+1
+				exclusion_areas_trees[ex] = area
+			else
+				maze_generator.set_room( area, 16, 0, nil )
+				local open, closed = maze_generator.generate_path( exit_areas[areanumber] )
+				exclusion_areas[areanumber] = closed
+				a.open_areas = open
+
+				for _,c in ipairs(closed) do
+					
+					--content.spread_props(c, 0, {{"green_tree"},{"old_prison"},{"small_green_tree", "stone_hedge", "big_statue"}}, 1)
+				end
+				for _,o in ipairs(open) do
+					ex=ex+1
+					exclusion_areas_trees[ex] = o
+					--content.spread_props(o, 8, {{"flower1","flower2", "fullgrass", "halfgrass"}}, 1) 
+				end
+			
+			end
+			--content.place_tile(area, 8, "walkable", 0)
+			if bounding_area == nil then bounding_area = area
+			else bounding_area = area_util.merge_areas(bounding_area, area) end
+		end -- filling in the otherwise empty areas
+		
+    end
+    bounding_area = area_util.resize_area(bounding_area, {-152, -128, 256, 256}) 
+	local treelines = content.plant_trees(bounding_area, exclusion_areas_trees)
+
+	local closed_leftovers = {}
+	for areanumber, list in ipairs(exclusion_areas) do
+		closed_leftovers[areanumber] = {}
+		for _, exclusion in ipairs(list) do
+			local adjusted_exclusions = {exclusion}
+			for _, tl in ipairs(treelines) do
+				local counter=1
+				repeat
+					-- log.debug(counter)
+					local excl = adjusted_exclusions[counter]
+					if excl and area_util.areas_intersect(excl, tl) then 
+						-- log.debug("content.create_forest_map found intersection treeline "..i)
+						local new_areas = area_util.shrink_until_no_conflict(tl, excl)
+						adjusted_exclusions[counter] = false
+						table_util.add_table_to_table(new_areas, adjusted_exclusions)
+					else 
+						counter = counter +1
+					end
+				until counter > #adjusted_exclusions
+			end
+			table_util.remove_false(adjusted_exclusions)
+			table_util.add_table_to_table(adjusted_exclusions, closed_leftovers[areanumber])
+		end
+	end
+	local choices = {{{"green_tree"}, {"old_prison"}, {"stone_hedge"}},
+					 {{"green_tree"}, {"small_green_tree"}, {"tiny_yellow_tree"}},
+					 {{"green_tree"}, {"big_statue"}, {"blue_block"}}}
+
+	for areanumber, list in ipairs(closed_leftovers) do 
+		local choice_for_that_area = table_util.random(choices)
+		for _, l in ipairs(list) do
+			content.spread_props(l, 0, choice_for_that_area, 1)
+		end
+	end 
 	return exit_areas, exclusion_areas
 end
 
@@ -758,9 +818,33 @@ function content.create_simple_dungeon_map(areas, area_details)
 						map:create_stairs{layer=0, x=adjusted_area.x1+8, y=adjusted_area.y1+8, direction=1, subtype=0}
 					end
 				end
+				table.insert(exit_areas[areanumber], area_util.get_side(area, (direction+2)%4))
 			end
 		end
 	end
+
+	for areanumber, a in pairs(areas["walkable"]) do
+		local choices = {{{"bright_rock_64x64"}, {"bright_rock_48x48"}, {"bright_rock_32x32"}, {"pipe_16x32_v", "pipe_32x16_h"}, {"pipe_16x16_h", "pipe_16x16_v"}},
+					 	{{"dark_rock_64x64"}, {"dark_rock_48x48"}, {"dark_rock_32x32"}, {"pipe_16x32_v", "pipe_32x16_h"}, {"pipe_16x16_h", "pipe_16x16_v"}},
+					 	{{"pipe_64x32_h"}, {"pipe_32x32_v"}, {"pipe_16x32_v", "pipe_32x16_h"}, {"pipe_16x16_h", "pipe_16x16_v"}}}
+		for _, area in ipairs(a) do	
+			-- create a path through the area
+			
+			if area_details[areanumber].area_type ~= "P" then
+				maze_generator.set_room( area, 16, 0, nil )
+				local open, closed = maze_generator.generate_path( exit_areas[areanumber] )
+				exclusion_areas[areanumber] = closed
+				a.open_areas = open
+				
+				local choice_for_that_area = table_util.random(choices)
+				for _,c in ipairs(closed) do
+					content.spread_props(c, 0, choice_for_that_area, 1)
+				end
+			end
+		end
+    end
+
+
 	return exit_areas, exclusion_areas
 end
 
@@ -861,6 +945,8 @@ function content.plant_trees(area, exclude_these)
 	log.debug("treelines")
 	-- log.debug(treelines)
 	local blocking_size = {x=48, y=64}
+	local current_treeline = {}
+	local previous_treeline = {}
 	local treeline_area_list = {}
 	local left_overs = {}
 	for i=1, treelines do
@@ -888,12 +974,24 @@ function content.plant_trees(area, exclude_these)
 			until counter > #chopped_treeline
 		end
 		table_util.remove_false(chopped_treeline)
+		current_treeline = {}
 		for _, tl in ipairs(chopped_treeline) do
 			local area_size = area_util.get_area_size(tl)
 			local x_available = (tl.x2 - (tl.x2-x_offset-x) % blocking_size.x) - (tl.x1 + (blocking_size.x - (tl.x1-x_offset-x) % blocking_size.x))
 			if area_size.y < blocking_size.y or x_available < blocking_size.x then 
-				if tl.y1 == top_line then tl.y1 = tl.y1+16 end
-				table.insert(left_overs, tl)
+				if i > 1 then
+					local intersection_found = false
+					for _, prev_tl in ipairs(previous_treeline) do
+						if area_util.areas_intersect(tl, prev_tl) then
+							intersection_found = true
+							local new_areas = area_util.shrink_until_no_conflict(prev_tl, tl, "horizontal")
+							table_util.add_table_to_table(new_areas, left_overs)
+						end					
+					end
+					if not intersection_found then 
+						table.insert(left_overs, tl)
+					end
+				end
 			else 
 				-- chop left side
 				tl.y1 = tl.y1+16
@@ -912,11 +1010,15 @@ function content.plant_trees(area, exclude_these)
 				local right_area = {x1=tl.x2-(till_next_part)+8,y1=tl.y1,x2=tl.x2,y2=tl.y2}
 				tl.x2 = tl.x2-(till_next_part)
 				if right_area.x2-right_area.x1 > 8 then
-					table.insert(left_overs, right_area)
+					--table.insert(left_overs, right_area)
 				end
-				if tl.x2-tl.x1 ~= 0 then table.insert(treeline_area_list, tl) end 
+				if tl.x2-tl.x1 ~= 0 then 
+					table.insert(current_treeline, tl)
+				end 
 			end
 		end
+		table_util.add_table_to_table(current_treeline, treeline_area_list)
+		previous_treeline = current_treeline
 	end
 	-- visualize
 	for _, tl in ipairs(treeline_area_list) do
@@ -939,8 +1041,7 @@ function content.plant_trees(area, exclude_these)
 			x = x+48
 		until x > tl.x2
 	end
-
-	return exit_areas, exclusion_areas
+	return treeline_area_list
 end
 
 

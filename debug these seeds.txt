@@ -1,1 +1,2 @@
-274616
+274616 -- weird exit placement in forest
+918988 -- selected_nb in maze_gen produces error

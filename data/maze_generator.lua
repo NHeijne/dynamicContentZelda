@@ -38,19 +38,16 @@ function maze_gen.generate_maze( area, exit_areas, exclusion)
 	local corridor_width = room.corridor_width
 	local maze = {}
 	local wall_width = room.wall_width
-	-- log.debug("initialize_maze")
+
 	maze_gen.initialize_maze( maze, area, wall_width, corridor_width )
-	-- log.debug(maze)
-	-- log.debug("excluding areas")
-	if exclusion ~= nil and next(exclusion) ~= nil then maze_gen.exclude( area, maze, exclusion, corridor_width, wall_width ) end
-	-- log.debug("open_exits")
-	-- log.debug(exit_areas)
+
+	if exclusion ~= nil and next(exclusion) ~= nil then maze_gen.exclude( maze, exclusion ) end
+
+	maze_gen.place_walls_around( maze, maze_gen.get_not_visited( maze ) )
+	
 	local exits = maze_gen.open_exits( maze, exit_areas, area, wall_width, corridor_width )
-	-- log.debug("maze pathfinding start")
+
 	maze_gen.create_maze_puzzle( maze, exits, area )
-	-- log.debug("maze pathfinding end")
-	-- log.debug(maze)
-	maze_gen.open_unvisited( maze )
 
 	local area_list, prop_list = maze_gen.create_area_list( maze, area, corridor_width, wall_width )
 	-- log.debug(area_list)
@@ -61,6 +58,7 @@ function maze_gen.generate_rooms( area_details )
 	local width, height = map:get_size(); local corridor_width = room.corridor_width; local wall_width = room.wall_width
 	local maze = {}
 	maze_gen.initialize_maze( maze, room, wall_width, corridor_width )
+	maze_gen.place_walls_around( maze, maze_gen.get_not_visited( maze ) )
 	local start_node = {x=1, y=math.floor(#maze[1]/2)}-- entrance is always west center
 	maze[start_node.x][start_node.y].visited = true
 	if not area_details.outside then
@@ -160,52 +158,108 @@ function maze_gen.maze_wall_to_areas( maze, pos, corridor_width, wall_width, nod
 end
 
 
-
-
-function maze_gen.generate_path( area, from, to, closed_parts )
+function maze_gen.generate_path( exit_areas )
 	-- for inside the areas
+	local wall_width, corridor_width = room.wall_width, room.corridor_width
+	local maze = {}
+	maze_gen.initialize_maze( maze, room, wall_width, corridor_width )
+	local exits = maze_gen.open_exits( maze, exit_areas, room, wall_width, corridor_width )
+	local paths = maze_gen.create_initial_paths( maze, exits )
+	-- got a path to all exits
+	-- expand and test
+	for _,path in ipairs(paths) do
+		for _, node in ipairs(path) do
+			local neighbors = maze_gen.get_neighbors(maze, node)
+			for _, n in ipairs(neighbors) do
+				maze[n.pos.x][n.pos.y].visited = true
+			end
+		end
+	end
+	-- we have an expanded path, now to make areas from those nodes
+	local closed_areas = maze_gen.visited_to_area_list( maze, false )
+	local open_areas = maze_gen.visited_to_area_list( maze, true )
+	return open_areas, closed_areas
 end
 
-function maze_gen.exclude( area, maze, exclusion, corridor_width, wall_width )
-	-- log.debug/("excluding areas")
-	-- log.debug(exclusion)
-	-- determine in which node the topleft area is located
-	local excluded_node_area = {}
-	for _, exclusion_details in ipairs(exclusion) do
-		local exclusion_area = exclusion_details
-		local sides_open = exclusion_details.sides_open
-
-		-- identify in which nodes the exclusion area is located
-		local x1 = math.ceil((exclusion_area.x1-area.x1)/(wall_width.x+corridor_width.x))
-		local y1 = math.ceil((exclusion_area.y1-area.y1)/(wall_width.y+corridor_width.y))
-		local x2 = math.ceil((exclusion_area.x2-area.x1)/(wall_width.x+corridor_width.x))
-		local y2 = math.ceil((exclusion_area.y2-area.y1)/(wall_width.y+corridor_width.y))
-
-		-- direction (number): between 0 (East of the room) and 3 (South of the room).
-		for x=x1, x2 do
-			for y=y1, y2 do
-				if not(x < 1 or y<1 or x>#maze or y >#maze[1]) then
-					-- open up everything
-					maze[x][y][1] = false
-					maze[x][y][2] = false
-					maze[x][y][3] = false
-					maze[x][y][0] = false
-					-- close the side if it's not supposed to be open
-					if x == x1 and not table_util.contains(sides_open, "west") then
-						maze[x][y][2] = true end
-					if x == x2 and not table_util.contains(sides_open, "east") then
-						maze[x][y][0] = true end
-					if y == y1 and not table_util.contains(sides_open, "north") then
-						maze[x][y][1] = true end
-					if y == y2 and not table_util.contains(sides_open, "south") then
-						maze[x][y][3] = true end
-					maze[x][y].visited = true
+function maze_gen.visited_to_area_list( maze, visit_status )
+	local area_list = {}
+	local max_x, max_y = #maze, #maze[1]
+	for x = 1, max_x do
+		for y = 1, max_y do
+			local tl_node = maze[x][y]
+			local tl_pos = {x=x, y=y}
+			if tl_node.visited == visit_status and not tl_node.assigned then
+				tl_node.assigned=true
+				-- remember topleft (x, y) and the bottomright node 
+				local br_pos = {x=x, y=y}
+				while true do
+					if br_pos.x+1 > max_x or br_pos.y+1 > max_y then table.insert(area_list, maze_gen.nodes_to_area( tl_pos, br_pos ) );break end
+					-- check if the block is expandable to the right and bottom of the current block
+					local right, bottom = true, true
+					for x2 = x, br_pos.x+1 do
+						if maze[x2][br_pos.y+1].visited ~= visit_status or maze[x2][br_pos.y+1].assigned then bottom=false end
+					end
+					if bottom then 
+						for y2 = y, br_pos.y+1 do
+							if maze[br_pos.x+1][y2].visited ~= visit_status or maze[br_pos.x+1][y2].assigned then right=false end
+						end
+						if right then
+							br_pos = {x=br_pos.x+1, y=br_pos.y+1}
+							for x2 = x, br_pos.x do
+								maze[x2][br_pos.y].assigned = true
+							end
+							for y2 = y, br_pos.y do
+								maze[br_pos.x][y2].assigned = true
+							end
+						else
+							table.insert(area_list, maze_gen.nodes_to_area( tl_pos, br_pos ) );	break
+						end
+					else
+						table.insert(area_list, maze_gen.nodes_to_area( tl_pos, br_pos ) );	break
+					end
 				end
 			end
 		end
-		table.insert(excluded_node_area, {x1=x1, y1=y1, x2=x2, y2=y2})
+	end
+	return area_list
+end
+
+function maze_gen.nodes_to_area( topleft_pos, bottomright_pos )
+	local cw = room.corridor_width
+	local ww = room.wall_width
+	return {x1=(topleft_pos.x-1)*(cw.x+ww.x)+room.x1,
+			x2=bottomright_pos.x*(cw.x+ww.x)+ww.x+room.x1,
+			y1=(topleft_pos.y-1)*(cw.y+ww.y)+room.y1,
+			y2=bottomright_pos.y*(cw.y+ww.y)+ww.y+room.y1}
+end
+
+function maze_gen.exclude( maze, exclusion )
+	for _, exclusion_area in ipairs(exclusion) do
+		local pos_list = maze_gen.area_to_pos ( exclusion_area )
+		local max_x, max_y= #maze, #maze[1]
+		for _, pos in ipairs(pos_list) do
+			if not (pos.x < 1 or pos.x > max_x or pos.y < 1 or pos.y > max_y) then
+				maze[pos.x][pos.y].visited = "excluded"
+			end
+		end
 	end
 end
+
+function maze_gen.area_to_pos ( area )
+	local pos_list = {}
+	local cw = room.corridor_width
+	local ww = room.wall_width
+	local x1 = math.floor((area.x1-room.x1)/(cw.x+ww.x))
+	local x2 = math.ceil((area.x2-room.x1-ww.x)/(cw.x+ww.x))
+	local y1 = math.floor((area.y1-room.y1)/(cw.y+ww.y))
+	local y2 = math.ceil((area.y2-room.y1-ww.y)/(cw.y+ww.y))
+	for x=x1, x2 do
+		for y=y1, y2 do
+			table.insert(pos_list, {x=x, y=y})
+		end
+	end
+	return pos_list
+end 
 
 function maze_gen.create_area_list( maze, area, corridor_width, wall_width )
 	-- standard 8x8 patterns
@@ -269,7 +323,23 @@ function maze_gen.initialize_maze( maze, area, wall_width, corridor_width )
 	for x=1,x_amount do
 		maze[x]={}
 		for y=1, y_amount do
-			maze[x][y] = {[1]=true, [2]=true, [3]=true, [0]=true, visited = false} 
+			maze[x][y] = {[1]=false, [2]=false, [3]=false, [0]=false, visited = false} 
+		end
+	end
+end
+
+function maze_gen.place_walls_around( maze, pos_list )
+	local max_x, max_y= #maze, #maze[1]
+	for _, pos in ipairs(pos_list) do
+		local node = maze[pos.x][pos.y]
+		local neighbors = maze_gen.get_neighbors( maze, pos)
+		if 		pos.x == 1 then 	node[2] = true 
+		elseif 	pos.x == max_x then node[0] = true end
+		if 		pos.y == 1 then 	node[1] = true 
+		elseif 	pos.y == max_y then node[3] = true end
+		for _, n in ipairs(neighbors) do
+			node[n.wall_to] = true
+			n.node[n.wall_from]=true
 		end
 	end
 end
@@ -648,7 +718,7 @@ function maze_gen.check_straight_path( maze, from, to )
 		if from.y == to.y then offset_x = stepsize_x end
 		for x=from.x+offset_x, to.x, stepsize_x do
 			for y=from.y+offset_y, to.y, stepsize_y do
-				if not maze[x] or not maze[x][y] or maze[x][y].visited then 
+				if not maze[x] or not maze[x][y] or maze[x][y].visited == true then 
 					return false 
 				else
 					table.insert(path, {x=x, y=y})
@@ -740,11 +810,15 @@ function maze_gen.open_path( maze, path, custom_value )
 end
 
 function maze_gen.get_not_visited( maze )
+	return maze_gen.get_nodes_with_visit_status( maze, false )
+end
+
+function maze_gen.get_nodes_with_visit_status( maze, visit_status )
 	local n = 0
 	local result = {}
 	for x=1, #maze do
 		for y=1, #maze[1] do
-			if maze[x][y].visited == false then 
+			if maze[x][y].visited == visit_status then 
 				n=n+1
 				result[n] = {x=x, y=y}
 			end
