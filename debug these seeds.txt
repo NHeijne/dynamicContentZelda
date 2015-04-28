@@ -1,2 +1,3 @@
 274616 -- weird exit placement in forest
 918988 -- selected_nb in maze_gen produces error
+134322 -- two hardhats spawned on grass in a southern dungeon room
