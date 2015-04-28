@@ -354,6 +354,19 @@ function fight_generator.make(areas, maxDiff, map, currentLife)
 			if chosenDifficulty <= 0 then chosenDifficulty = 1 end
 		end
 		
+		local offBy = absolute( maxDiff - (difficulty+chosenDifficulty+monsterAmountDifficulty) )
+		iterations = 0
+		while (difficulty+chosenDifficulty+monsterAmountDifficulty) > maxDiff do
+			iterations = iterations + 1
+			if iterations > 40 then break end
+			local altBreed = breedOptions[math.random(1,#breedOptions)] 
+			local altDifficulty = breedDifficulties[altBreed]
+			if altDifficulty <= 0 then altDifficulty = 1 end
+			if absolute( maxDiff - (difficulty+altDifficulty+monsterAmountDifficulty) ) < offBy then
+				chosenBreed = altBreed; chosenDifficulty = altDifficulty
+			end
+		end
+		
 		-- monster = {name, layer, x,y, direction, breed,rank,savegame_variable, treasure_name,treasure_variant,treasure_savegame_variable}
 		table.insert(enemiesInFight,{name="generatedEnemy_thisOne", layer=0, x=xPos, y=yPos, direction=0, breed=chosenBreed})
 		difficulty = difficulty + chosenDifficulty + monsterAmountDifficulty
