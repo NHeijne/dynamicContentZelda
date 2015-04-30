@@ -140,7 +140,7 @@ end
 
 function analyseGameplaySoFar(map)
 	local f = sol.file.open("userExperience.txt","r")
-	local nothing = {fightFinished=0, swordHits=0, monstersKilled=0, timeInRoom=0, directionChange=0, 
+	local nothing = {fightFinished=0, swordHits=0, monstersKilled=0, timeInRoom=0, surface=0, directionChange=0, 
 			lifeLostInRoom=0, uselessKeys=0, monsterTypes={}, monsterTypesKilled={}, heroStates={}, 
 			moving=0, standing=0, percentageStanding=0, startingLife=0, intendedDifficulty=0, insideDungeon=0}
 	local room = table_util.copy( nothing )
@@ -195,6 +195,9 @@ function analyseGameplaySoFar(map)
 		if string.find(line, "starttime") then 
 			room.timeInRoom = os.time() - tonumber (splitLine[1])
 		end
+		if string.find(line, "spawnSurface") then 
+			room.surface = tonumber (splitLine[1])
+		end
 		if line=="right-keypress" or line=="left-keypress" or line=="up-keypress" or line=="down-keypress" then 
 			room.directionChange = room.directionChange + 1
 		end
@@ -245,11 +248,12 @@ function logTheRoom (room)
 	fightRoomData[#fightRoomData+1] = room.monsterTypes.green_knight_soldier or 0
 	fightRoomData[#fightRoomData+1] = room.startingLife
 	
-	-- inside,finished,swordHits,time,dirChange,lifeLost,uselessKeys,moving,standing,percStanding
+	-- inside,finished,swordHits,time,surface,dirChange,lifeLost,uselessKeys,moving,standing,percStanding
 	playerBehaviourData[#playerBehaviourData+1] = room.insideDungeon
 	playerBehaviourData[#playerBehaviourData+1] = room.fightFinished
 	playerBehaviourData[#playerBehaviourData+1] = room.swordHits
 	playerBehaviourData[#playerBehaviourData+1] = room.timeInRoom
+	playerBehaviourData[#playerBehaviourData+1] = room.surface
 	playerBehaviourData[#playerBehaviourData+1] = room.directionChange
 	playerBehaviourData[#playerBehaviourData+1] = room.lifeLostInRoom
 	playerBehaviourData[#playerBehaviourData+1] = room.uselessKeys
@@ -319,6 +323,13 @@ function fight_generator.make(areas, maxDiff, map, currentLife)
 	local hero = map:get_hero()
 	local spawnAreas = fight_generator.getViableAreasForSpawning(hero, 100, areas)
 	
+	local totalSurface = 0
+	for _, area in ipairs(areas) do
+		totalSurface = totalSurface + absolute ( area.x1-area.x2 ) * absolute ( area.y1-area.y2 )
+	end
+	totalSurface = totalSurface / 64
+	local f = sol.file.open("userExperience.txt","a+"); f:write(totalSurface .. "-spawnSurface\n"); f:flush(); f:close()
+	
 	if enemyTried <= 4 then 
 
 		local chosenArea = table_util.random(spawnAreas)
@@ -352,6 +363,19 @@ function fight_generator.make(areas, maxDiff, map, currentLife)
 			chosenBreed = breedOptions[math.random(1,#breedOptions)] 
 			chosenDifficulty = breedDifficulties[chosenBreed]
 			if chosenDifficulty <= 0 then chosenDifficulty = 1 end
+		end
+		
+		local offBy = absolute( maxDiff - (difficulty+chosenDifficulty+monsterAmountDifficulty) )
+		iterations = 0
+		while (difficulty+chosenDifficulty+monsterAmountDifficulty) > maxDiff do
+			iterations = iterations + 1
+			if iterations > 40 then break end
+			local altBreed = breedOptions[math.random(1,#breedOptions)] 
+			local altDifficulty = breedDifficulties[altBreed]
+			if altDifficulty <= 0 then altDifficulty = 1 end
+			if absolute( maxDiff - (difficulty+altDifficulty+monsterAmountDifficulty) ) < offBy then
+				chosenBreed = altBreed; chosenDifficulty = altDifficulty
+			end
 		end
 		
 		-- monster = {name, layer, x,y, direction, breed,rank,savegame_variable, treasure_name,treasure_variant,treasure_savegame_variable}
