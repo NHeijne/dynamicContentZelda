@@ -6,7 +6,7 @@ local table_util = require("table_util")
 local log = require("log")
 
 mission_grammar.planned_items = {
-	
+
 }
 
 mission_grammar.available_keys = {
@@ -20,10 +20,10 @@ mission_grammar.available_barriers = {
 -- keys as keys and the values are the barriers opened with it
 mission_grammar.key_barrier_lookup = {
 	["EQ"]=	{
-			["sword__1"]={"bush"},
-			["glove__1"]={"white_rock", "bush"},
-			["glove__2"]={"black_rock"},
-			["bomb_bag__1"]={"door_weak_block"}
+			["sword-1"]={"bush"},
+			["glove-1"]={"white_rock"},
+			["glove-2"]={"black_rock"},
+			["bomb_bag-1"]={"door_weak_block"}
 			},
 	["K"]=	{	
 			["boss_key"]={"door_boss_key"},
@@ -34,7 +34,7 @@ mission_grammar.key_barrier_lookup = {
 
 mission_grammar.key_types = 	{"K", "EQ"}
 mission_grammar.barrier_types = {"L", "B", "OB", "NB", "S"}
-mission_grammar.area_types = 	{"C", "P", "F", "PF", "CH", "T", "E"}
+mission_grammar.area_types = 	{"C", "P", "F", "PF", "CH", "T", "BT", "E", "BOSS"}
 -- based on:
 -- http://sander.landofsand.com/publications/Dormans_Bakkes_-_Generating_Missions_and_Spaces_for_Adaptable_Play_Experiences.pdf
 
@@ -44,9 +44,10 @@ mission_grammar.area_types = 	{"C", "P", "F", "PF", "CH", "T", "E"}
 -- OB:old barrier (hero should be able to open these based on the available keys list)
 -- NB:new barrier (hero should be able to open this with an equipment piece found later in game)
 -- K:key, unlocks L:lock
--- T:Task, which can turn into F:(mandatory) fight room, P:puzzle, E:empty room, PF: puzzle with enemies
+-- T:Task or BT:Branch task, which can turn into F:(mandatory) fight room, P:puzzle, E:empty room, PF: puzzle with enemies
 -- CH:challenge room
 -- S:secret transition, C:treasure chest room
+-- BOSS: boss room
 
 -- graph grammar rules lookup where the keys are the rule numbers, and the values the left and right hand sides
 -- grammar = [1]={prob=100, lhs={ nodes={[1]="T", [2]="T", [3]="T"}, edges={ [1]={ [2]="undir_fw" }, [2]={[3]="undir_fw"} } }, 
@@ -73,7 +74,7 @@ mission_grammar.grammar = {
 	-- new rules that utilize a new equipment piece			    
 	-- create an new Equipment item and 1 barrier in between two tasks
 	[5]={ lhs={ nodes={[1]="T", [2]="T",		  }, edges={ [1]={ [2]="undir_fw" } } }, 
-		  rhs={ nodes={[1]="T", [2]="T", [3]="EQ", [4]="B"}, 
+		  rhs={ nodes={[1]="T", [2]="T", [3]="EQ:?", [4]="B:?"}, 
 			    edges={ [1]={ [3]="undir_fw", [4]="undir_fw"}, [3]={[4]="dir_fw"}, [4]={[2]="undir_fw"} } } },
 	-- move a barrier forward and cause branching				  
 	[6]={ lhs={ nodes={[1]="T", [2]="?", [3]="B"}, edges={ [1]={ [2]="undir_fw" }, [2]={[3]="undir_fw"} } }, 
@@ -93,16 +94,23 @@ mission_grammar.grammar = {
 	-------------------------------------------------------------------------------------------------
 	-- Replacing nodes
 	[10]={ lhs={ nodes={[1]="T"}, edges={} }, 
+		   rhs={ nodes={[1]="F"}, edges={} } },	   
+    [11]={ lhs={ nodes={[1]="T", [2]="?" }, edges={ [1]={ [2]="undir_fw" } } }, 
+		   rhs={ nodes={[1]="P", [2]="?" }, edges={ [1]={ [2]="undir_fw" } } } },
+	["BT:F"]={ lhs={ nodes={[1]="BT"}, edges={} }, 
 		   rhs={ nodes={[1]="F"}, edges={} } },
-    [11]={ lhs={ nodes={[1]="T"}, edges={} }, 
+	["BT:P"]={ lhs={ nodes={[1]="BT"}, edges={} }, 
 		   rhs={ nodes={[1]="P"}, edges={} } },
-	[12]={ lhs={ nodes={[1]="T"}, edges={} }, 
-		   rhs={ nodes={[1]="PF"}, edges={} } },
+	[12]={ lhs={ nodes={[1]="T", [2]="goal" }, edges={ [1]={ [2]="undir_fw" } } }, 
+		   rhs={ nodes={[1]="T", [2]="goal", [3]="BOSS"}, 
+			    edges={ [1]={ [3]="undir_fw"}, [3]={[2]="dir_fw"} } } },
     [13]={ lhs={ nodes={[1]="E", [2]="T",		}, edges={ [1]={ [2]="undir_fw" } } }, 
 		   rhs={ nodes={[1]="E", [2]="T", [3]="K:dungeon_key", [4]="L:door_small_key", [5]="P"}, 
-			     edges={ [1]={ [3]="undir_fw", [4]="undir_fw"}, [3]={[4]="dir_fw"}, [4]={[5]="undir_fw"}, [5]={[2]="undir_fw"} } } },	
-
-
+			     edges={ [1]={ [3]="undir_fw", [4]="undir_fw"}, [3]={[4]="dir_fw"}, [4]={[5]="undir_fw"}, [5]={[2]="undir_fw"} } } },
+	[14]={ lhs={ nodes={[1]="EQ:?", [2]="?" }, edges={ [1]={ [2]="undir_bk" } } }, 
+		   rhs={ nodes={[1]="EQ", [2]="?", [3]="C" }, edges={ [2]={ [3]="undir_fw" }, [3]={[1]="undir_fw"} } } },
+    [15]={ lhs={ nodes={[1]="EQ:?", [2]="?" }, edges={ [1]={ [2]="undir_bk" } } }, 
+		   rhs={ nodes={[1]="EQ", [2]="?", [3]="BT" }, edges={ [2]={ [3]="undir_fw" }, [3]={[1]="undir_fw"} } } },	
 	-------------------------------------------------------------------------------------------------
 	-- rules that add to the example rules
 }
@@ -118,10 +126,10 @@ mission_grammar.grammar = {
 mission_grammar.produced_graph = {}
 
 function mission_grammar.initialize_graph( task_length )
-	local nodes = {[1]="start", [2]="P"}
-	local edges = {[1]={[2]="undir_fw"}, [2]={[1]="undir_bk"}}
-	local non_terminals = {2}
-	for i=3, task_length+2 do
+	local nodes = {[1]="start"}
+	local edges = {}
+	local non_terminals = {}
+	for i=2, task_length+1 do
 		nodes[i] = "T"
 		edges[i-1]= edges[i-1] or {}
 		edges[i-1][i]="undir_fw"
@@ -129,8 +137,8 @@ function mission_grammar.initialize_graph( task_length )
 		edges[i][i-1]="undir_bk"
 		table.insert(non_terminals, i)
 	end
-	edges[task_length+2][task_length+3]="undir_fw"
-	edges[task_length+3]={[task_length+2]="undir_bk"}
+	edges[task_length+1][task_length+2]="undir_fw"
+	edges[task_length+2]={[task_length+1]="undir_bk"}
 	table.insert(nodes, "goal")
 	mission_grammar.produced_graph = {nodes=nodes, edges=edges, non_terminals=non_terminals, branching={}} -- max one branch per NT
 end
@@ -140,7 +148,7 @@ function mission_grammar.update_keys_and_barriers( game )
 	mission_grammar.available_barriers = {}
 	local k = 0
 	for item,data in pairs(lookup.equipment) do
-		if game:get_value(item) then 
+		if game:get_value(data.treasure_savegame_variable) then 
 			k = k + 1
 			mission_grammar.available_keys[k]=item
 			table_util.add_table_to_table(mission_grammar.key_barrier_lookup["EQ"][item], mission_grammar.available_barriers)
@@ -150,49 +158,96 @@ end
 
 
 -- what kind of map type are we producing
-function mission_grammar.produce_graph( map_type, length, branches, puzzles, fights)
-	mission_grammar.initialize_graph( length )
-	if map_type == "dungeon" then
-		-- adding single key and lock at the beginning for testing
-		local matches = mission_grammar.match( 13 )
-		if next(matches) ~= nil then mission_grammar.apply_rule( matches[math.random(#matches)], 13 ) end
+function mission_grammar.produce_graph( params)
+	local params_clone = table_util.copy(params)
+	mission_grammar.initialize_graph( params_clone.length )
+	if params.outside then
+		mission_grammar.produce_outside_graph( params_clone )
+	else
+		mission_grammar.produce_dungeon_graph( params_clone )
+	end
+	return params_clone
+end
 
-	elseif map_type == "outside" then
-		-- lets start off simple using nothing but tasks and branches
-		for i=1, branches do
-			local matches = mission_grammar.match( 1, mission_grammar.produced_graph.branching )
-			if next(matches) == nil then break end
-			local selected_match = matches[math.random(#matches)]
-			table.insert( mission_grammar.produced_graph.branching, selected_match[1] )
-			mission_grammar.apply_rule( selected_match, 1 )
-		end
-		-- place barriers
-		local bar = mission_grammar.available_barriers
-		local bar_amount = #bar
-		for i=1, math.floor(length/2) do
-			local matches = mission_grammar.match( 9 )
-			if next(matches) == nil then break end
-			mission_grammar.apply_rule( matches[math.random(#matches)], 9, bar[math.random(bar_amount)] )
-		end
+function mission_grammar.produce_dungeon_graph( params )
+	mission_grammar.add_boss_fight( )
+	mission_grammar.add_planned_equipment_and_barrier( params )
+	mission_grammar.add_branches( params )
+	mission_grammar.add_old_barriers( params )
+	mission_grammar.assign_fights_and_puzzles( params )
+end
 
-		local puzzles_left = puzzles
-		local fights_left = fights
-		local options = {10, 11} -- 12 is both, but doesn't function yet
-		for i=1, length do
-			if fights_left == 0 and puzzles_left == 0 then break
-			elseif fights_left == 0 then options = {11}
-			elseif puzzles_left == 0 then options = {10} end
-			local matches = mission_grammar.match( 10 )
-			if next(matches) == nil then break end
-			local selected_option= options[math.random(#options)]
-			if selected_option==10 then fights_left=fights_left-1
-			elseif selected_option==11 then puzzles_left=puzzles_left-1
-			else 
-				fights_left=fights_left-1
-				puzzles_left=puzzles_left-1
-			end
-			mission_grammar.apply_rule( matches[math.random(#matches)], selected_option )
-		end
+function mission_grammar.produce_outside_graph( params )
+	mission_grammar.add_planned_equipment_and_barrier( params )
+	mission_grammar.add_branches( params )
+	mission_grammar.add_old_barriers( params )
+	mission_grammar.assign_fights_and_puzzles( params )
+end
+
+function mission_grammar.add_planned_equipment_and_barrier( params )
+	-- add and branch
+	local matches = mission_grammar.match( 5 )
+	if next(matches) ~= nil then
+		local next_eq = table.remove(mission_grammar.planned_items, 1)
+		local next_bar = table_util.random(mission_grammar.key_barrier_lookup.EQ[next_eq])
+		mission_grammar.apply_rule( table_util.random(matches), 5, {next_eq, next_bar} )
+	end
+	-- create room between branch and EQ
+	for i=1, params.branch_length do -- the amount needs to be determined by Openness
+		matches = mission_grammar.match( 15 )
+		if next(matches) == nil then break end
+		mission_grammar.apply_rule( matches[1], 15 )
+	end
+	matches = mission_grammar.match( 14 )
+	if next(matches) ~= nil then mission_grammar.apply_rule( matches[1], 14 ) end
+end
+
+function mission_grammar.add_boss_fight( )
+	local matches = mission_grammar.match( 12 )
+	if next(matches) == nil then return end
+	mission_grammar.apply_rule( matches[1], 12 )
+end
+
+function mission_grammar.assign_fights_and_puzzles( params )
+	local fights_left, puzzles_left = params.fights, params.puzzles
+	local puzzle_matches = mission_grammar.match( 11 )
+	for i=1, puzzles_left do
+		local selected_match = table.remove(puzzle_matches, math.random(#puzzle_matches))
+		mission_grammar.apply_rule( selected_match, 11 )
+		params.puzzles = params.puzzles - 1
+	end
+	local fights_matches = mission_grammar.match( 10 )
+	for i=1, fights_left do
+		local selected_match = table.remove(fights_matches, math.random(#fights_matches))
+		mission_grammar.apply_rule( selected_match, 10 )
+		params.fights = params.fights - 1
+	end
+	local branch_tasks = mission_grammar.match( "BT:F" )
+	for i=1, #branch_tasks do
+		local selected_option = table_util.random({"BT:F", "BT:P"})
+		mission_grammar.apply_rule( branch_tasks[i], selected_option )
+	end
+end
+
+function mission_grammar.add_branches( params )
+	local branches_left = params.branches
+	for i=1, branches_left do 
+		local matches = mission_grammar.match( 1, mission_grammar.produced_graph.branching )
+		if next(matches) == nil then break end
+		local selected_match = matches[math.random(#matches)]
+		table.insert( mission_grammar.produced_graph.branching, selected_match[1] )
+		mission_grammar.apply_rule( selected_match, 1 )
+		params.branches = params.branches -1
+	end
+end
+
+function mission_grammar.add_old_barriers( params )
+	local bar = mission_grammar.available_barriers
+	local bar_amount = #bar
+	for i=1, math.floor(params.length/2) do
+		local matches = mission_grammar.match( 9 )
+		if next(matches) == nil then break end
+		mission_grammar.apply_rule( matches[math.random(#matches)], 9, {bar[math.random(bar_amount)]} )
 	end
 end
 
@@ -209,7 +264,7 @@ function mission_grammar.match( rule_number, except_non_terminals )
 		if not table_util.contains(except_non_terminals, nt) then
 			local split_node = table_util.split(nodes[nt], ":")
 			local split_node_pattern = table_util.split(pattern.nodes[1], ":")
-			if split_node[1] == split_node_pattern[1] and (split_node[2] == nil or split_node[2] == split_node_pattern[2]) then 
+			if split_node_pattern[1] == "?" or split_node[1] == split_node_pattern[1] and (split_node_pattern[2] == "?" or split_node[2] == nil or split_node[2] == split_node_pattern[2]) then 
 				-- log.debug("starting recursive_search on node "..nt)
 				local new_matches = mission_grammar.recursive_search( nodes, edges, pattern, {[1]=nt}, {[1]=nt})
 				if new_matches then table_util.add_table_to_table(new_matches, matches) end
@@ -220,30 +275,17 @@ function mission_grammar.match( rule_number, except_non_terminals )
 end
 
 function mission_grammar.recursive_search( nodes, edges, pattern, candidates, current_match)
-	-- log.debug("candidates")
-	-- log.debug(candidates)
 	local new_candidates = {}
 	for pattern_index, candidate in pairs(candidates) do
-		-- log.debug("pattern_index")
-		-- log.debug(pattern_index)
-		-- log.debug("candidate")
-		-- log.debug(candidate)
 		if pattern.edges[pattern_index] ~= nil then
-			-- log.debug("edges found for pattern_index in pattern")
-			-- log.debug(pattern.edges[pattern_index])
-			-- log.debug("existing edges")
-			-- log.debug(edges)
-			-- log.debug("existing nodes")
-			-- log.debug(nodes)
 			for index,edge in pairs(pattern.edges[pattern_index]) do -- pattern edges
 				local found = false
 				for i,v in pairs(edges[candidate]) do -- existing edges
-					-- log.debug("checking existing edge "..candidate.." to "..i)
 					-- we need to check whether the edge and the non-terminal type 
 					-- are the same for each node connected to the current node
 					local split_node = table_util.split(nodes[i], ":")
 					local split_node_pattern = table_util.split(pattern.nodes[index], ":")
-					if edge == v and (pattern.nodes[index]== "?" or split_node[1] == split_node_pattern[1]) and (split_node[2]==nil or split_node[2] == split_node_pattern[2]) then 
+					if edge == v and (pattern.nodes[index]== "?" or split_node[1] == split_node_pattern[1] and (split_node_pattern[2] == "?" or split_node[2]==nil or split_node[2] == split_node_pattern[2])) then 
 						-- edge types and node types are the same 
 						-- log.debug("found a node that is connected in the right way")
 						-- log.debug("candidate "..candidate.." is connected with "..edge.." to node "..i)
@@ -332,7 +374,7 @@ function mission_grammar.apply_rule( match, rule_number, custom_terminal )
 		local split_lhs_node = table_util.split(mission_grammar.produced_graph.nodes[match[i]], ":")
 		if not (rule.rhs.nodes[i] == "?" or split_lhs_node[1] == rule.rhs.nodes[i]) then -- NT:term --> NT results in NT:term // NT --> NT:term goes through
 			local split_node = table_util.split(rule.rhs.nodes[i], ":")
-			if split_node[2] == "?" then mission_grammar.produced_graph.nodes[match[i]]=split_node[1]..":"..custom_terminal	-- NT:? --> NT:custom_terminal		
+			if split_node[2] == "?" then mission_grammar.produced_graph.nodes[match[i]]=split_node[1]..":"..table.remove(custom_terminal, 1)	-- NT:? --> NT:custom_terminal		
 			else mission_grammar.produced_graph.nodes[match[i]]=rule.rhs.nodes[i] end -- NT:term1 --> NT2 or NT:term2 // NT1 --> NT2
 		end
 	end
@@ -340,7 +382,7 @@ function mission_grammar.apply_rule( match, rule_number, custom_terminal )
 	local used_nodes = table_util.copy(match)
 	for i=#rule.lhs.nodes+1, #rule.rhs.nodes, 1 do
 		local split_node = table_util.split(rule.rhs.nodes[i], ":")
-		if split_node[2] == "?" then table.insert(mission_grammar.produced_graph.nodes, split_node[1]..":"..custom_terminal)
+		if split_node[2] == "?" then table.insert(mission_grammar.produced_graph.nodes, split_node[1]..":"..table.remove(custom_terminal, 1) )
 		else table.insert(mission_grammar.produced_graph.nodes, rule.rhs.nodes[i]) end
 		local last_node = #mission_grammar.produced_graph.nodes
 		table.insert(mission_grammar.produced_graph.non_terminals, last_node)

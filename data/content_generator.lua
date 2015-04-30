@@ -44,14 +44,14 @@ function content.start_test(given_map)
 	math.random(); math.random(); math.random()
 	-- done. :-)
 
-	mission_grammar.update_keys_and_barriers(game)
-	mission_grammar.produce_graph( "outside", 7, 3, 0, 7)
-	log.debug("produced graph")
-	log.debug(mission_grammar.produced_graph)
-	log.debug("area_details")
 	local tileset_id = tonumber(map:get_tileset())
 	local outside = false
 	if tileset_id == 1 or tileset_id == 2 then outside = true end
+	mission_grammar.update_keys_and_barriers(game)
+	mission_grammar.produce_graph({branches=4, branch_length=2, fights=6, puzzles=0, length=6, outside=outside})
+	log.debug("produced graph")
+	log.debug(mission_grammar.produced_graph)
+	log.debug("area_details")
 	content.area_details = mission_grammar.transform_to_space( {tileset_id=tileset_id, 
 																outside=outside, 
 																from_direction="west", 
@@ -94,9 +94,15 @@ function content.start_test(given_map)
 		for _, a in ipairs(v) do
 			log.debug("filling in area "..k)
 			log.debug("creating area_type " .. content.area_details[k].area_type)
-			if content.area_details[k].area_type == "P" or content.area_details[k].area_type == "PF" then 
+			if content.area_details[k].area_type == "P" then 
 				maze_generator.set_room(a, 16, 8, "mazeprop_area_"..k)
 				content.makeSingleMaze(a, exit_areas[k], content.area_details, exclusion_areas[k], layer)
+			end
+			if content.area_details[k].area_type == "C" then
+				local equipment = table_util.split(content.area_details[k].contains_items[1], ":")[2] -- quick solution, should be checked for normal and equipment items
+				local large_area = area_util.get_largest_area(v.open_areas)
+				local chest_pos = area_util.from_center( large_area, 16, 16, true)-- round to 8
+				content.place_chest(equipment, chest_pos)
 			end
 		end
     end
@@ -113,6 +119,10 @@ function content.start_test(given_map)
 	-- content.open_normal_doors_sensorwise()
 	-- local entity = map:create_custom_entity({name="fireball_statue", direction=0, layer=0, x=hero_x+48, y=hero_y+16, model="fireball_statue"})
 	-- entity:stop()
+end
+
+function content.set_planned_items_for_this_zone( list )
+	mission_grammar.planned_items = list
 end
 
 function content.open_normal_doors_sensorwise()
@@ -491,8 +501,8 @@ function content.tile_destructible( details, area, barrier_type, optional )
 	for k,v in pairs(optional) do
 		details[k] = v
 	end
-	for x=area.x1, area.x2-details.offset.x, details.required_size.x do
-		for y=area.y1, area.y2-details.offset.y, details.required_size.y do
+	for x=area.x1, area.x2-details.offset.x-1, details.required_size.x do
+		for y=area.y1, area.y2-details.offset.y-1, details.required_size.y do
 			details.x, details.y = x+details.offset.x, y+details.offset.y
 			if barrier_type == "door" then
 				-- log.debug("creating door")
@@ -519,6 +529,21 @@ function content.place_lock( details, direction, area, optional )
 	-- log.debug("creating lock")
 	-- log.debug(details)
 	map:create_door(details)
+end
+
+function content.place_chest( equipment_name, pos, optional )
+	local chest_details = { layer=0, x=pos.x1+8, y=pos.y1+13, sprite="entities/chest" }
+	for k,v in pairs(lookup.equipment[equipment_name]) do
+		chest_details[k] = v
+	end
+	if optional then
+		for k,v in pairs(optional) do
+			chest_details[k] = v
+		end
+	end
+	log.debug("creating chest with details:")
+	log.debug(chest_details)
+	map:create_chest(chest_details)
 end
 
 function content.place_prop(name, area, layer, tileset_id, use_this_lookup, custom_name)
@@ -679,10 +704,9 @@ function content.create_simple_forest_map(areas, area_details)
 				exclusion_areas[areanumber] = closed
 				a.open_areas = open
 
-				for _,c in ipairs(closed) do
-					
-					--content.spread_props(c, 0, {{"green_tree"},{"old_prison"},{"small_green_tree", "stone_hedge", "big_statue"}}, 1)
-				end
+				-- for _,c in ipairs(closed) do
+				-- 	content.spread_props(c, 0, {{"green_tree"},{"old_prison"},{"small_green_tree", "stone_hedge", "big_statue"}}, 1)
+				-- end
 				for _,o in ipairs(open) do
 					ex=ex+1
 					exclusion_areas_trees[ex] = o
@@ -726,11 +750,20 @@ function content.create_simple_forest_map(areas, area_details)
 	local choices = {{{"green_tree"}, {"old_prison"}, {"stone_hedge"}},
 					 {{"green_tree"}, {"small_green_tree"}, {"tiny_yellow_tree"}},
 					 {{"green_tree"}, {"big_statue"}, {"blue_block"}}}
-
+	-- local filler_destructible = {"black_rock", "white_rock"}
 	for areanumber, list in ipairs(closed_leftovers) do 
 		local choice_for_that_area = table_util.random(choices)
 		for _, l in ipairs(list) do
-			content.spread_props(l, 0, choice_for_that_area, 1)
+			local leftovers = content.spread_props(l, 0, choice_for_that_area, 1)
+			-- for _,v in ipairs(leftovers) do
+			-- 	local selection = table_util.random({"destructible", "prop"})
+			-- 	if selection == "destructible" then
+			-- 		local object = table_util.random(filler_destructible)
+			-- 		local object_details = lookup.destructible[object]
+			-- 	else
+			-- 		content.spread_props(v, 0, filler, 1)
+			-- 	end
+			-- end
 		end
 	end 
 	return exit_areas, exclusion_areas
@@ -824,9 +857,11 @@ function content.create_simple_dungeon_map(areas, area_details)
 	end
 
 	for areanumber, a in pairs(areas["walkable"]) do
-		local choices = {{{"bright_rock_64x64"}, {"bright_rock_48x48"}, {"bright_rock_32x32"}, {"pipe_16x32_v", "pipe_32x16_h"}, {"pipe_16x16_h", "pipe_16x16_v"}},
-					 	{{"dark_rock_64x64"}, {"dark_rock_48x48"}, {"dark_rock_32x32"}, {"pipe_16x32_v", "pipe_32x16_h"}, {"pipe_16x16_h", "pipe_16x16_v"}},
-					 	{{"pipe_64x32_h"}, {"pipe_32x32_v"}, {"pipe_16x32_v", "pipe_32x16_h"}, {"pipe_16x16_h", "pipe_16x16_v"}}}
+		local choices = {{{"bright_rock_64x64"}, {"bright_rock_48x48"}, {"bright_rock_32x32"}, {"pipe_16x32_v", "pipe_32x16_h"}},
+					 	{{"dark_rock_64x64"}, {"dark_rock_48x48"}, {"dark_rock_32x32"}, {"pipe_16x32_v", "pipe_32x16_h"}},
+					 	{{"pipe_64x32_h"}, {"pipe_32x32_v"}, {"pipe_16x32_v", "pipe_32x16_h"}}}
+		local filler = {"pipe_16x16_h", "pipe_16x16_v"}
+		local filler_destructible = {"black_rock", "white_rock"}
 		for _, area in ipairs(a) do	
 			-- create a path through the area
 			
@@ -835,10 +870,24 @@ function content.create_simple_dungeon_map(areas, area_details)
 				local open, closed = maze_generator.generate_path( exit_areas[areanumber] )
 				exclusion_areas[areanumber] = closed
 				a.open_areas = open
+				-- for _,o in ipairs(open) do
+				-- 	content.place_tile(o, 451, "transition", 0)
+				-- end
 				
 				local choice_for_that_area = table_util.random(choices)
 				for _,c in ipairs(closed) do
-					content.spread_props(c, 0, choice_for_that_area, 1)
+					local leftovers = content.spread_props(c, 0, choice_for_that_area, 1)
+					for _,v in ipairs(leftovers) do
+						local selection = table_util.random({"destructible", "prop"})
+						if selection == "destructible" then
+							local object = table_util.random(filler_destructible)
+							local object_details = lookup.destructible[object]
+							content.tile_destructible(object_details, v, "destructible", {})
+						else
+							content.spread_props(v, 0, filler, 1)
+						end
+					end
+					
 				end
 			end
 		end

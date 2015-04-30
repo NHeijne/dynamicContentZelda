@@ -1,3 +1,3 @@
 Error: In timer callback: [string "dungeons.lua"]:123: attempt to index local 'world' (a nil value)
-Error: In on_activated: [string "fight_generator.lua"]:325: attempt to index local 'chosenArea' (a nil value)
 Error: In on_activated: [string "fight_generator.lua"]:341: attempt to index local 'chosenArea' (a nil value)
+Error: In timer callback: [string "dungeons.lua"]:123: attempt to index local 'world' (a nil value)

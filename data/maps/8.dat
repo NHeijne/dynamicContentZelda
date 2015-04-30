@@ -346,6 +346,51 @@ destructible{
 
 tile{
   layer = 1,
+  x = 64,
+  y = 136,
+  width = 24,
+  height = 24,
+  pattern = "53",
+}
+
+tile{
+  layer = 1,
+  x = 64,
+  y = 144,
+  width = 24,
+  height = 24,
+  pattern = "55",
+}
+
+tile{
+  layer = 1,
+  x = 136,
+  y = 104,
+  width = 32,
+  height = 24,
+  pattern = "49",
+}
+
+tile{
+  layer = 1,
+  x = 120,
+  y = 80,
+  width = 24,
+  height = 32,
+  pattern = "50",
+}
+
+tile{
+  layer = 1,
+  x = 120,
+  y = 104,
+  width = 24,
+  height = 24,
+  pattern = "55",
+}
+
+tile{
+  layer = 1,
   x = 88,
   y = 104,
   width = 24,
@@ -526,15 +571,6 @@ tile{
 
 tile{
   layer = 1,
-  x = 64,
-  y = 136,
-  width = 24,
-  height = 24,
-  pattern = "53",
-}
-
-tile{
-  layer = 1,
   x = 72,
   y = 144,
   width = 24,
@@ -581,7 +617,7 @@ tile{
 tile{
   layer = 1,
   x = 136,
-  y = 72,
+  y = 64,
   width = 32,
   height = 24,
   pattern = "52",
@@ -589,17 +625,8 @@ tile{
 
 tile{
   layer = 1,
-  x = 136,
-  y = 112,
-  width = 32,
-  height = 24,
-  pattern = "49",
-}
-
-tile{
-  layer = 1,
   x = 160,
-  y = 88,
+  y = 80,
   width = 24,
   height = 32,
   pattern = "51",
@@ -607,26 +634,8 @@ tile{
 
 tile{
   layer = 1,
-  x = 120,
-  y = 88,
-  width = 24,
-  height = 32,
-  pattern = "50",
-}
-
-tile{
-  layer = 1,
-  x = 120,
-  y = 112,
-  width = 24,
-  height = 24,
-  pattern = "55",
-}
-
-tile{
-  layer = 1,
   x = 160,
-  y = 112,
+  y = 104,
   width = 24,
   height = 24,
   pattern = "56",
@@ -635,7 +644,7 @@ tile{
 tile{
   layer = 1,
   x = 160,
-  y = 72,
+  y = 64,
   width = 24,
   height = 24,
   pattern = "54",
@@ -644,7 +653,7 @@ tile{
 tile{
   layer = 1,
   x = 120,
-  y = 72,
+  y = 64,
   width = 24,
   height = 24,
   pattern = "53",
@@ -657,15 +666,6 @@ tile{
   width = 24,
   height = 24,
   pattern = "54",
-}
-
-tile{
-  layer = 1,
-  x = 64,
-  y = 144,
-  width = 24,
-  height = 24,
-  pattern = "55",
 }
 
 tile{
@@ -849,6 +849,15 @@ tile{
 }
 
 tile{
+  layer = 1,
+  x = 168,
+  y = 88,
+  width = 8,
+  height = 16,
+  pattern = "486",
+}
+
+tile{
   layer = 2,
   x = 216,
   y = 96,
@@ -860,7 +869,7 @@ tile{
 tile{
   layer = 2,
   x = 144,
-  y = 96,
+  y = 88,
   width = 16,
   height = 16,
   pattern = "170",

@@ -1,2 +1,4 @@
 274616 -- weird exit placement in forest
-918988 -- selected_nb in maze_gen produces error
+918988, 694043 -- selected_nb in maze_gen produces error
+711143, -- probably maze generation doesn't fit somewhere in the caves
+469143, -- no offset for destructibles, can't find the bug...

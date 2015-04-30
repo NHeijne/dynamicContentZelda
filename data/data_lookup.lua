@@ -24,14 +24,14 @@ local lookup = {}
 -- Return value (destructible object): The destructible object created.
 
 lookup.equipment = {
-	["sword__1"]={requires=nil},
-	["sword__2"]={requires="sword__1"},
-	["sword__3"]={requires="sword__2"},
-	["glove__1"]={requires=nil},
-	["glove__2"]={requires="glove__1"},
-	["bomb_bag__1"]={requires=nil},
-	["bomb_bag__2"]={requires="bomb_bag__1"},
-	["bomb_bag__3"]={requires="bomb_bag__2"}
+	["sword-1"]={requires=nil, 				treasure_name="sword",treasure_variant=1,treasure_savegame_variable="sword__1"},
+	["sword-2"]={requires="sword__1", 		treasure_name="sword",treasure_variant=2,treasure_savegame_variable="sword__2"},
+	["sword-3"]={requires="sword__2", 		treasure_name="sword",treasure_variant=3,treasure_savegame_variable="sword__3"},
+	["glove-1"]={requires=nil, 				treasure_name="glove",treasure_variant=1,treasure_savegame_variable="glove__1"},
+	["glove-2"]={requires="glove__1", 		treasure_name="glove",treasure_variant=2,treasure_savegame_variable="glove__2"},
+	["bomb_bag-1"]={requires=nil, 			treasure_name="bomb_bag",treasure_variant=1,treasure_savegame_variable="bomb_bag__1"},
+	["bomb_bag-2"]={requires="bomb_bag__1", treasure_name="bomb_bag",treasure_variant=2,treasure_savegame_variable="bomb_bag__2"},
+	["bomb_bag-3"]={requires="bomb_bag__2", treasure_name="bomb_bag",treasure_variant=3,treasure_savegame_variable="bomb_bag__3"}
 }
 
 lookup.destructible = {
@@ -42,7 +42,7 @@ lookup.destructible = {
 }
 
 lookup.doors = {
-	["door_weak_block"]={ layer = 0, direction = 1, sprite = "entities/door_weak_block", opening_method = "explosion"},
+	["door_weak_block"]={ layer = 0, direction = 1, sprite = "entities/door_weak_block", opening_method = "explosion", required_size={x=16, y=16}, offset={x=0, y=0}},
 	["door_normal"]={ layer = 0, direction = 1, sprite = "entities/door_normal"},
 	["door_small_key"]={ layer = 0, direction = 1, sprite = "entities/door_small_key", opening_method = "interaction_if_savegame_variable", 
 						 opening_condition = "small_key", opening_condition_consumed = true, cannot_open_dialog = "_small_key_required"},
@@ -362,7 +362,7 @@ lookup.props =
 								[{x1=48, y1=0, x2=64, y2=16, layer=0}]=464,
 							},
 						[2]={	[{x1=0, y1=0, x2=16, y2=8, layer=0}]=488,
-					  			[{x1=0, y1=24, x2=16, y2=32, layer=0}]=489},
+					  			[{x1=48, y1=0, x2=64, y2=8, layer=0}]=488},
 						required_size={x=64, y=32}},
 
 }

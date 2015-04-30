@@ -260,6 +260,18 @@ function area_util.get_areas_in_between(area1, area2)
 			y1=math.min(area1.y2, area2.y2)}
 end
 
+function area_util.get_largest_area( areas )
+	local largest_area
+	local max_size = 0
+	for _,area in ipairs(areas) do
+		local size = area_util.get_area_size(area).size
+		if largest_area == nil or size > max_size then
+			largest_area = area; max_size = size
+		end
+	end
+	return largest_area
+end
+
 
 function area_util.distance(area1, area2, overlap_required)
 	local x_distance = 0

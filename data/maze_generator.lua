@@ -91,7 +91,7 @@ function maze_gen.recursive_rooms( maze, area_details, areanumber, pos, last_dir
 			local selected_nb
 			for i=3, 1, -1 do
 				if #ranking[i] > 0 then 
-					selected_nb = table_util.random(ranking[i]); break
+					selected_nb = ranking[i][1]; break
 				end
 			end
 			maze_gen.open_path(maze, {cur_pos, selected_nb.pos}, "exit")
@@ -165,14 +165,58 @@ function maze_gen.generate_path( exit_areas )
 	maze_gen.initialize_maze( maze, room, wall_width, corridor_width )
 	local exits = maze_gen.open_exits( maze, exit_areas, room, wall_width, corridor_width )
 	local paths = maze_gen.create_initial_paths( maze, exits )
+	-- check along the path what the max distance is to the exits
+	local max_dist=0
+
+	for _,path in ipairs(paths) do
+		for _, node in ipairs(path) do
+			local to_area = maze_gen.pos_to_area( node )
+			local distance = area_util.distance(exit_areas[1], to_area, 0)	
+			if distance > max_dist then max_dist = distance end	
+		end
+	end
+	if max_dist < 150 then
+		local viable_positions = {}
+		-- create another branch
+		local unvisited = maze_gen.get_not_visited( maze )
+		local n = 0
+		for _,u in ipairs(unvisited) do
+			local to_area = maze_gen.pos_to_area( u )
+			local distance = area_util.distance(exit_areas[1], to_area, 0)	
+			if distance > 150 then n = n+1; viable_positions[n]=u end	
+		end
+		local chosen_branch_ending_pos = table_util.random(viable_positions)
+		local found_path = maze_gen.create_direct_path( paths[1][1], chosen_branch_ending_pos, maze )
+		if not found_path and next(paths) ~= nil then -- will fail if the starting point is in a closed off area of the maze 
+			local min_dist = maze_gen.distance(paths[1][1], chosen_branch_ending_pos)
+			local next_start = paths[1][1]
+			for _,path in ipairs(paths) do
+				for _,pos in ipairs(path) do
+					if maze_gen.distance(pos, chosen_branch_ending_pos) < min_dist then next_start = pos end
+				end
+			end
+			found_path = maze_gen.create_direct_path( next_start, chosen_branch_ending_pos, maze )
+		end
+		table.insert(paths, found_path)
+		maze_gen.open_path( maze, found_path )
+	end
 	-- got a path to all exits
-	-- expand and test
 	for _,path in ipairs(paths) do
 		for _, node in ipairs(path) do
 			local neighbors = maze_gen.get_neighbors(maze, node)
 			for _, n in ipairs(neighbors) do
 				maze[n.pos.x][n.pos.y].visited = true
 			end
+		end
+	end
+	for _,exit_list in ipairs(exits) do
+		neighbors = maze_gen.get_neighbors(maze, exit_list[math.ceil(#exit_list/2)])
+		for _, n in ipairs(neighbors) do
+			neighbors = maze_gen.get_neighbors(maze, n.pos)
+			for _, n2 in ipairs(neighbors) do
+				maze[n2.pos.x][n2.pos.y].visited = "exit"
+			end
+			maze[n.pos.x][n.pos.y].visited = "exit"
 		end
 	end
 	-- we have an expanded path, now to make areas from those nodes
@@ -386,13 +430,7 @@ function maze_gen.open_exits( maze, exit_areas, area, wall_width, corridor_width
 			end
 		end
 		maze_gen.open_path(maze, exit_nodes)
-		local possible_exits = {}
-		for _,n in ipairs(exit_nodes) do
-			table_util.add_table_to_table(maze_gen.get_neighbors(maze, n, true), possible_exits)
-		end
-		local n2 = table_util.random(possible_exits)
-		maze_gen.open_path(maze, {n2.from_pos, n2.pos})
-		table.insert(exits, n2.pos)
+		table.insert(exits, exit_nodes)
 	end
 	return exits
 end
@@ -773,7 +811,8 @@ function maze_gen.create_initial_paths( maze, exits )
 	local starting_point = possible_nodes[math.random(nr_of_nodes)]
 
 	local paths = {}
-	for index, exit in ipairs(exits) do
+	for index, exit_list in ipairs(exits) do
+		local exit = table_util.random(exit_list)
 		local found_path = maze_gen.create_direct_path( starting_point, exit , maze )
 		if not found_path and next(paths) ~= nil then -- will fail if the starting point is in a closed off area of the maze 
 			local min_dist = maze_gen.distance(starting_point, exit)
