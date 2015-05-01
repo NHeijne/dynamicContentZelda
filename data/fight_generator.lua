@@ -267,7 +267,7 @@ function logTheRoom (room)
 	playerBehaviourData[#playerBehaviourData+1] = room.monsterTypesKilled.blue_hardhat_beetle or 0
 	playerBehaviourData[#playerBehaviourData+1] = room.monsterTypesKilled.green_knight_soldier or 0
 
-	-- free,freezed,grabbing,hurt,stairs,loading,spin,swing,tap
+	-- free,freezed,grabbing,hurt,stairs,loading,spin,swing,tap,carry,lift,treasure,useItem
 	playerBehaviourData[#playerBehaviourData+1] = room.heroStates.free or 0
 	playerBehaviourData[#playerBehaviourData+1] = room.heroStates.freezed or 0
 	playerBehaviourData[#playerBehaviourData+1] = room.heroStates.grabbing or 0
@@ -278,9 +278,14 @@ function logTheRoom (room)
 	playerBehaviourData[#playerBehaviourData+1] = room.heroStates["sword swinging"] or 0
 	playerBehaviourData[#playerBehaviourData+1] = room.heroStates["sword tapping"] or 0
 	
+	playerBehaviourData[#playerBehaviourData+1] = room.heroStates["carrying"] or 0
+	playerBehaviourData[#playerBehaviourData+1] = room.heroStates["lifting"] or 0
+	playerBehaviourData[#playerBehaviourData+1] = room.heroStates["treasure"] or 0
+	playerBehaviourData[#playerBehaviourData+1] = room.heroStates["using item"] or 0
+	
 	-- The following aren't being logged because they are not very useful for now.
-	--"back to solid ground", "boomerang", "bow", "carrying", "falling", "forced walking", "hookshot", "jumping", 
-	--"lifting", "plunging", "pulling", "pushing", "running", "stream", "swimming", "treasure", "using item", "victory"
+	--"back to solid ground", "boomerang", "bow", "falling", "forced walking", "hookshot", "jumping", 
+	--"plunging", "pulling", "pushing", "running", "stream", "swimming", "victory"
 	
 	roomDifficultyPrediction = { 0.1652 * room.swordHits + 
 			-0.0269 * room.standing + 
@@ -289,7 +294,6 @@ function logTheRoom (room)
 			 1.3787 }
 	roomDifficultyIntention = { room.intendedDifficulty }
 	
-	-- egg,mandible,hardhat,knight,startLife,inside,finished,swordHits,time,dirChange,lifeLost,uselessKeys,moving,standing,percStanding,killEgg,killMandible,killHardhat,killKnight,free,freezed,grabbing,hurt,stairs,loading,spin,swing,tap,measuredStress,intendedStress
 	writeTableToFile (fightRoomData, "roomSummaries.csv")
 	local f = sol.file.open("roomSummaries.csv","a+"); f:write(","); f:flush(); f:close()
 	writeTableToFile (playerBehaviourData, "roomSummaries.csv")
