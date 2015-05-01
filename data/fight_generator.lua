@@ -347,7 +347,7 @@ function fight_generator.make(areas, maxDiff, map, currentLife)
 			if iterations > 40 then break end
 			chosenBreed = breedOptions[math.random(1,#breedOptions)] 
 			chosenDifficulty = breedDifficulties[chosenBreed]
-			if chosenDifficulty <= 0 then chosenDifficulty = 1 end
+			if chosenDifficulty <= 0.1 then chosenDifficulty = 1 end
 		end
 		
 		local offBy = absolute( maxDiff - (difficulty+chosenDifficulty+monsterAmountDifficulty) )
