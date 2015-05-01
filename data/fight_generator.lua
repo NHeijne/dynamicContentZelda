@@ -152,34 +152,21 @@ function analyseGameplaySoFar(map)
 		local splitLine = table_util.split(line, "-")
 		if line=="sword-enemy" then room.swordHits = room.swordHits + 1 end
 		if splitLine[2] == "hero" then 
-			if room.heroStates[splitLine[1]] == nil then
-				room.heroStates[splitLine[1]] = 1
-			else
-				room.heroStates[splitLine[1]] = room.heroStates[splitLine[1]] + 1
-			end
+			if room.heroStates[splitLine[1]] == nil then room.heroStates[splitLine[1]] = 1 
+			else room.heroStates[splitLine[1]] = room.heroStates[splitLine[1]] + 1 end
 		end
 
 		if splitLine[2] == "spawned" then 
-			if room.monsterTypes[splitLine[1]] == nil then
-				room.monsterTypes[splitLine[1]] = 1
-			else
-				room.monsterTypes[splitLine[1]] = room.monsterTypes[splitLine[1]] + 1
-			end
+			if room.monsterTypes[splitLine[1]] == nil then room.monsterTypes[splitLine[1]] = 1
+			else room.monsterTypes[splitLine[1]] = room.monsterTypes[splitLine[1]] + 1 end
 		end
 		if splitLine[2] == "waskilled" then 
 			room.monstersKilled = room.monstersKilled + 1 
-			if room.monsterTypesKilled[splitLine[1]] == nil then
-				room.monsterTypesKilled[splitLine[1]] = 1
-			else
-				room.monsterTypesKilled[splitLine[1]] = room.monsterTypesKilled[splitLine[1]] + 1
-			end
+			if room.monsterTypesKilled[splitLine[1]] == nil then room.monsterTypesKilled[splitLine[1]] = 1
+			else room.monsterTypesKilled[splitLine[1]] = room.monsterTypesKilled[splitLine[1]] + 1 end
 		end
-		if line == "moving around" then 
-			room.moving = room.moving + 1
-		end
-		if line == "standing still" then 
-			room.standing = room.standing + 1
-		end
+		if line == "moving around" then room.moving = room.moving + 1 end
+		if line == "standing still" then room.standing = room.standing + 1 end
 		if string.find(line, "beginlife") then 
 			local game = map:get_game()
 			room.lifeLostInRoom = tonumber (splitLine[1]) - game:get_life()
@@ -189,15 +176,9 @@ function analyseGameplaySoFar(map)
 			room.fightFinished = (splitLine[1] == "finished") and 1 or 0
 			room.fightFinished = room.fightFinished - ( (splitLine[1] == "diedin") and 1 or 0 )
 		end
-		if string.find(line, "ofADungeon") then 
-			room.insideDungeon = (splitLine[1] == "inside") and 1 or 0
-		end
-		if string.find(line, "starttime") then 
-			room.timeInRoom = os.time() - tonumber (splitLine[1])
-		end
-		if string.find(line, "spawnSurface") then 
-			room.surface = tonumber (splitLine[1])
-		end
+		if string.find(line, "ofADungeon") then room.insideDungeon = (splitLine[1] == "inside") and 1 or 0 end
+		if string.find(line, "starttime") then room.timeInRoom = os.time() - tonumber (splitLine[1]) end
+		if string.find(line, "spawnSurface") then room.surface = tonumber (splitLine[1]) end
 		if line=="right-keypress" or line=="left-keypress" or line=="up-keypress" or line=="down-keypress" then 
 			room.directionChange = room.directionChange + 1
 		end
@@ -205,17 +186,11 @@ function analyseGameplaySoFar(map)
 				and splitLine[1]~="c" and splitLine[1]~="space" and splitLine[1]~="x" and splitLine[1]~="v" and splitLine[1]~="d" then 
 			room.uselessKeys = room.uselessKeys + 1
 		end
-		if string.find(line, "areasensor") or string.find(line, "A NEW GAME IS STARTING NOW") then 
-			room = table_util.copy( nothing )
-		end	
+		if string.find(line, "areasensor") or string.find(line, "A NEW GAME IS STARTING NOW") then room = table_util.copy( nothing ) end	
 		
-		if splitLine[2] == "intendedDifficulty" then
-			room.intendedDifficulty = tonumber (splitLine[1]) 
-		end
+		if splitLine[2] == "intendedDifficulty" then room.intendedDifficulty = tonumber (splitLine[1]) end
 	end
-	if (room.moving+room.standing) ~= 0 then
-		room.percentageStanding = room.standing/(room.moving+room.standing)
-	end
+	if (room.moving+room.standing) ~= 0 then room.percentageStanding = room.standing/(room.moving+room.standing) end
 	
 	f:flush(); f:close()
 	logTheRoom (room)
@@ -225,11 +200,11 @@ function analyseGameplaySoFar(map)
 end
 
 function updateWeights (weights)
-	breedDifficulties["minillosaur_egg_fixed"] = weights[1][1] --room.monsterTypes.minillosaur_egg_fixed
-	breedDifficulties["mandible"] = weights[2][1] --room.monsterTypes.mandible
-	breedDifficulties["blue_hardhat_beetle"] = weights[3][1] --room.monsterTypes.blue_hardhat_beetle
-	breedDifficulties["green_knight_soldier"] = weights[4][1] --room.monsterTypes.green_knight_soldier
-	baseDifficulty = weights[5][1]--bias
+	breedDifficulties["minillosaur_egg_fixed"] = weights[1][1]
+	breedDifficulties["mandible"] = weights[2][1]
+	breedDifficulties["blue_hardhat_beetle"] = weights[3][1]
+	breedDifficulties["green_knight_soldier"] = weights[4][1]
+	baseDifficulty = weights[5][1]
 end
 
 function absolute( number )
@@ -328,14 +303,11 @@ function fight_generator.make(areas, maxDiff, map, currentLife)
 	local spawnAreas = fight_generator.getViableAreasForSpawning(hero, 100, areas)
 	
 	local totalSurface = 0
-	for _, area in ipairs(areas) do
-		totalSurface = totalSurface + absolute ( area.x1-area.x2 ) * absolute ( area.y1-area.y2 )
-	end
+	for _, area in ipairs(areas) do totalSurface = totalSurface + absolute ( area.x1-area.x2 ) * absolute ( area.y1-area.y2 ) end
 	totalSurface = totalSurface / 64
 	local f = sol.file.open("userExperience.txt","a+"); f:write(totalSurface .. "-spawnSurface\n"); f:flush(); f:close()
 	
 	if enemyTried <= 4 then 
-
 		local chosenArea = table_util.random(spawnAreas)
 		xPos = math.random(chosenArea.x1+13, chosenArea.x2-13)
 		yPos = math.random(chosenArea.y1+13, chosenArea.y2-13)
@@ -357,7 +329,6 @@ function fight_generator.make(areas, maxDiff, map, currentLife)
 	-- Remove these three lines when testing is done.
 	
 	while difficulty < maxDiff do
-		
 		local chosenArea = table_util.random(spawnAreas)
 		xPos = math.random(chosenArea.x1+13, chosenArea.x2-13)
 		yPos = math.random(chosenArea.y1+13, chosenArea.y2-13)
