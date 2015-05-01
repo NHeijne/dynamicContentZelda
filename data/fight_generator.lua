@@ -140,7 +140,7 @@ end
 
 function analyseGameplaySoFar(map)
 	local f = sol.file.open("userExperience.txt","r")
-	local nothing = {fightFinished=0, swordHits=0, monstersKilled=0, timeInRoom=0, surface=0, directionChange=0, 
+	local nothing = {fightFinished=0, swordHits=0, explodeHits=0, thrownHits=0, monstersKilled=0, timeInRoom=0, surface=0, directionChange=0, 
 			lifeLostInRoom=0, uselessKeys=0, monsterTypes={}, monsterTypesKilled={}, heroStates={}, 
 			moving=0, standing=0, percentageStanding=0, startingLife=0, intendedDifficulty=0, insideDungeon=0}
 	local room = table_util.copy( nothing )
@@ -151,6 +151,8 @@ function analyseGameplaySoFar(map)
 		
 		local splitLine = table_util.split(line, "-")
 		if line=="sword-enemy" then room.swordHits = room.swordHits + 1 end
+		if line=="thrown_item-enemy" then room.thrownHits = room.thrownHits + 1 end
+		if line=="explosion-enemy" then room.explodeHits = room.explodeHits + 1 end
 		if splitLine[2] == "hero" then 
 			if room.heroStates[splitLine[1]] == nil then room.heroStates[splitLine[1]] = 1 
 			else room.heroStates[splitLine[1]] = room.heroStates[splitLine[1]] + 1 end
@@ -223,10 +225,12 @@ function logTheRoom (room)
 	fightRoomData[#fightRoomData+1] = room.monsterTypes.green_knight_soldier or 0
 	fightRoomData[#fightRoomData+1] = room.startingLife
 	
-	-- inside,finished,swordHits,time,surface,dirChange,lifeLost,uselessKeys,moving,standing,percStanding
+	-- inside,finished,swordHits,explodeHits,thrownHits,time,surface,dirChange,lifeLost,uselessKeys,moving,standing,percStanding
 	playerBehaviourData[#playerBehaviourData+1] = room.insideDungeon
 	playerBehaviourData[#playerBehaviourData+1] = room.fightFinished
 	playerBehaviourData[#playerBehaviourData+1] = room.swordHits
+	playerBehaviourData[#playerBehaviourData+1] = room.explodeHits
+	playerBehaviourData[#playerBehaviourData+1] = room.thrownHits
 	playerBehaviourData[#playerBehaviourData+1] = room.timeInRoom
 	playerBehaviourData[#playerBehaviourData+1] = room.surface
 	playerBehaviourData[#playerBehaviourData+1] = room.directionChange
@@ -242,7 +246,7 @@ function logTheRoom (room)
 	playerBehaviourData[#playerBehaviourData+1] = room.monsterTypesKilled.blue_hardhat_beetle or 0
 	playerBehaviourData[#playerBehaviourData+1] = room.monsterTypesKilled.green_knight_soldier or 0
 
-	-- free,freezed,grabbing,hurt,stairs,loading,spin,swing,tap,carry,lift,treasure,useItem
+	-- free,freezed,grabbing,hurt,stairs,loading,spin,swing,tap,carry,lift,treasure,useItem,falling
 	playerBehaviourData[#playerBehaviourData+1] = room.heroStates.free or 0
 	playerBehaviourData[#playerBehaviourData+1] = room.heroStates.freezed or 0
 	playerBehaviourData[#playerBehaviourData+1] = room.heroStates.grabbing or 0
@@ -252,14 +256,14 @@ function logTheRoom (room)
 	playerBehaviourData[#playerBehaviourData+1] = room.heroStates["sword spin attack"] or 0
 	playerBehaviourData[#playerBehaviourData+1] = room.heroStates["sword swinging"] or 0
 	playerBehaviourData[#playerBehaviourData+1] = room.heroStates["sword tapping"] or 0
-	
 	playerBehaviourData[#playerBehaviourData+1] = room.heroStates["carrying"] or 0
 	playerBehaviourData[#playerBehaviourData+1] = room.heroStates["lifting"] or 0
 	playerBehaviourData[#playerBehaviourData+1] = room.heroStates["treasure"] or 0
 	playerBehaviourData[#playerBehaviourData+1] = room.heroStates["using item"] or 0
+	playerBehaviourData[#playerBehaviourData+1] = room.heroStates["falling"] or 0
 	
 	-- The following aren't being logged because they are not very useful for now.
-	--"back to solid ground", "boomerang", "bow", "falling", "forced walking", "hookshot", "jumping", 
+	--"back to solid ground", "boomerang", "bow", "forced walking", "hookshot", "jumping", 
 	--"plunging", "pulling", "pushing", "running", "stream", "swimming", "victory"
 	
 	roomDifficultyPrediction = { 0.1652 * room.swordHits + 
