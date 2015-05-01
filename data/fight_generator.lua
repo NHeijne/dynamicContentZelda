@@ -350,6 +350,12 @@ function fight_generator.make(areas, maxDiff, map, currentLife)
 	local difficulty = baseDifficulty + startLifeDifficulty * currentLife
 	local enemiesInFight = {}
 	
+	-- For testing purposes only, to diversify the data.
+	local randomBadRoom = math.random()
+	if randomBadRoom > 0.96 then maxDiff = 6 end
+	if randomBadRoom < 0.04 then maxDiff = 1 end
+	-- Remove these three lines when testing is done.
+	
 	while difficulty < maxDiff do
 		
 		local chosenArea = table_util.random(spawnAreas)
