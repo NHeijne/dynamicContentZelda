@@ -66,6 +66,7 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 					local diff = difficultyOfFights
 					local f = sol.file.open("userExperience.txt","a+"); f:write(diff .. "-difficulty\n"); f:flush(); f:close()
 					local enemiesInEncounter, resultingDiff = fight_generator.make(spawnAreas, diff, map, game:get_life()) 
+					if split_table[5] == "BOSS" then
 						local hero = map:get_hero()
 						local availableAreas = fight_generator.getViableAreasForSpawning(hero, 100, spawnAreas)
 						local chosenArea = table_util.random(availableAreas)
@@ -226,11 +227,12 @@ function logTheRoom (room)
 	local playerBehaviourData = {}
 	local bias = 1
 	
-	-- egg,mandible,hardhat,knight,startLife
+	-- egg,mandible,hardhat,knight,papillosaur,startLife
 	fightRoomData[#fightRoomData+1] = room.monsterTypes.minillosaur_egg_fixed or 0
 	fightRoomData[#fightRoomData+1] = room.monsterTypes.mandible or 0
 	fightRoomData[#fightRoomData+1] = room.monsterTypes.blue_hardhat_beetle or 0
 	fightRoomData[#fightRoomData+1] = room.monsterTypes.green_knight_soldier or 0
+	fightRoomData[#fightRoomData+1] = room.monsterTypes.papillosaur_king or 0
 	fightRoomData[#fightRoomData+1] = room.startingLife
 	
 	-- inside,finished,swordHits,explodeHits,thrownHits,time,surface,dirChange,lifeLost,uselessKeys,moving,standing,percStanding
