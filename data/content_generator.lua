@@ -889,6 +889,8 @@ function content.create_simple_dungeon_map(areas, area_details)
 					end
 					
 				end
+			else
+				a.open_areas = {area}
 			end
 		end
     end
