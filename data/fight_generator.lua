@@ -58,6 +58,9 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 					local f = sol.file.open("userExperience.txt","a+"); f:write(split_table[2] .. "-ofADungeon\n"); f:flush(); f:close()
 					local f = sol.file.open("userExperience.txt","a+"); f:write(game:get_life() .. "-beginlife\n"); f:flush(); f:close()
 					local f = sol.file.open("userExperience.txt","a+"); f:write(os.time() .. "-starttime\n"); f:flush(); f:close()
+					local f = sol.file.open("userExperience.txt","a+"); f:write((game:get_value("glove__1") and 1 or 0) .. "-hasGlove\n"); f:flush(); f:close()
+					local f = sol.file.open("userExperience.txt","a+"); f:write((game:get_value("glove__2") and 1 or 0) .. "-hasGlove2\n"); f:flush(); f:close()
+					local f = sol.file.open("userExperience.txt","a+"); f:write((game:get_value("bomb_bag__1") and 1 or 0) .. "-hasBomb\n"); f:flush(); f:close()
 					local split_table = split_table
 					
 					for enemy in map:get_entities("generatedEnemy") do enemy:remove() end
@@ -150,8 +153,8 @@ end
 function analyseGameplaySoFar(map)
 	local f = sol.file.open("userExperience.txt","r")
 	local nothing = {fightFinished=0, swordHits=0, explodeHits=0, thrownHits=0, monstersKilled=0, timeInRoom=0, surface=0, directionChange=0, 
-			lifeLostInRoom=0, uselessKeys=0, monsterTypes={}, monsterTypesKilled={}, heroStates={}, bombUse=0, swordClang=0,
-			moving=0, standing=0, percentageStanding=0, startingLife=0, intendedDifficulty=0, insideDungeon=0}
+			lifeLostInRoom=0, uselessKeys=0, monsterTypes={}, monsterTypesKilled={}, heroStates={}, bombUse=0, swordClang=0,hasGlove=0,hasGlove2=0,
+			hasBomb=0,moving=0, standing=0, percentageStanding=0, startingLife=0, intendedDifficulty=0, insideDungeon=0}
 	local room = table_util.copy( nothing )
 
 	while true do
@@ -202,6 +205,9 @@ function analyseGameplaySoFar(map)
 		if string.find(line, "areasensor") or string.find(line, "A NEW GAME IS STARTING NOW") then room = table_util.copy( nothing ) end	
 		
 		if splitLine[2] == "intendedDifficulty" then room.intendedDifficulty = tonumber (splitLine[1]) end
+		if splitLine[2] == "hasGlove" then room.hasGlove = tonumber (splitLine[1]) end
+		if splitLine[2] == "hasGlove2" then room.hasGlove2 = tonumber (splitLine[1]) end
+		if splitLine[2] == "hasBomb" then room.hasBomb = tonumber (splitLine[1]) end
 	end
 	if (room.moving+room.standing) ~= 0 then room.percentageStanding = room.standing/(room.moving+room.standing) end
 	
@@ -229,13 +235,16 @@ function logTheRoom (room)
 	local playerBehaviourData = {}
 	local bias = 1
 	
-	-- egg,mandible,hardhat,knight,papillosaur,startLife
+	-- egg,mandible,hardhat,knight,papillosaur,startLife,hasGlove,hasGlove2,hasBomb
 	fightRoomData[#fightRoomData+1] = room.monsterTypes.minillosaur_egg_fixed or 0
 	fightRoomData[#fightRoomData+1] = room.monsterTypes.mandible or 0
 	fightRoomData[#fightRoomData+1] = room.monsterTypes.blue_hardhat_beetle or 0
 	fightRoomData[#fightRoomData+1] = room.monsterTypes.green_knight_soldier or 0
 	fightRoomData[#fightRoomData+1] = room.monsterTypes.papillosaur_king or 0
 	fightRoomData[#fightRoomData+1] = room.startingLife
+	fightRoomData[#fightRoomData+1] = room.hasGlove
+	fightRoomData[#fightRoomData+1] = room.hasGlove2
+	fightRoomData[#fightRoomData+1] = room.hasBomb
 	
 	-- inside,finished,swordHits,bombUsage,explodeHits,thrownHits,time,surface,dirChange,lifeLost,clangs,uselessKeys,moving,standing,percStanding
 	playerBehaviourData[#playerBehaviourData+1] = room.insideDungeon
@@ -314,9 +323,7 @@ end
 
 function fight_generator.make(areas, maxDiff, map, currentLife) 
 
-	local breedOptions={}
-	for k,_ in pairs(breedDifficulties) do table.insert( breedOptions, k ) end
-	
+	local breedOptions={"minillosaur_egg_fixed","mandible","blue_hardhat_beetle","green_knight_soldier"}	
 	local hero = map:get_hero()
 	local spawnAreas = fight_generator.getViableAreasForSpawning(hero, 100, areas)
 	
@@ -388,6 +395,7 @@ end
 function fight_generator.getViableAreasForSpawning(hero, reqDistance, potentialSpawnAreas)
 	local xPos,yPos = hero:get_position()
 	local spawnAreas = {}
+	
 	for _, area in ipairs(potentialSpawnAreas) do
 		local distance = area_util.distance({x1=xPos, x2=xPos, y1=yPos, y2=yPos}, area, 0)
 		if distance >= reqDistance and area_util.get_area_size(area).size > 16*16 then
