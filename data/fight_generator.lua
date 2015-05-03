@@ -323,9 +323,7 @@ end
 
 function fight_generator.make(areas, maxDiff, map, currentLife) 
 
-	local breedOptions={}
-	for k,_ in pairs(breedDifficulties) do table.insert( breedOptions, k ) end
-	
+	local breedOptions={"minillosaur_egg_fixed","mandible","blue_hardhat_beetle","green_knight_soldier"}	
 	local hero = map:get_hero()
 	local spawnAreas = fight_generator.getViableAreasForSpawning(hero, 100, areas)
 	
@@ -397,6 +395,7 @@ end
 function fight_generator.getViableAreasForSpawning(hero, reqDistance, potentialSpawnAreas)
 	local xPos,yPos = hero:get_position()
 	local spawnAreas = {}
+	
 	for _, area in ipairs(potentialSpawnAreas) do
 		local distance = area_util.distance({x1=xPos, x2=xPos, y1=yPos, y2=yPos}, area, 0)
 		if distance >= reqDistance and area_util.get_area_size(area).size > 16*16 then
