@@ -159,7 +159,8 @@ function analyseGameplaySoFar(map)
 	local f = sol.file.open("userExperience.txt","r")
 	local nothing = {fightFinished=0, swordHits=0, explodeHits=0, thrownHits=0, monstersKilled=0, timeInRoom=0, surface=0, directionChange=0, 
 			lifeLostInRoom=0, uselessKeys=0, monsterTypes={}, monsterTypesKilled={}, heroStates={}, bombUse=0, swordClang=0,hasGlove=0,hasGlove2=0,
-			hasBomb=0,moving=0, standing=0, percentageStanding=0, startingLife=0, intendedDifficulty=0, insideDungeon=0}
+			hasBomb=0,moving=0, standing=0, percentageStanding=0, startingLife=0, intendedDifficulty=0, insideDungeon=0, 
+			goingHero=0,countedGoingHero=0,averageAggro=0}
 	local room = table_util.copy( nothing )
 
 	while true do
@@ -213,8 +214,15 @@ function analyseGameplaySoFar(map)
 		if splitLine[2] == "hasGlove" then room.hasGlove = tonumber (splitLine[1]) end
 		if splitLine[2] == "hasGlove2" then room.hasGlove2 = tonumber (splitLine[1]) end
 		if splitLine[2] == "hasBomb" then room.hasBomb = tonumber (splitLine[1]) end
+		
+		if splitLine[2] == "goingHero" then 
+			room.goingHero = room.goingHero + tonumber (splitLine[1])
+			room.countedGoingHero = room.countedGoingHero + 1
+		end
+		
 	end
 	if (room.moving+room.standing) ~= 0 then room.percentageStanding = room.standing/(room.moving+room.standing) end
+	if (room.countedGoingHero) ~= 0 then room.averageAggro = room.goingHero/room.countedGoingHero end
 	
 	f:flush(); f:close()
 	logTheRoom (room)
@@ -251,7 +259,7 @@ function logTheRoom (room)
 	fightRoomData[#fightRoomData+1] = room.hasGlove2
 	fightRoomData[#fightRoomData+1] = room.hasBomb
 	
-	-- inside,finished,swordHits,bombUsage,explodeHits,thrownHits,time,surface,dirChange,lifeLost,clangs,uselessKeys,moving,standing,percStanding
+	-- inside,finished,swordHits,bombUsage,explodeHits,thrownHits,time,surface,dirChange,lifeLost,clangs,uselessKeys,moving,standing,percStanding,avgAggro
 	playerBehaviourData[#playerBehaviourData+1] = room.insideDungeon
 	playerBehaviourData[#playerBehaviourData+1] = room.fightFinished
 	playerBehaviourData[#playerBehaviourData+1] = room.swordHits
@@ -267,6 +275,7 @@ function logTheRoom (room)
 	playerBehaviourData[#playerBehaviourData+1] = room.moving
 	playerBehaviourData[#playerBehaviourData+1] = room.standing
 	playerBehaviourData[#playerBehaviourData+1] = room.percentageStanding
+	playerBehaviourData[#playerBehaviourData+1] = room.averageAggro
 	
 	-- killEgg,killMandible,killHardhat,killKnight
 	playerBehaviourData[#playerBehaviourData+1] = room.monsterTypesKilled.minillosaur_egg_fixed or 0
