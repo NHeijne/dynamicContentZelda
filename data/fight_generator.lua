@@ -34,7 +34,7 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 		local sensorname = sensor:get_name()
 		local split_table = table_util.split(sensorname, "_")
 		
-		if split_table[5] == "F" then 
+		if split_table[5] == "F" or split_table[5] == "BOSS" then 
 		
 			sensor.on_activated = 
 				function()
@@ -66,6 +66,14 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 					local diff = difficultyOfFights
 					local f = sol.file.open("userExperience.txt","a+"); f:write(diff .. "-difficulty\n"); f:flush(); f:close()
 					local enemiesInEncounter, resultingDiff = fight_generator.make(spawnAreas, diff, map, game:get_life()) 
+						local hero = map:get_hero()
+						local availableAreas = fight_generator.getViableAreasForSpawning(hero, 100, spawnAreas)
+						local chosenArea = table_util.random(availableAreas)
+						xPos = math.random(chosenArea.x1+13, chosenArea.x2-13)
+						yPos = math.random(chosenArea.y1+13, chosenArea.y2-13)
+						enemiesInEncounter = {{name="generatedEnemy_thisOne", layer=0, x=xPos, y=yPos, direction=0, breed="papillosaur_king"}}
+					end
+					
 					local f = sol.file.open("userExperience.txt","a+"); f:write(resultingDiff .. "-intendedDifficulty\n"); f:flush(); f:close()
 
 					for _,enemy in pairs(enemiesInEncounter) do
