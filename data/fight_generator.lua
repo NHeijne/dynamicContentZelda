@@ -80,6 +80,7 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 							yPos = math.random(chosenArea.y1+13, chosenArea.y2-13)
 						end
 						enemiesInEncounter = {{name="generatedEnemy_thisOne", layer=0, x=xPos, y=yPos, direction=0, breed="papillosaur_king"}}
+						resultingDiff = 6
 					end
 					
 					local f = sol.file.open("userExperience.txt","a+"); f:write(resultingDiff .. "-intendedDifficulty\n"); f:flush(); f:close()
