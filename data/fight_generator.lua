@@ -66,7 +66,7 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 					local diff = difficultyOfFights
 					local f = sol.file.open("userExperience.txt","a+"); f:write(diff .. "-difficulty\n"); f:flush(); f:close()
 					local enemiesInEncounter, resultingDiff = fight_generator.make(spawnAreas, diff, map, game:get_life()) 
-					if split_table[5] == "BOSS" then
+					if split_table[5] == "BOSS" then--or split_table[5] == "F" then
 						local hero = map:get_hero()
 						local availableAreas = fight_generator.getViableAreasForSpawning(hero, 100, spawnAreas)
 						local chosenArea = table_util.random(availableAreas)
