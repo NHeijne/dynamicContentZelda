@@ -150,7 +150,7 @@ end
 function analyseGameplaySoFar(map)
 	local f = sol.file.open("userExperience.txt","r")
 	local nothing = {fightFinished=0, swordHits=0, explodeHits=0, thrownHits=0, monstersKilled=0, timeInRoom=0, surface=0, directionChange=0, 
-			lifeLostInRoom=0, uselessKeys=0, monsterTypes={}, monsterTypesKilled={}, heroStates={}, 
+			lifeLostInRoom=0, uselessKeys=0, monsterTypes={}, monsterTypesKilled={}, heroStates={}, bombUse=0,
 			moving=0, standing=0, percentageStanding=0, startingLife=0, intendedDifficulty=0, insideDungeon=0}
 	local room = table_util.copy( nothing )
 
@@ -176,6 +176,7 @@ function analyseGameplaySoFar(map)
 			if room.monsterTypesKilled[splitLine[1]] == nil then room.monsterTypesKilled[splitLine[1]] = 1
 			else room.monsterTypesKilled[splitLine[1]] = room.monsterTypesKilled[splitLine[1]] + 1 end
 		end
+		if line == "bomb-used" then room.bombUse = room.bombUse + 1 end
 		if line == "moving around" then room.moving = room.moving + 1 end
 		if line == "standing still" then room.standing = room.standing + 1 end
 		if string.find(line, "beginlife") then 
@@ -235,10 +236,11 @@ function logTheRoom (room)
 	fightRoomData[#fightRoomData+1] = room.monsterTypes.papillosaur_king or 0
 	fightRoomData[#fightRoomData+1] = room.startingLife
 	
-	-- inside,finished,swordHits,explodeHits,thrownHits,time,surface,dirChange,lifeLost,uselessKeys,moving,standing,percStanding
+	-- inside,finished,swordHits,bombUsage,explodeHits,thrownHits,time,surface,dirChange,lifeLost,uselessKeys,moving,standing,percStanding
 	playerBehaviourData[#playerBehaviourData+1] = room.insideDungeon
 	playerBehaviourData[#playerBehaviourData+1] = room.fightFinished
 	playerBehaviourData[#playerBehaviourData+1] = room.swordHits
+	playerBehaviourData[#playerBehaviourData+1] = room.bombUse
 	playerBehaviourData[#playerBehaviourData+1] = room.explodeHits
 	playerBehaviourData[#playerBehaviourData+1] = room.thrownHits
 	playerBehaviourData[#playerBehaviourData+1] = room.timeInRoom
