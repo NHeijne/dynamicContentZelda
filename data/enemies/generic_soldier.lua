@@ -128,6 +128,7 @@ end
 function enemy:on_custom_attack_received(attack, sprite)
 
   if attack == "sword" and sprite == sword_sprite then
+    local f = sol.file.open("userExperience.txt","a+"); f:write("swords-clang\n"); f:flush(); f:close()
     sol.audio.play_sound("sword_tapping")
     being_pushed = true
     local x, y = self:get_position()

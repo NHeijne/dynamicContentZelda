@@ -109,7 +109,7 @@ local function fix_starting_location(game)
   end
 end
 
-local f = sol.file.open("userExperience.txt","a+"); f:write("A NEW GAME IS STARTING NOW\n"); f:flush(); f:close()
+local f = sol.file.open("userExperience.txt","w+"); f:write("A NEW GAME IS STARTING NOW\n"); f:flush(); f:close()
 sol.timer.start(200, function ()
 	if leftPressed or rightPressed or upPressed or downPressed then
 		local f = sol.file.open("userExperience.txt","a+"); f:write("moving around\n"); f:flush(); f:close()

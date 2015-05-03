@@ -86,8 +86,27 @@ function enemy:throw_egg()
     breed = "minillosaur_egg_thrown",
     x = 0,
     y = 16,
-  }
+  }  
   egg:set_treasure(nil)
+  function egg:on_dead()
+	local f = sol.file.open("userExperience.txt","a+") 
+	f:write(egg:get_breed() .. "-waskilled\n")
+	f:flush(); f:close()
+
+	if not self:get_map():has_entities("generatedEnemy") then 
+		self:get_map():open_doors("door_normal_area_"..split_table[3])
+		
+		difficultyOfFights = difficultyOfFights + 1
+		if difficultyOfFights > highestDifficulty then difficultyOfFights = lowestDifficulty end
+		local game = self:get_map():get_game()
+		local f = sol.file.open("userExperience.txt","a+"); f:write(game:get_life() .. "-endlife\n"); f:flush(); f:close()
+		local f = sol.file.open("userExperience.txt","a+"); f:write(os.time() .. "-endtime\n"); f:flush(); f:close()
+		local f = sol.file.open("userExperience.txt","a+"); f:write("finished-thefight\n"); f:flush(); f:close()
+		analyseGameplaySoFar(self:get_map())
+	end
+	return false
+  end
+  
   sol.audio.play_sound("boss_fireball")
 
   -- See what to do next.
