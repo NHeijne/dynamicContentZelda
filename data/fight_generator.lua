@@ -150,7 +150,7 @@ end
 function analyseGameplaySoFar(map)
 	local f = sol.file.open("userExperience.txt","r")
 	local nothing = {fightFinished=0, swordHits=0, explodeHits=0, thrownHits=0, monstersKilled=0, timeInRoom=0, surface=0, directionChange=0, 
-			lifeLostInRoom=0, uselessKeys=0, monsterTypes={}, monsterTypesKilled={}, heroStates={}, bombUse=0,
+			lifeLostInRoom=0, uselessKeys=0, monsterTypes={}, monsterTypesKilled={}, heroStates={}, bombUse=0, swordClang=0,
 			moving=0, standing=0, percentageStanding=0, startingLife=0, intendedDifficulty=0, insideDungeon=0}
 	local room = table_util.copy( nothing )
 
@@ -162,6 +162,7 @@ function analyseGameplaySoFar(map)
 		if line=="sword-enemy" then room.swordHits = room.swordHits + 1 end
 		if line=="thrown_item-enemy" then room.thrownHits = room.thrownHits + 1 end
 		if line=="explosion-enemy" then room.explodeHits = room.explodeHits + 1 end
+		if line=="swords-clang" then room.swordClang = room.swordClang + 1 end
 		if splitLine[2] == "hero" then 
 			if room.heroStates[splitLine[1]] == nil then room.heroStates[splitLine[1]] = 1 
 			else room.heroStates[splitLine[1]] = room.heroStates[splitLine[1]] + 1 end
@@ -236,7 +237,7 @@ function logTheRoom (room)
 	fightRoomData[#fightRoomData+1] = room.monsterTypes.papillosaur_king or 0
 	fightRoomData[#fightRoomData+1] = room.startingLife
 	
-	-- inside,finished,swordHits,bombUsage,explodeHits,thrownHits,time,surface,dirChange,lifeLost,uselessKeys,moving,standing,percStanding
+	-- inside,finished,swordHits,bombUsage,explodeHits,thrownHits,time,surface,dirChange,lifeLost,clangs,uselessKeys,moving,standing,percStanding
 	playerBehaviourData[#playerBehaviourData+1] = room.insideDungeon
 	playerBehaviourData[#playerBehaviourData+1] = room.fightFinished
 	playerBehaviourData[#playerBehaviourData+1] = room.swordHits
@@ -247,6 +248,7 @@ function logTheRoom (room)
 	playerBehaviourData[#playerBehaviourData+1] = room.surface
 	playerBehaviourData[#playerBehaviourData+1] = room.directionChange
 	playerBehaviourData[#playerBehaviourData+1] = room.lifeLostInRoom
+	playerBehaviourData[#playerBehaviourData+1] = room.swordClang
 	playerBehaviourData[#playerBehaviourData+1] = room.uselessKeys
 	playerBehaviourData[#playerBehaviourData+1] = room.moving
 	playerBehaviourData[#playerBehaviourData+1] = room.standing
