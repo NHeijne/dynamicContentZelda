@@ -865,7 +865,7 @@ function content.create_simple_dungeon_map(areas, area_details)
 		for _, area in ipairs(a) do	
 			-- create a path through the area
 			
-			if area_details[areanumber].area_type ~= "P" then
+			if not table_util.contains({"P", "TP", "TF", "BOSS"}, area_details[areanumber].area_type) then
 				maze_generator.set_room( area, 16, 0, nil )
 				local open, closed = maze_generator.generate_path( exit_areas[areanumber] )
 				exclusion_areas[areanumber] = closed
