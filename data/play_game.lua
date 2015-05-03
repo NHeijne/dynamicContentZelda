@@ -116,6 +116,11 @@ sol.timer.start(200, function ()
 	else
 		local f = sol.file.open("userExperience.txt","a+"); f:write("standing still\n"); f:flush(); f:close()
 	end
+	local totalGoingEnemies = 0
+	for enemy in game:get_map():get_entities("generatedEnemy") do
+		totalGoingEnemies = totalGoingEnemies + (enemy:get_going_hero() and 1 or 0)
+	end
+	local f = sol.file.open("userExperience.txt","a+"); f:write(totalGoingEnemies .. "-goingHero\n"); f:flush(); f:close()
 	return true
 end)
 -- Run the game.

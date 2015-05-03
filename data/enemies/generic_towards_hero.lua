@@ -31,6 +31,10 @@ local going_hero = false
 local time_since_disengagement = 0
 local time_at_disengagement = 0
 
+function enemy:get_going_hero()
+	return going_hero
+end
+
 function enemy:set_properties(prop)
 
   properties = prop
