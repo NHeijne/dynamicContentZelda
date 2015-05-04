@@ -32,12 +32,19 @@ function content.start_test(given_map)
 	end
 		
 	log.debug("test")
+	local lol = {}; local lol2 = nil
+	if lol[1]~=nil and lol2[1] ~= nil then 
+		log.debug("it does both")
+	else
+		log.debug("as expected")
+	end
+
 	local tic = os.clock()
 	log.debug(tic)
 
 	log.debug("end test")
 	-- Initialize the pseudo random number generator
-	local seed = 
+	local seed = 785847
 			tonumber(tostring(os.time()):reverse():sub(1,6)) -- good random seeds
 	log.debug("random seed = " .. seed)
 	math.randomseed( seed )
@@ -56,7 +63,7 @@ function content.start_test(given_map)
 																outside=outside, 
 																from_direction="west", 
 																to_direction="east", 
-																preferred_area_surface=180,
+																area_size=2,--1, 2, or 4
 																path_width=2*16}
 																)
 	log.debug(content.area_details)
@@ -90,20 +97,18 @@ function content.start_test(given_map)
 	log.debug("exclusion_areas")
 	log.debug(exclusion_areas)
 	maze_generator.set_map(map)
-	for k,v in pairs(content.areas["walkable"]) do
-		for _, a in ipairs(v) do
-			log.debug("filling in area "..k)
-			log.debug("creating area_type " .. content.area_details[k].area_type)
-			if content.area_details[k].area_type == "P" then 
-				maze_generator.set_room(a, 16, 8, "mazeprop_area_"..k)
-				content.makeSingleMaze(a, exit_areas[k], content.area_details, exclusion_areas[k], layer)
-			end
-			if content.area_details[k].area_type == "C" then
-				local equipment = table_util.split(content.area_details[k].contains_items[1], ":")[2] -- quick solution, should be checked for normal and equipment items
-				local large_area = area_util.get_largest_area(v.open_areas)
-				local chest_pos = area_util.from_center( large_area, 16, 16, true)-- round to 8
-				content.place_chest(equipment, chest_pos)
-			end
+	for k, a in pairs(content.areas["walkable"]) do
+		log.debug("filling in area "..k)
+		log.debug("creating area_type " .. content.area_details[k].area_type)
+		if content.area_details[k].area_type == "P" then 
+			maze_generator.set_room(a.area, 16, 8, "mazeprop_area_"..k)
+			content.makeSingleMaze(a.area, exit_areas[k], content.area_details, exclusion_areas[k], layer)
+		end
+		if content.area_details[k].area_type == "C" then
+			local equipment = table_util.split(content.area_details[k].contains_items[1], ":")[2] -- quick solution, should be checked for normal and equipment items
+			local large_area = area_util.get_largest_area(a.open_areas)
+			local chest_pos = area_util.from_center( large_area, 16, 16, true)-- round to 8
+			content.place_chest(equipment, chest_pos)
 		end
     end
     local toc = os.clock()
@@ -119,6 +124,8 @@ function content.start_test(given_map)
 	-- content.open_normal_doors_sensorwise()
 	-- local entity = map:create_custom_entity({name="fireball_statue", direction=0, layer=0, x=hero_x+48, y=hero_y+16, model="fireball_statue"})
 	-- entity:stop()
+	log.debug("content.areas")
+	log.debug(content.areas)
 end
 
 function content.set_planned_items_for_this_zone( list )
@@ -625,16 +632,14 @@ end
 
 function content.place_separators( areas )
 	for areanumber, a in pairs(areas["nodes"]) do
-		for _, area in ipairs(a) do	
-			local east = area_util.expand_line( area_util.get_side(area, 0), 8 )
-			local north = area_util.expand_line( area_util.get_side(area, 1), 8 )
-			local west = area_util.expand_line( area_util.get_side(area, 2), 8 )
-			local south = area_util.expand_line( area_util.get_side(area, 3), 8 )
-			map:create_separator{layer=0, x=east.x1, y=east.y1, width=east.x2-east.x1, height=east.y2-east.y1}
-			map:create_separator{layer=0, x=north.x1, y=north.y1, width=north.x2-north.x1, height=north.y2-north.y1}
-			map:create_separator{layer=0, x=west.x1, y=west.y1, width=west.x2-west.x1, height=west.y2-west.y1}
-			map:create_separator{layer=0, x=south.x1, y=south.y1, width=south.x2-south.x1, height=south.y2-south.y1}
-		end 
+		local east = area_util.expand_line( area_util.get_side(a.area, 0), 8 )
+		local north = area_util.expand_line( area_util.get_side(a.area, 1), 8 )
+		local west = area_util.expand_line( area_util.get_side(a.area, 2), 8 )
+		local south = area_util.expand_line( area_util.get_side(a.area, 3), 8 )
+		map:create_separator{layer=0, x=east.x1, y=east.y1, width=east.x2-east.x1, height=east.y2-east.y1}
+		map:create_separator{layer=0, x=north.x1, y=north.y1, width=north.x2-north.x1, height=north.y2-north.y1}
+		map:create_separator{layer=0, x=west.x1, y=west.y1, width=west.x2-west.x1, height=west.y2-west.y1}
+		map:create_separator{layer=0, x=south.x1, y=south.y1, width=south.x2-south.x1, height=south.y2-south.y1}
     end
 end
 
@@ -648,6 +653,10 @@ function content.create_simple_forest_map(areas, area_details)
 	local exit_areas={}
     local exclusion_areas={}
 
+    for areanumber, a in pairs(areas["walkable"]) do
+    	a.throwables = {["bush"]=0, ["white_rock"]=0}
+    end
+
 	for areanumber,connections in pairs(areas["exit"]) do
 		exit_areas[areanumber]={}
 		exclusion_areas[areanumber]={}
@@ -660,7 +669,11 @@ function content.create_simple_forest_map(areas, area_details)
 				table.insert(exit_areas[areanumber], area_util.get_side(area, (direction+2)%4))
 				--content.spread_props(area, 24, {{"flower1","flower2", "fullgrass"}}, 1) 
 				--content.place_tile(area, 8, "transition", 0)
-				content.create_simple_barriers( area_details, area_util.from_center(area, 32, 32), direction, areanumber, area.to_area )
+				local added_throwables = content.create_simple_barriers( area_details, area_util.from_center(area, 32, 32), direction, areanumber, area.to_area )
+				if added_throwables then 
+					areas["walkable"][areanumber].throwables.bush = areas["walkable"][areanumber].throwables.bush + added_throwables.bush
+					areas["walkable"][areanumber].throwables.white_rock = areas["walkable"][areanumber].throwables.white_rock + added_throwables.white_rock
+				end
 			end
 		end
 	end
@@ -692,32 +705,25 @@ function content.create_simple_forest_map(areas, area_details)
 
 	for areanumber, a in pairs(areas["walkable"]) do
 
-		for _, area in ipairs(a) do	
-			-- create a path through the area
-			
-			if area_details[areanumber].area_type == "P" then
-				ex=ex+1
-				exclusion_areas_trees[ex] = area
-			else
-				maze_generator.set_room( area, 16, 0, nil )
-				local open, closed = maze_generator.generate_path( exit_areas[areanumber] )
-				exclusion_areas[areanumber] = closed
-				a.open_areas = open
+		if table_util.contains({"P", "TP", "TF", "BOSS"}, area_details[areanumber].area_type) then
+			ex=ex+1
+			exclusion_areas_trees[ex] = a.area
+			a.open_areas = {a.area}
+		else
+			maze_generator.set_room( a.area, 16, 0, nil )
+			local open, closed = maze_generator.generate_path( exit_areas[areanumber] )
+			exclusion_areas[areanumber] = closed
+			a.open_areas = open
 
-				-- for _,c in ipairs(closed) do
-				-- 	content.spread_props(c, 0, {{"green_tree"},{"old_prison"},{"small_green_tree", "stone_hedge", "big_statue"}}, 1)
-				-- end
-				for _,o in ipairs(open) do
-					ex=ex+1
-					exclusion_areas_trees[ex] = o
-					--content.spread_props(o, 8, {{"flower1","flower2", "fullgrass", "halfgrass"}}, 1) 
-				end
-			
+			for _,o in ipairs(open) do
+				ex=ex+1
+				exclusion_areas_trees[ex] = o
 			end
-			--content.place_tile(area, 8, "walkable", 0)
-			if bounding_area == nil then bounding_area = area
-			else bounding_area = area_util.merge_areas(bounding_area, area) end
-		end -- filling in the otherwise empty areas
+		
+		end
+
+		if bounding_area == nil then bounding_area = a.area
+		else bounding_area = area_util.merge_areas(bounding_area, a.area) end
 		
     end
     bounding_area = area_util.resize_area(bounding_area, {-152, -128, 256, 256}) 
@@ -750,20 +756,11 @@ function content.create_simple_forest_map(areas, area_details)
 	local choices = {{{"green_tree"}, {"old_prison"}, {"stone_hedge"}},
 					 {{"green_tree"}, {"small_green_tree"}, {"tiny_yellow_tree"}},
 					 {{"green_tree"}, {"big_statue"}, {"blue_block"}}}
-	-- local filler_destructible = {"black_rock", "white_rock"}
+
 	for areanumber, list in ipairs(closed_leftovers) do 
 		local choice_for_that_area = table_util.random(choices)
 		for _, l in ipairs(list) do
 			local leftovers = content.spread_props(l, 0, choice_for_that_area, 1)
-			-- for _,v in ipairs(leftovers) do
-			-- 	local selection = table_util.random({"destructible", "prop"})
-			-- 	if selection == "destructible" then
-			-- 		local object = table_util.random(filler_destructible)
-			-- 		local object_details = lookup.destructible[object]
-			-- 	else
-			-- 		content.spread_props(v, 0, filler, 1)
-			-- 	end
-			-- end
 		end
 	end 
 	return exit_areas, exclusion_areas
@@ -782,30 +779,22 @@ function content.place_edge_tiles(area, width, type, layer, custom_name)
 end
 
 function content.create_simple_dungeon_map(areas, area_details)
-	-- start filling in floor
 	local tileset = area_details.tileset_id
-	log.debug("walkables")
-	for areanumber, a in pairs(areas["walkable"]) do
-		log.debug("areanumber "..areanumber)
-		for _, area in ipairs(a) do	
-			log.debug("placing floor")
-			content.place_tile(area, lookup.tiles["dungeon_floor"][tileset], "walkable", 0)
-			content.place_edge_tiles(area, 8, "floor")
-		end 
-
-    end
 
     -- walls
     for areanumber, a in pairs(areas["nodes"]) do
+		content.place_edge_tiles(area_util.resize_area(a.area, {8, 8, -8, -8}), 24, "wall")
+		for _, dir in ipairs({0, 1, 2, 3}) do
+			local side = area_util.get_side(a.area, dir, -8, 0)				
+			content.place_tile(side, lookup.tiles["dungeon_spacer"][tileset], "spacer", 1)
+		end
+    end
 
-		for _, area in ipairs(a) do	
-			content.place_edge_tiles(area_util.resize_area(area, {8, 8, -8, -8}), 24, "wall")
-			for _, dir in ipairs({0, 1, 2, 3}) do
-				local side = area_util.get_side(area, dir, -8, 0)				
-				content.place_tile(side, lookup.tiles["dungeon_spacer"][tileset], "spacer", 1)
-			end
-		end -- filling in the otherwise empty areas
-
+    for areanumber, a in pairs(areas["walkable"]) do
+    	a.throwables = {["bush"]=0, ["white_rock"]=0}
+    	log.debug("placing floor")
+		content.place_tile(a.area, lookup.tiles["dungeon_floor"][tileset], "walkable", 0)
+		content.place_edge_tiles(a.area, 8, "floor")
     end
 
     -- transitions
@@ -823,7 +812,11 @@ function content.create_simple_dungeon_map(areas, area_details)
 				end
 				table.insert(exit_areas[areanumber], area_util.get_side(area, (direction+2)%4))
 				
-				content.create_simple_barriers( area_details, area_util.get_side(area, (direction+2)%4, 32, 0), direction, areanumber, area.to_area )
+				local added_throwables = content.create_simple_barriers( area_details, area_util.get_side(area, (direction+2)%4, 32, 0), direction, areanumber, area.to_area )
+				if added_throwables then 
+					areas["walkable"][areanumber].throwables.bush = areas["walkable"][areanumber].throwables.bush + added_throwables.bush
+					areas["walkable"][areanumber].throwables.white_rock = areas["walkable"][areanumber].throwables.white_rock + added_throwables.white_rock
+				end
 			end
 		end
 	end
@@ -856,42 +849,29 @@ function content.create_simple_dungeon_map(areas, area_details)
 		end
 	end
 
+	-- start filling in floor
 	for areanumber, a in pairs(areas["walkable"]) do
 		local choices = {{{"bright_rock_64x64"}, {"bright_rock_48x48"}, {"bright_rock_32x32"}, {"pipe_16x32_v", "pipe_32x16_h"}},
 					 	{{"dark_rock_64x64"}, {"dark_rock_48x48"}, {"dark_rock_32x32"}, {"pipe_16x32_v", "pipe_32x16_h"}},
 					 	{{"pipe_64x32_h"}, {"pipe_32x32_v"}, {"pipe_16x32_v", "pipe_32x16_h"}}}
 		local filler = {"pipe_16x16_h", "pipe_16x16_v"}
-		local filler_destructible = {"black_rock", "white_rock"}
-		for _, area in ipairs(a) do	
-			-- create a path through the area
+
+		if not table_util.contains({"P", "TP", "TF", "BOSS"}, area_details[areanumber].area_type) then
+			maze_generator.set_room( a.area, 16, 0, nil )
+			local open, closed = maze_generator.generate_path( exit_areas[areanumber] )
+			exclusion_areas[areanumber] = closed
+			a.open_areas = open
 			
-			if not table_util.contains({"P", "TP", "TF", "BOSS"}, area_details[areanumber].area_type) then
-				maze_generator.set_room( area, 16, 0, nil )
-				local open, closed = maze_generator.generate_path( exit_areas[areanumber] )
-				exclusion_areas[areanumber] = closed
-				a.open_areas = open
-				-- for _,o in ipairs(open) do
-				-- 	content.place_tile(o, 451, "transition", 0)
-				-- end
-				
-				local choice_for_that_area = table_util.random(choices)
-				for _,c in ipairs(closed) do
-					local leftovers = content.spread_props(c, 0, choice_for_that_area, 1)
-					for _,v in ipairs(leftovers) do
-						local selection = table_util.random({"destructible", "prop"})
-						if selection == "destructible" then
-							local object = table_util.random(filler_destructible)
-							local object_details = lookup.destructible[object]
-							content.tile_destructible(object_details, v, "destructible", {})
-						else
-							content.spread_props(v, 0, filler, 1)
-						end
-					end
-					
+			local choice_for_that_area = table_util.random(choices)
+			for _,c in ipairs(closed) do
+				local leftovers = content.spread_props(c, 0, choice_for_that_area, 1)
+				for _,v in ipairs(leftovers) do
+					content.spread_props(v, 0, filler, 1)
 				end
-			else
-				a.open_areas = {area}
+				
 			end
+		else
+			a.open_areas = {a.area}
 		end
     end
 
@@ -936,8 +916,7 @@ function content.create_simple_barriers( area_details, opening, direction, arean
 		local barriers =area_details[areanumber][connection].barriers
 		-- log.debug()
 		if barriers == nil then	return false end
-		-- log.debug("found barriers")
-		-- log.debug(barriers)
+		local added_throwables = {["bush"]=0, ["white_rock"]=0}
 		for _,barrier in pairs(barriers) do
 			local split = table_util.split(barrier, ":")
 			local barrier_type
@@ -945,6 +924,7 @@ function content.create_simple_barriers( area_details, opening, direction, arean
 			if lookup.destructible[split[2]] then 
 				barrier_type = "destructible" 
 				object_details = lookup.destructible[split[2]]
+				added_throwables[split[2]] = added_throwables[split[2]] + 4
 			else
 				barrier_type = "door" 
 				object_details = lookup.doors[split[2]]
@@ -976,11 +956,11 @@ function content.create_simple_barriers( area_details, opening, direction, arean
 				-- place destructibles in front of the transition or inside the transition
 				content.tile_destructible( object_details, opening , barrier_type, {} )
 			end
-			
 		end
 
+		return added_throwables
+
 	end
-	
 end
 
 

@@ -35,9 +35,9 @@ lookup.equipment = {
 }
 
 lookup.destructible = {
-	["bush"]=		{layer = 0, treasure_name = "random", sprite = "entities/bush", destruction_sound = "bush", weight = 1, can_be_cut = true, required_size={x=16, y=16}, offset={x=8, y=13}},
+	["bush"]=		{layer = 0, treasure_name = "random", sprite = "entities/bush", destruction_sound = "bush", weight = 1, damage_on_enemies = 2,  can_be_cut = true, required_size={x=16, y=16}, offset={x=8, y=13}},
 	["white_rock"]=	{layer = 0, treasure_name = "random", sprite = "entities/stone_small_white", destruction_sound = "stone", weight = 1,  damage_on_enemies = 2, required_size={x=16, y=16}, offset={x=8, y=13}},
-	["black_rock"]= {layer = 0, treasure_name = "random", sprite = "entities/stone_small_black", destruction_sound = "stone", weight = 2,  damage_on_enemies = 4, required_size={x=16, y=16}, offset={x=8, y=13}},
+	["black_rock"]= {layer = 0, treasure_name = "random", sprite = "entities/stone_small_black", destruction_sound = "stone", weight = 2,  damage_on_enemies = 2, required_size={x=16, y=16}, offset={x=8, y=13}},
 	["pot"]=		{layer = 0, treasure_name = "random", sprite = "entities/pot",  destruction_sound = "stone",  damage_on_enemies = 2, required_size={x=16, y=16}, offset={x=8, y=13}}, -- treasure undecided
 }
 

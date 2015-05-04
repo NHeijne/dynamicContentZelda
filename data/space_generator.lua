@@ -1001,6 +1001,8 @@ function space_gen.generate_simple_space( area_details, given_map )
 	if area_details.outside then maze_generator.set_room( {x1=128, y1=128, x2=width-128, y2=height-128}, {x=224, y=224}, {x=112, y=160} )
 							else maze_generator.set_room( {x1=128, y1=128, x2=width-128, y2=height-128}, {x=256, y=176}, 32*2 ) end
 	local areas = maze_generator.generate_rooms( area_details )
+	log.debug("returned areas from maze_generator")
+	log.debug(areas)
 	space_gen.create_simple_area_sensors( area_details, areas )
 	space_gen.create_simple_enemy_stoppers( areas )
 	return areas
@@ -1009,12 +1011,10 @@ end
 function space_gen.create_simple_enemy_stoppers( areas )
 	log.debug("creating walls for enemies")
 	for areanumber, a in pairs(areas["nodes"]) do
-		for _, area in ipairs(a) do	
-			for _, dir in ipairs({0, 1, 2, 3}) do
-				local side = area_util.get_side(area, dir, -32, 16)
-				local details = {layer=0, x=side.x1, y=side.y1, width=side.x2-side.x1, height=side.y2-side.y1, stops_enemies=true}		
-				map:create_wall(details)		
-			end
+		for _, dir in ipairs({0, 1, 2, 3}) do
+			local side = area_util.get_side(a.area, dir, -32, 16)
+			local details = {layer=0, x=side.x1, y=side.y1, width=side.x2-side.x1, height=side.y2-side.y1, stops_enemies=true}		
+			map:create_wall(details)		
 		end
 	end
 end
@@ -1022,20 +1022,16 @@ end
 function space_gen.create_simple_area_sensors( area_details, areas )
 	log.debug("creating area sensors")
 	for areanumber, a in pairs(areas["walkable"]) do
-		for _, area in ipairs(a) do	
-			local details = {name="areasensor_inside_"..areanumber.."_type_"..area_details[areanumber].area_type, 
-				layer=0, x=area.x1-8, y=area.y1-8, width=area.x2-area.x1+16, height=area.y2-area.y1+24}
-			-- log.debug(details)
-			map:create_sensor(details)
-		end
+		local details = {name="areasensor_inside_"..areanumber.."_type_"..area_details[areanumber].area_type, 
+			layer=0, x=a.area.x1-8, y=a.area.y1-8, width=a.area.x2-a.area.x1+16, height=a.area.y2-a.area.y1+24}
+		-- log.debug(details)
+		map:create_sensor(details)
 	end
 	for areanumber, a in pairs(areas["nodes"]) do
-		for _, area in ipairs(a) do	
-			local details = {name="areasensor_outside_"..areanumber.."_type_"..area_details[areanumber].area_type, 
-				layer=0, x=area.x1+8, y=area.y1+8, width=area.x2-area.x1-16, height=area.y2-area.y1-16}
-			-- log.debug(details)
-			map:create_sensor(details)
-		end
+		local details = {name="areasensor_outside_"..areanumber.."_type_"..area_details[areanumber].area_type, 
+			layer=0, x=a.area.x1+8, y=a.area.y1+8, width=a.area.x2-a.area.x1-16, height=a.area.y2-a.area.y1-16}
+		-- log.debug(details)
+		map:create_sensor(details)
 	end
 end
 

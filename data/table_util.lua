@@ -263,5 +263,4 @@ function table_util.get(tbl, index_tbl)
     return obj
 end
 
-
 return table_util

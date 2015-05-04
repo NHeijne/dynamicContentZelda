@@ -26,7 +26,7 @@ function maze_gen.set_map( given_map )
 end
 
 function maze_gen.set_room( area, corridor_width, wall_width, name_prefix )
-	room = area
+	room = table_util.copy(area)
 	if type(corridor_width) == "table" then room.corridor_width = corridor_width
 	else room.corridor_width = {x=corridor_width, y=corridor_width} end
 	if type(wall_width) == "table" then room.wall_width = wall_width
@@ -59,43 +59,75 @@ function maze_gen.generate_rooms( area_details )
 	local maze = {}
 	maze_gen.initialize_maze( maze, room, wall_width, corridor_width )
 	maze_gen.place_walls_around( maze, maze_gen.get_not_visited( maze ) )
-	local start_node = {x=1, y=math.floor(#maze[1]/2)}-- entrance is always west center
-	maze[start_node.x][start_node.y].visited = true
+	local start_pos = {x=1, y=math.floor(#maze[1]/2)}-- entrance is always west center
+	maze[start_pos.x][start_pos.y].visited = true
 	if not area_details.outside then
-		maze[start_node.x][start_node.y+1].visited = true
+		maze[start_pos.x][start_pos.y+1].visited = true
 	end	if area_details.outside then 
-		maze[start_node.x][start_node.y][2] = "other_map" -- exit to the left because the witch hut exit is to the right
+		maze[start_pos.x][start_pos.y][2] = "other_map" -- exit to the left because the witch hut exit is to the right
 	else
-		maze[start_node.x][start_node.y][3] = "other_map" -- exit to the bottom because of the tile for the exit
+		maze[start_pos.x][start_pos.y][3] = "other_map" -- exit to the bottom because of the tile for the exit
 	end
-	maze_gen.recursive_rooms( maze, area_details, "start", start_node, 2 )
+	maze_gen.recursive_rooms( maze, area_details, "start", start_pos )
 	return maze_gen.create_room_list( maze, corridor_width, {x=wall_width.x/2, y=wall_width.y/2} )
 end
 
 -- direction (number): between 0 (East of the room) and 3 (South of the room).
-function maze_gen.recursive_rooms( maze, area_details, areanumber, pos, last_direction )
+-- area size = 1, 2, or 4
+function maze_gen.recursive_rooms( maze, area_details, areanumber, pos )
 	-- if the area contains multiple tasks then we assign multiple nodes in random directions
+	local area_size = area_details.area_size
 	maze[pos.x][pos.y].areanumber = areanumber
-	if areanumber ~= "goal" then
-		local cur_pos = pos
-		if type(area_details[areanumber].area_type) == "table" then
+	-- expand the area if P or F
+	local room_positions={pos}
+	if table_util.contains({"F", "P"}, area_details[areanumber].area_type) and area_size > 1 then
+		if area_size >= 2 then
+			local neighbors = maze_gen.get_neighbors(maze, pos, true)
+			local second_neighbor = maze_gen.get_most_isolated_neighbor( maze, neighbors )
+			room_positions[2] = second_neighbor.pos
+			second_neighbor.node.areanumber = areanumber
 
-		end
-		-- follow area details; place the next nodes at spots that have the most free neighbors
-		for _,connection in ipairs(area_details[areanumber]) do
-			local neighbors = maze_gen.get_neighbors(maze, cur_pos, true)
-			local ranking = {[0]={}, [1]={}, [2]={}, [3]={}}
-			for _,nb in ipairs(neighbors) do
-				table.insert(ranking[#maze_gen.get_neighbors(maze, nb.pos, true)], nb)
-			end
-			local selected_nb
-			for i=3, 1, -1 do
-				if #ranking[i] > 0 then 
-					selected_nb = ranking[i][1]; break
+			maze_gen.open_path(maze, {pos, second_neighbor.pos}, "opening")
+			local first_node_neighbors = maze_gen.get_neighbors(maze, pos, true)
+			local second_node_neighbors = maze_gen.get_neighbors(maze, second_neighbor.pos, true)
+
+			if area_size == 4 then
+
+				local second_degree_neighbors_of_first_node = {}
+				for _, nb in ipairs(first_node_neighbors) do
+					table_util.add_table_to_table( maze_gen.get_neighbors(maze, nb.pos, true), second_degree_neighbors_of_first_node )
+				end
+
+				-- now match the second_node_neighbors with the second_degree_neighbors_of_first_node
+				local found_match = false
+				for _, nb1 in ipairs(second_node_neighbors) do -- use the node pos on this
+					for _, nb2 in ipairs(second_degree_neighbors_of_first_node) do -- use the from pos with this one
+						if nb1.pos.x == nb2.pos.x and nb1.pos.y == nb2.pos.y then
+							found_match = true
+							local third_node = nb1
+							local fourth_node = maze[nb2.from_pos.x][nb2.from_pos.y]
+							room_positions[3] = nb1.pos
+							room_positions[4] = nb2.from_pos
+							third_node.node.areanumber = areanumber
+							fourth_node.areanumber = areanumber
+
+							maze_gen.open_path(maze, {pos, nb2.from_pos, nb1.pos, second_neighbor.pos}, "opening")
+							break
+						end
+					end
+					if found_match then break end
 				end
 			end
-			maze_gen.open_path(maze, {cur_pos, selected_nb.pos}, "exit")
-			maze_gen.recursive_rooms( maze, area_details, connection.areanumber, selected_nb.pos, selected_nb.wall_to )
+		end
+	end
+	-- find new nodes for the next rooms
+	if areanumber ~= "goal" then
+		for _,connection in ipairs(area_details[areanumber]) do
+			local neighbors = maze_gen.get_neighbors_from_pos_list( maze, room_positions, true )
+			-- create the room with a given size
+			local selected_nb = maze_gen.get_most_isolated_neighbor( maze, neighbors )
+			maze_gen.open_path(maze, {selected_nb.from_pos, selected_nb.pos}, "exit")
+			maze_gen.recursive_rooms( maze, area_details, connection.areanumber, selected_nb.pos )
 		end
 	elseif area_details.outside then
 		for _,i in ipairs({0, 1, 2, 3}) do
@@ -114,6 +146,39 @@ function maze_gen.recursive_rooms( maze, area_details, areanumber, pos, last_dir
 	end
 end
 
+function maze_gen.get_neighbors_from_pos_list( maze, pos_list, get_not_visited )
+	local neighbors = {}
+	for _, pos in ipairs(pos_list) do
+		table_util.add_table_to_table( maze_gen.get_neighbors(maze, pos, get_not_visited), neighbors )
+	end
+	return neighbors
+end
+
+function maze_gen.get_most_isolated_neighbor( maze, neighbors )
+	local ranking = {}
+	local highest_rank = 0
+	for _,nb in ipairs(neighbors) do
+		local first_degree_neighbors = maze_gen.get_neighbors(maze, nb.pos, true)
+		local second_degree_neighbors = {}
+		for _, nb2 in ipairs(first_degree_neighbors) do
+			table_util.add_table_to_table( maze_gen.get_neighbors(maze, nb2.pos, true), second_degree_neighbors )
+		end
+		local nr_of_second_degree_nb = #second_degree_neighbors
+		if nr_of_second_degree_nb > highest_rank then highest_rank = nr_of_second_degree_nb end
+		ranking[nr_of_second_degree_nb] = ranking[nr_of_second_degree_nb] or {}
+		table.insert(ranking[nr_of_second_degree_nb], nb)
+	end
+	local selected_nb
+	log.debug("ranking:")
+	log.debug(ranking)
+	for i=highest_rank, 0, -1 do
+		if ranking[i] and #ranking[i] > 0 then 
+			selected_nb = ranking[i][1]; break
+		end
+	end
+	return selected_nb
+end
+
 
 function maze_gen.create_room_list ( maze, corridor_width, wall_width )
 	result = {["walkable"]={}, ["opening"]={}, ["exit"]={}, ["nodes"]={}, ["other_map"]={}}
@@ -129,6 +194,20 @@ function maze_gen.create_room_list ( maze, corridor_width, wall_width )
 				local p = maze_gen.maze_wall_to_areas( maze, {x=x, y=y}, corridor_width, wall_width, node)
 				table.insert(w[a_nr], walkable); table.insert(n[a_nr], node);table.insert(e[a_nr], p.exit); table.insert(o[a_nr], p.opening); table.insert(m[a_nr], p.other_map)
 			end
+		end
+	end
+	for _, a in pairs(result["walkable"]) do
+		a.area = nil
+		for _, area in ipairs(a) do
+			if a.area == nil then a.area = table_util.copy(area)
+			else a.area = area_util.merge_areas(a.area, area) end
+		end
+	end
+	for _, a in pairs(result["nodes"]) do
+		a.area = nil
+		for _, area in ipairs(a) do
+			if a.area == nil then a.area = table_util.copy(area)
+			else a.area = area_util.merge_areas(a.area, area) end
 		end
 	end
 	return result
@@ -164,42 +243,26 @@ function maze_gen.generate_path( exit_areas )
 	local maze = {}
 	maze_gen.initialize_maze( maze, room, wall_width, corridor_width )
 	local exits = maze_gen.open_exits( maze, exit_areas, room, wall_width, corridor_width )
-	local paths = maze_gen.create_initial_paths( maze, exits )
 	-- check along the path what the max distance is to the exits
-	local max_dist=0
 
-	for _,path in ipairs(paths) do
-		for _, node in ipairs(path) do
-			local to_area = maze_gen.pos_to_area( node )
-			local distance = area_util.distance(exit_areas[1], to_area, 0)	
-			if distance > max_dist then max_dist = distance end	
+	-- get not visited, pick a spot, create a branch
+	local available_points = {}
+	local stepsize_x, stepsize_y = math.ceil(#maze/math.floor(#maze/6)), math.ceil(#maze[1]/math.floor(#maze[1]/6))
+	local max_x, max_y =  #maze-1, #maze[1]-1
+	for i=2, #maze-1, stepsize_x do
+		for j=2, #maze[1]-1, stepsize_y do
+			local x, y = math.random(i, num_util.clamp(i+stepsize_x, 2, max_x)), math.random(j, num_util.clamp(j+stepsize_y, 2, max_y))
+			table.insert(available_points, {x=x, y=y})
 		end
 	end
-	if max_dist < 150 then
-		local viable_positions = {}
-		-- create another branch
-		local unvisited = maze_gen.get_not_visited( maze )
-		local n = 0
-		for _,u in ipairs(unvisited) do
-			local to_area = maze_gen.pos_to_area( u )
-			local distance = area_util.distance(exit_areas[1], to_area, 0)	
-			if distance > 150 then n = n+1; viable_positions[n]=u end	
+	local paths = maze_gen.create_initial_paths( maze, exits )
+	repeat
+		local next_point = table.remove(available_points, math.random(#available_points))
+		local path1 = maze_gen.create_direct_path( maze_gen.find_closest_node( maze, next_point, paths ), next_point, maze )
+		if path1 then 
+			table.insert(paths, path1) 
 		end
-		local chosen_branch_ending_pos = table_util.random(viable_positions)
-		local found_path = maze_gen.create_direct_path( paths[1][1], chosen_branch_ending_pos, maze )
-		if not found_path and next(paths) ~= nil then -- will fail if the starting point is in a closed off area of the maze 
-			local min_dist = maze_gen.distance(paths[1][1], chosen_branch_ending_pos)
-			local next_start = paths[1][1]
-			for _,path in ipairs(paths) do
-				for _,pos in ipairs(path) do
-					if maze_gen.distance(pos, chosen_branch_ending_pos) < min_dist then next_start = pos end
-				end
-			end
-			found_path = maze_gen.create_direct_path( next_start, chosen_branch_ending_pos, maze )
-		end
-		table.insert(paths, found_path)
-		maze_gen.open_path( maze, found_path )
-	end
+	until #available_points == 0
 	-- got a path to all exits
 	for _,path in ipairs(paths) do
 		for _, node in ipairs(path) do
@@ -223,6 +286,19 @@ function maze_gen.generate_path( exit_areas )
 	local closed_areas = maze_gen.visited_to_area_list( maze, false )
 	local open_areas = maze_gen.visited_to_area_list( maze, true )
 	return open_areas, closed_areas
+end
+
+function maze_gen.close_path( maze, path )
+	for i = 1, #path-1, 1 do
+		local from, to
+		if path[i+1].x > path[i].x then from, to = 2, 0
+		elseif path[i+1].x < path[i].x then from, to = 0, 2
+		elseif path[i+1].y > path[i].y then from, to = 1, 3
+		elseif path[i+1].y < path[i].y then from, to = 3, 1 end
+		maze[path[i].x][path[i].y][to]= true
+ 		maze[path[i+1].x][path[i+1].y][from]= true
+        maze[path[i+1].x][path[i+1].y].visited = false
+	end
 end
 
 function maze_gen.visited_to_area_list( maze, visit_status )
@@ -806,9 +882,26 @@ function maze_gen.make_dark_room()
 		end
 end
 
-function maze_gen.create_initial_paths( maze, exits )
-	local possible_nodes, nr_of_nodes = maze_gen.get_not_visited(maze) 
-	local starting_point = possible_nodes[math.random(nr_of_nodes)]
+function maze_gen.create_initial_paths( maze, exits, convergence_pos )
+	local starting_point
+	if convergence_pos == nil then
+		local possible_nodes, nr_of_nodes = maze_gen.get_not_visited(maze) 
+		local viable_positions, v_pos_nr = {}, 0
+		local min_dist_required = math.floor(0.4 * (0.5 * #maze + 0.5 * #maze[1]))--at least 40% of the maze size away from the exits
+		for _, pos in ipairs(possible_nodes) do
+			local add_node = true
+			for _, exit in ipairs(exits) do
+				if maze_gen.distance(pos, table_util.random(exit)) < min_dist_required then add_node = false end
+			end
+			if add_node then 
+				v_pos_nr = v_pos_nr +1
+				viable_positions[v_pos_nr] = pos
+			end
+		end
+		starting_point = table_util.random(viable_positions)
+	else
+		starting_point = convergence_pos
+	end
 
 	local paths = {}
 	for index, exit_list in ipairs(exits) do
@@ -817,9 +910,14 @@ function maze_gen.create_initial_paths( maze, exits )
 		if not found_path and next(paths) ~= nil then -- will fail if the starting point is in a closed off area of the maze 
 			local min_dist = maze_gen.distance(starting_point, exit)
 			local next_start = starting_point
+
 			for _,path in ipairs(paths) do
 				for _,pos in ipairs(path) do
-					if maze_gen.distance(pos, exit) < min_dist then next_start = pos end
+					local dist = maze_gen.distance(pos, exit)
+					if dist < min_dist then 
+						min_dist = dist
+						next_start = pos 
+					end
 				end
 			end
 			found_path = maze_gen.create_direct_path( next_start, exit , maze )
@@ -832,6 +930,28 @@ function maze_gen.create_initial_paths( maze, exits )
 		maze_gen.open_path( maze, path )
 	end
 	return paths
+end
+
+function maze_gen.find_closest_node( maze, to_pos, paths )
+	local result
+	local min_dist = math.huge
+	for _,path in ipairs(paths) do
+		for _,pos in ipairs(path) do
+			local dist = maze_gen.distance(pos, to_pos)
+			if dist < min_dist then 
+				local neighbors = maze_gen.get_neighbors( maze, pos, true)
+				for _, nb in ipairs(neighbors) do
+					local dist_nb = maze_gen.distance(nb.pos, to_pos)
+					if dist_nb < dist then
+						min_dist = dist 
+						result = pos 
+						break
+					end
+				end
+			end
+		end
+	end
+	return result
 end
 
 -- direction (number): between 0 (East of the room) and 3 (South of the room).
@@ -881,6 +1001,8 @@ function maze_gen.create_direct_path( from, to, maze )
 				if path_length == 0 then return false end
 				neighbors = maze_gen.get_neighbors(maze_copy, path[path_length], true)
 			until #neighbors ~= 0
+		else
+			table_util.shuffleTable(neighbors)
 		end 
 		local next_node = nil
 		local min_dist = math.huge

@@ -436,7 +436,7 @@ function mission_grammar.transform_to_space( params )
 								outside=params.outside,
 								from_direction=params.from_direction,
 								to_direction=params.to_direction,
-								preferred_area_surface=params.preferred_area_surface,
+								area_size = params.area_size,
 								path_width=params.path_width,
 								["start"]={area_type="E", nr_of_connections=1, contains_items={}, [1]={type="twoway", areanumber=1}},
 								["goal"]={area_type="E", nr_of_connections=0, contains_items={}},
