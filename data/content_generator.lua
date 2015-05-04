@@ -32,19 +32,12 @@ function content.start_test(given_map)
 	end
 		
 	log.debug("test")
-	local lol = {}; local lol2 = nil
-	if lol[1]~=nil and lol2[1] ~= nil then 
-		log.debug("it does both")
-	else
-		log.debug("as expected")
-	end
-
 	local tic = os.clock()
 	log.debug(tic)
 
 	log.debug("end test")
 	-- Initialize the pseudo random number generator
-	local seed = 785847
+	local seed = 
 			tonumber(tostring(os.time()):reverse():sub(1,6)) -- good random seeds
 	log.debug("random seed = " .. seed)
 	math.randomseed( seed )
