@@ -9374,7 +9374,7 @@ teletransporter{
   y = 280,
   width = 16,
   height = 48,
-  destination_map = "0",
+  destination_map = "2",
 }
 
 wall{

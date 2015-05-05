@@ -3,13 +3,13 @@ properties{
   y = 0,
   width = 2000,
   height = 2000,
-  tileset = "4",
+  tileset = "1",
 }
 
 destination{
-  layer = 1,
-  x = 296,
-  y = 1069,
+  layer = 0,
+  x = 8,
+  y = 13,
   name = "start_position",
   direction = 3,
   default = true,

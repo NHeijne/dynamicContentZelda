@@ -17,7 +17,7 @@ local game
 local hero
 local map
 
-function content.start_test(given_map)
+function content.start_test(given_map, params, end_destination)
 	map = given_map
 	game = map:get_game()
 	hero = map:get_hero()
@@ -48,7 +48,12 @@ function content.start_test(given_map)
 	local outside = false
 	if tileset_id == 1 or tileset_id == 2 then outside = true end
 	mission_grammar.update_keys_and_barriers(game)
-	mission_grammar.produce_graph({branches=4, branch_length=2, fights=6, puzzles=0, length=6, outside=outside})
+	params = params or {}
+	local standard_params = {branches=4, branch_length=2, fights=6, puzzles=0, length=6, outside=outside, mission_type="normal", area_size=1} 
+	for k,v in pairs(standard_params) do
+		if params[k] == nil then params[k]=v end
+	end
+	mission_grammar.produce_graph(params)
 	log.debug("produced graph")
 	log.debug(mission_grammar.produced_graph)
 	log.debug("area_details")
@@ -56,7 +61,7 @@ function content.start_test(given_map)
 																outside=outside, 
 																from_direction="west", 
 																to_direction="east", 
-																area_size=2,--1, 2, or 4
+																area_size=params.area_size,--1, 2, or 4
 																path_width=2*16}
 																)
 	log.debug(content.area_details)
@@ -76,11 +81,11 @@ function content.start_test(given_map)
     local layer
 	if content.area_details.outside then -- forest
     	--exit_areas, exclusion_areas = content.create_forest_map(content.areas, content.area_details)
-    	exit_areas, exclusion_areas = content.create_simple_forest_map(content.areas, content.area_details)
+    	exit_areas, exclusion_areas = content.create_simple_forest_map(content.areas, content.area_details, end_destination)
     	layer = 0
 	else -- dungeon
 		-- exit_areas, exclusion_areas = content.create_dungeon_map(content.areas, content.area_details)
-		exit_areas, exclusion_areas = content.create_simple_dungeon_map(content.areas, content.area_details)
+		exit_areas, exclusion_areas = content.create_simple_dungeon_map(content.areas, content.area_details, end_destination)
 		layer = 0
 	end
 	-- adding effects
@@ -636,7 +641,7 @@ function content.place_separators( areas )
     end
 end
 
-function content.create_simple_forest_map(areas, area_details)
+function content.create_simple_forest_map(areas, area_details, end_destination)
 	-- start filling in
 	local tileset = area_details.tileset_id
 	local bounding_area 
@@ -681,7 +686,7 @@ function content.create_simple_forest_map(areas, area_details)
 				end
 				if areanumber == "goal" then
 					local side = area_util.get_side(area, direction, -16, 0)
-					map:create_teletransporter{layer=0, x=side.x1, y=side.y1, width=side.x2-side.x1, height=side.y2-side.y1, destination_map="5", destination="dungeon_entrance_left"}
+					map:create_teletransporter{layer=0, x=side.x1, y=side.y1, width=side.x2-side.x1, height=side.y2-side.y1,  destination_map=end_destination.map_id, destination=end_destination.destination_name}-- "5", "dungeon_entrance_left"
 				end
 				-- displaying transition areas
 				if areanumber == "start" or areanumber == "goal" then
@@ -697,7 +702,7 @@ function content.create_simple_forest_map(areas, area_details)
 	end
 
 	for areanumber, a in pairs(areas["walkable"]) do
-
+		a.contact_length = {["pitfall"]=0, ["spikes"]=0}
 		if table_util.contains({"P", "TP", "TF", "BOSS"}, area_details[areanumber].area_type) then
 			ex=ex+1
 			exclusion_areas_trees[ex] = a.area
@@ -771,7 +776,7 @@ function content.place_edge_tiles(area, width, type, layer, custom_name)
 
 end
 
-function content.create_simple_dungeon_map(areas, area_details)
+function content.create_simple_dungeon_map(areas, area_details, end_destination)
 	local tileset = area_details.tileset_id
 
     -- walls
@@ -828,7 +833,7 @@ function content.create_simple_dungeon_map(areas, area_details)
 					hero:teleport(map:get_id(), "start_here")
 					content.place_prop("cave_entrance", area, 0, tileset, lookup.transitions)
 				elseif areanumber == "goal" then 
-					map:create_teletransporter{layer=0, x=area.x1+8, y=area.y1, width=16, height=32, destination_map="5", destination="dungeon_exit"}
+					map:create_teletransporter{layer=0, x=area.x1+8, y=area.y1, width=16, height=32, destination_map=end_destination.map_id, destination=end_destination.destination_name} -- "5", "dungeon_exit"
 					if direction == 3 then
 						content.place_prop("cave_entrance", area, 0, tileset, lookup.transitions)
 					elseif direction == 1 then
@@ -844,9 +849,10 @@ function content.create_simple_dungeon_map(areas, area_details)
 
 	-- start filling in floor
 	for areanumber, a in pairs(areas["walkable"]) do
-		local choices = {{{"bright_rock_64x64"}, {"bright_rock_48x48"}, {"bright_rock_32x32"}, {"pipe_16x32_v", "pipe_32x16_h"}},
+		local choices = {"pitfall", "spikes", "wall"}
+		local filler_choices = {{{"bright_rock_64x64"}, {"bright_rock_48x48"}, {"bright_rock_32x32"}, {"pipe_16x32_v", "pipe_32x16_h"}},
 					 	{{"dark_rock_64x64"}, {"dark_rock_48x48"}, {"dark_rock_32x32"}, {"pipe_16x32_v", "pipe_32x16_h"}},
-					 	{{"pipe_64x32_h"}, {"pipe_32x32_v"}, {"pipe_16x32_v", "pipe_32x16_h"}}}
+					 	{{"pipe_64x32_h"}, {"pipe_32x32_v"}, {"pipe_16x32_v", "pipe_32x16_h"}}} 
 		local filler = {"pipe_16x16_h", "pipe_16x16_v"}
 
 		if not table_util.contains({"P", "TP", "TF", "BOSS"}, area_details[areanumber].area_type) then
@@ -854,14 +860,34 @@ function content.create_simple_dungeon_map(areas, area_details)
 			local open, closed = maze_generator.generate_path( exit_areas[areanumber] )
 			exclusion_areas[areanumber] = closed
 			a.open_areas = open
+			local area_assignment = {["pitfall"]={}, ["spikes"]={}, ["wall"]={} }
 			
-			local choice_for_that_area = table_util.random(choices)
-			for _,c in ipairs(closed) do
-				local leftovers = content.spread_props(c, 0, choice_for_that_area, 1)
-				for _,v in ipairs(leftovers) do
-					content.spread_props(v, 0, filler, 1)
+			for _,c in ipairs(closed) do			
+				local choice_for_that_area = table_util.random(choices)
+				if choice_for_that_area == "pitfall" then
+					content.place_tile(c, 340, "pitfall", 0)
+					table.insert(area_assignment.pitfall, c)
+				elseif choice_for_that_area == "spikes" then
+					content.place_tile(c, 420, "spikes" , 0)
+					table.insert(area_assignment.spikes, c)
+				else
+					local leftovers = content.spread_props(c, 0, table_util.random(filler_choices), 1)
+					for _,v in ipairs(leftovers) do
+						content.spread_props(v, 0, filler, 1)
+					end
+					table.insert(area_assignment.wall, c)
 				end
-				
+			end
+			a.contact_length = {["pitfall"]=0, ["spikes"]=0}
+			for _, t in ipairs({"pitfall", "spikes"}) do
+				for _, area in ipairs(area_assignment[t]) do
+					for _, o in ipairs(open) do
+						-- if touching, check the length of the touching area
+						local _, _, _, _, touching_length = area_util.areas_touching(area, o)
+						a.contact_length[t] = a.contact_length[t] + touching_length/8
+						-- add that length/8 to a.contact_length[t]
+					end
+				end
 			end
 		else
 			a.open_areas = {a.area}

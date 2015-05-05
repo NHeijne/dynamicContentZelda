@@ -1029,7 +1029,7 @@ function space_gen.create_simple_area_sensors( area_details, areas )
 	end
 	for areanumber, a in pairs(areas["nodes"]) do
 		local details = {name="areasensor_outside_"..areanumber.."_type_"..area_details[areanumber].area_type, 
-			layer=0, x=a.area.x1+8, y=a.area.y1+8, width=a.area.x2-a.area.x1-16, height=a.area.y2-a.area.y1-16}
+			layer=0, x=a.area.x1, y=a.area.y1, width=a.area.x2-a.area.x1, height=a.area.y2-a.area.y1}
 		-- log.debug(details)
 		map:create_sensor(details)
 	end

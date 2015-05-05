@@ -115,22 +115,27 @@ function area_util.areas_touching(area1, area2)
 	local along_entire_length = {false, false}
 	local touching_area = {}
 	local touching_direction = false
+	local touching_length = 0
 	if area1.x1 == area2.x2 and area2.y1 < area1.y2 and area2.y2 > area1.y1 then -- area1 west is touching
 		touching_direction = 2
 		touching_area = {x1=area1.x1, y1=math.max(area1.y1, area2.y1), x2=area1.x1, y2=math.min(area1.y2, area2.y2)}
+		touching_length = touching_area.y2-touching_area.y1
 	elseif area1.x2 == area2.x1 and area2.y1 < area1.y2 and area2.y2 > area1.y1 then -- area1 east is touching
 		touching_direction = 0
 		touching_area = {x1=area1.x2, y1=math.max(area1.y1, area2.y1), x2=area1.x2, y2=math.min(area1.y2, area2.y2)}
+		touching_length = touching_area.y2-touching_area.y1
 	elseif area1.y1 == area2.y2 and area2.x1 < area1.x2 and area2.x2 > area1.x1 then -- area1 north is touching
 		touching_direction = 1
 		touching_area = {x1=math.max(area1.x1, area2.x1), y1=area1.y1, x2=math.min(area1.x2, area2.x2), y2=area1.y1}
+		touching_length = touching_area.x2-touching_area.x1
 	elseif area1.y2 == area2.y1 and area2.x1 < area1.x2 and area2.x2 > area1.x1 then -- area1 south is touching
 		touching_direction = 3
 		touching_area = {x1=math.max(area1.x1, area2.x1), y1=area1.y2, x2=math.min(area1.x2, area2.x2), y2=area1.y2}
+		touching_length = touching_area.x2-touching_area.x1
 	else touching = false end
 	if (area1.y1 >= area2.y1 and area1.y2 <= area2.y2) or (area1.x1 >= area2.x1 and area1.x2 <= area2.x2) then along_entire_length[1] = true end
 	if (area1.y1 <= area2.y1 and area1.y2 >= area2.y2) or (area1.x1 <= area2.x1 and area1.x2 >= area2.x2) then along_entire_length[2] = true end
-	return touching, along_entire_length, touching_area, touching_direction
+	return touching, along_entire_length, touching_area, touching_direction, touching_length
 end
 
 function area_util.random_area(area_details, origin)

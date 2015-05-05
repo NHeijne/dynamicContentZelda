@@ -80,8 +80,8 @@ function maze_gen.recursive_rooms( maze, area_details, areanumber, pos )
 	maze[pos.x][pos.y].areanumber = areanumber
 	-- expand the area if P or F
 	local room_positions={pos}
-	if table_util.contains({"F", "P"}, area_details[areanumber].area_type) and area_size > 1 then
-		if area_size >= 2 then
+	if table_util.contains({"F", "P"}, area_details[areanumber].area_type) and area_size > 1 or area_details[areanumber].area_type == "BOSS" then
+		if area_size >= 2 or area_details[areanumber].area_type == "BOSS" then
 			local neighbors = maze_gen.get_neighbors(maze, pos, true)
 			local second_neighbor = maze_gen.get_most_isolated_neighbor( maze, neighbors )
 			room_positions[2] = second_neighbor.pos
@@ -91,7 +91,7 @@ function maze_gen.recursive_rooms( maze, area_details, areanumber, pos )
 			local first_node_neighbors = maze_gen.get_neighbors(maze, pos, true)
 			local second_node_neighbors = maze_gen.get_neighbors(maze, second_neighbor.pos, true)
 
-			if area_size == 4 then
+			if area_size == 4 or area_details[areanumber].area_type == "BOSS" then
 
 				local second_degree_neighbors_of_first_node = {}
 				for _, nb in ipairs(first_node_neighbors) do

@@ -34,7 +34,7 @@ mission_grammar.key_barrier_lookup = {
 
 mission_grammar.key_types = 	{"K", "EQ"}
 mission_grammar.barrier_types = {"L", "B", "OB", "NB", "S"}
-mission_grammar.area_types = 	{"C", "P", "F", "PF", "CH", "T", "BT", "E", "BOSS"}
+mission_grammar.area_types = 	{"C", "P", "F", "PF", "CH", "T", "BT", "E", "BOSS", "TF", "TP"}
 -- based on:
 -- http://sander.landofsand.com/publications/Dormans_Bakkes_-_Generating_Missions_and_Spaces_for_Adaptable_Play_Experiences.pdf
 
@@ -156,15 +156,47 @@ function mission_grammar.update_keys_and_barriers( game )
 	end
 end
 
+function mission_grammar.initialize_tutorial_graph( params )
+	local nodes = {[1]="start"}
+	local edges = {}
+	local non_terminals = {}
+	local task_length = params.length
+	for i=2, params.fights+1 do
+		nodes[i] = "TF"
+		edges[i-1]= edges[i-1] or {}
+		edges[i-1][i]="undir_fw"
+		edges[i]= edges[i] or {}
+		edges[i][i-1]="undir_bk"
+		table.insert(non_terminals, i)
+	end
+	for i=params.fights+2, params.fights+params.puzzles+1 do
+		nodes[i] = "TP"
+		edges[i-1]= edges[i-1] or {}
+		edges[i-1][i]="undir_fw"
+		edges[i]= edges[i] or {}
+		edges[i][i-1]="undir_bk"
+		table.insert(non_terminals, i)
+	end
+	edges[task_length+1][task_length+2]="undir_fw"
+	edges[task_length+2]={[task_length+1]="undir_bk"}
+	table.insert(nodes, "goal")
+	mission_grammar.produced_graph = {nodes=nodes, edges=edges, non_terminals=non_terminals, branching={}} -- max one branch per NT
+end
+
 
 -- what kind of map type are we producing
 function mission_grammar.produce_graph( params)
+	log.debug(params)
 	local params_clone = table_util.copy(params)
-	mission_grammar.initialize_graph( params_clone.length )
-	if params.outside then
-		mission_grammar.produce_outside_graph( params_clone )
+	if params.mission_type=="tutorial" then
+		mission_grammar.initialize_tutorial_graph( params )
 	else
-		mission_grammar.produce_dungeon_graph( params_clone )
+		mission_grammar.initialize_graph( params_clone.length )
+		if params.outside then
+			mission_grammar.produce_outside_graph( params_clone )
+		else
+			mission_grammar.produce_dungeon_graph( params_clone )
+		end
 	end
 	return params_clone
 end
