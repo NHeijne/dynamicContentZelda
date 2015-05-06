@@ -61,6 +61,14 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 					local f = sol.file.open("userExperience.txt","a+"); f:write((game:get_value("glove__1") and 1 or 0) .. "-hasGlove\n"); f:flush(); f:close()
 					local f = sol.file.open("userExperience.txt","a+"); f:write((game:get_value("glove__2") and 1 or 0) .. "-hasGlove2\n"); f:flush(); f:close()
 					local f = sol.file.open("userExperience.txt","a+"); f:write((game:get_value("bomb_bag__1") and 1 or 0) .. "-hasBomb\n"); f:flush(); f:close()
+					local f = sol.file.open("userExperience.txt","a+"); 
+						f:write(areas["walkable"][tonumber(split_table[3])].contact_length["pitfall"] .. "-pits\n"); f:flush(); f:close()
+					local f = sol.file.open("userExperience.txt","a+"); 
+						f:write(areas["walkable"][tonumber(split_table[3])].contact_length["spikes"] .. "-spikes\n"); f:flush(); f:close()
+					local f = sol.file.open("userExperience.txt","a+"); 
+						f:write(areas["walkable"][tonumber(split_table[3])].throwables.white_rock .. "-whiteRock\n"); f:flush(); f:close()
+					local f = sol.file.open("userExperience.txt","a+"); 
+						f:write(areas["walkable"][tonumber(split_table[3])].throwables.bush .. "-grass\n"); f:flush(); f:close()
 					local split_table = split_table
 					
 					for enemy in map:get_entities("generatedEnemy") do enemy:remove() end
@@ -152,8 +160,8 @@ function analyseGameplaySoFar(map)
 	local f = sol.file.open("userExperience.txt","r")
 	local nothing = {fightFinished=0, swordHits=0, explodeHits=0, thrownHits=0, monstersKilled=0, timeInRoom=0, surface=0, directionChange=0, 
 			lifeLostInRoom=0, uselessKeys=0, monsterTypes={}, monsterTypesKilled={}, heroStates={}, bombUse=0, swordClang=0,hasGlove=0,hasGlove2=0,
-			hasBomb=0,moving=0, standing=0, percentageStanding=0, startingLife=0, intendedDifficulty=0, insideDungeon=0, 
-			goingHero=0,countedGoingHero=0,averageAggro=0}
+			hasBomb=0,moving=0, standing=0, percentageStanding=0, startingLife=0, intendedDifficulty=0, insideDungeon=0, pitfalls=0, spikes=0,
+			grass=0, whiteRock=0, goingHero=0,countedGoingHero=0,averageAggro=0}
 	local room = table_util.copy( nothing )
 
 	while true do
@@ -207,6 +215,10 @@ function analyseGameplaySoFar(map)
 		if splitLine[2] == "hasGlove" then room.hasGlove = tonumber (splitLine[1]) end
 		if splitLine[2] == "hasGlove2" then room.hasGlove2 = tonumber (splitLine[1]) end
 		if splitLine[2] == "hasBomb" then room.hasBomb = tonumber (splitLine[1]) end
+		if splitLine[2] == "pits" then room.pitfalls = tonumber (splitLine[1]) end
+		if splitLine[2] == "spikes" then room.spikes = tonumber (splitLine[1]) end
+		if splitLine[2] == "grass" then room.grass = tonumber (splitLine[1]) end
+		if splitLine[2] == "whiteRock" then room.whiteRock = tonumber (splitLine[1]) end
 		
 		if splitLine[2] == "goingHero" then 
 			room.goingHero = room.goingHero + tonumber (splitLine[1])
@@ -241,7 +253,7 @@ function logTheRoom (room)
 	local playerBehaviourData = {}
 	local bias = 1
 	
-	-- egg,mandible,hardhat,knight,papillosaur,startLife,hasGlove,hasGlove2,hasBomb
+	-- egg,mandible,hardhat,knight,papillosaur,startLife,hasGlove,hasGlove2,hasBomb,pitfalls,spikes,grass,whiteRock
 	fightRoomData[#fightRoomData+1] = room.monsterTypes.minillosaur_egg_fixed or 0
 	fightRoomData[#fightRoomData+1] = room.monsterTypes.mandible or 0
 	fightRoomData[#fightRoomData+1] = room.monsterTypes.blue_hardhat_beetle or 0
@@ -251,6 +263,10 @@ function logTheRoom (room)
 	fightRoomData[#fightRoomData+1] = room.hasGlove
 	fightRoomData[#fightRoomData+1] = room.hasGlove2
 	fightRoomData[#fightRoomData+1] = room.hasBomb
+	fightRoomData[#fightRoomData+1] = room.pitfalls
+	fightRoomData[#fightRoomData+1] = room.spikes
+	fightRoomData[#fightRoomData+1] = room.grass
+	fightRoomData[#fightRoomData+1] = room.whiteRock
 	
 	-- inside,finished,swordHits,bombUsage,explodeHits,thrownHits,time,surface,dirChange,lifeLost,clangs,uselessKeys,moving,standing,percStanding,avgAggro
 	playerBehaviourData[#playerBehaviourData+1] = room.insideDungeon
