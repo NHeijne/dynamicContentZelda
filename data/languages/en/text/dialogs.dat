@@ -57,7 +57,16 @@ dialog{
   text = [[
 Use Bombs against
 enemies and to
-destroy obstacles.
+destroy obstacles.$0
+Assign it by pressing
+the pause button and
+pressing the desired
+button "X" or "V"
+with the cursor on
+the bombs.$0
+You can also lift up
+any placed bomb and
+throw it.$0
 ]]
 }
 --------------------
@@ -740,7 +749,12 @@ dialog{
   text = [[
 These Iron Gloves
 will let you lift
-rocks.
+rocks and bushes.$0
+Press spacebar to
+lift up an object$0
+
+and spacebar again
+to throw it.$0
 ]]
 }
 --------------------
@@ -1746,8 +1760,12 @@ dialog{
 You found the
 Sword of Courage!$0
 
-Use it to vanquish
-your enemies!
+The sword is assigned
+to the "C" button.$0
+
+Hold down the attack
+button to charge up
+a spin attack.$0
 ]]
 }
 --------------------
