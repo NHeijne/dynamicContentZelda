@@ -4,6 +4,7 @@ properties{
   width = 2000,
   height = 2000,
   tileset = "1",
+  music = "lost_woods",
 }
 
 destination{

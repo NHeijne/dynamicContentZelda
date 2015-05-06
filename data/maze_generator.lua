@@ -237,32 +237,33 @@ function maze_gen.maze_wall_to_areas( maze, pos, corridor_width, wall_width, nod
 end
 
 
-function maze_gen.generate_path( exit_areas )
+function maze_gen.generate_path( exit_areas, straight_path )
 	-- for inside the areas
 	local wall_width, corridor_width = room.wall_width, room.corridor_width
 	local maze = {}
 	maze_gen.initialize_maze( maze, room, wall_width, corridor_width )
 	local exits = maze_gen.open_exits( maze, exit_areas, room, wall_width, corridor_width )
 	-- check along the path what the max distance is to the exits
-
-	-- get not visited, pick a spot, create a branch
-	local available_points = {}
-	local stepsize_x, stepsize_y = math.ceil(#maze/math.floor(#maze/6)), math.ceil(#maze[1]/math.floor(#maze[1]/6))
-	local max_x, max_y =  #maze-1, #maze[1]-1
-	for i=2, #maze-1, stepsize_x do
-		for j=2, #maze[1]-1, stepsize_y do
-			local x, y = math.random(i, num_util.clamp(i+stepsize_x, 2, max_x)), math.random(j, num_util.clamp(j+stepsize_y, 2, max_y))
-			table.insert(available_points, {x=x, y=y})
-		end
-	end
 	local paths = maze_gen.create_initial_paths( maze, exits )
-	repeat
-		local next_point = table.remove(available_points, math.random(#available_points))
-		local path1 = maze_gen.create_direct_path( maze_gen.find_closest_node( maze, next_point, paths ), next_point, maze )
-		if path1 then 
-			table.insert(paths, path1) 
+	if not straight_path then
+		-- get not visited, pick a spot, create a branch
+		local available_points = {}
+		local stepsize_x, stepsize_y = math.ceil(#maze/math.floor(#maze/6)), math.ceil(#maze[1]/math.floor(#maze[1]/6))
+		local max_x, max_y =  #maze-1, #maze[1]-1
+		for i=2, #maze-1, stepsize_x do
+			for j=2, #maze[1]-1, stepsize_y do
+				local x, y = math.random(i, num_util.clamp(i+stepsize_x, 2, max_x)), math.random(j, num_util.clamp(j+stepsize_y, 2, max_y))
+				table.insert(available_points, {x=x, y=y})
+			end
 		end
-	until #available_points == 0
+		repeat
+			local next_point = table.remove(available_points, math.random(#available_points))
+			local path1 = maze_gen.create_direct_path( maze_gen.find_closest_node( maze, next_point, paths ), next_point, maze )
+			if path1 then 
+				table.insert(paths, path1) 
+			end
+		until #available_points == 0
+	end
 	-- got a path to all exits
 	for _,path in ipairs(paths) do
 		for _, node in ipairs(path) do

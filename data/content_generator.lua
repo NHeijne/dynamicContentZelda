@@ -703,13 +703,17 @@ function content.create_simple_forest_map(areas, area_details, end_destination)
 
 	for areanumber, a in pairs(areas["walkable"]) do
 		a.contact_length = {["pitfall"]=0, ["spikes"]=0}
-		if table_util.contains({"P", "TP", "TF", "BOSS"}, area_details[areanumber].area_type) then
+		if table_util.contains({"P", "TP", "BOSS"}, area_details[areanumber].area_type) then
 			ex=ex+1
 			exclusion_areas_trees[ex] = a.area
 			a.open_areas = {a.area}
 		else
 			maze_generator.set_room( a.area, 16, 0, nil )
-			local open, closed = maze_generator.generate_path( exit_areas[areanumber] )
+			if table_util.contains({"E", "TF"}, area_details[areanumber].area_type) then 
+				open, closed = maze_generator.generate_path( exit_areas[areanumber], true )
+			else
+				open, closed = maze_generator.generate_path( exit_areas[areanumber], false )
+			end
 			exclusion_areas[areanumber] = closed
 			a.open_areas = open
 
@@ -855,9 +859,14 @@ function content.create_simple_dungeon_map(areas, area_details, end_destination)
 					 	{{"pipe_64x32_h"}, {"pipe_32x32_v"}, {"pipe_16x32_v", "pipe_32x16_h"}}} 
 		local filler = {"pipe_16x16_h", "pipe_16x16_v"}
 
-		if not table_util.contains({"P", "TP", "TF", "BOSS"}, area_details[areanumber].area_type) then
+		if not table_util.contains({"P", "TP", "BOSS"}, area_details[areanumber].area_type) then
 			maze_generator.set_room( a.area, 16, 0, nil )
-			local open, closed = maze_generator.generate_path( exit_areas[areanumber] )
+			local open, closed
+			if table_util.contains({"E", "TF"}, area_details[areanumber].area_type) then 
+				open, closed = maze_generator.generate_path( exit_areas[areanumber], true )
+			else
+				open, closed = maze_generator.generate_path( exit_areas[areanumber], false )
+			end
 			exclusion_areas[areanumber] = closed
 			a.open_areas = open
 			local area_assignment = {["pitfall"]={}, ["spikes"]={}, ["wall"]={} }
