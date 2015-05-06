@@ -1,4 +1,1 @@
 Error: In timer callback: [string "dungeons.lua"]:123: attempt to index local 'world' (a nil value)
-Error: In timer callback: [string "play_game.lua"]:121: attempt to call method 'get_going_hero' (a nil value)
-Error: In timer callback: [string "dungeons.lua"]:123: attempt to index local 'world' (a nil value)
-Error: In on_dead: [string "enemies/papillosaur_king.lua"]:97: attempt to index global 'split_table' (a nil value)
