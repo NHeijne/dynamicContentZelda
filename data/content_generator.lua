@@ -653,6 +653,7 @@ function content.create_simple_forest_map(areas, area_details, end_destination)
 
     for areanumber, a in pairs(areas["walkable"]) do
     	a.throwables = {["bush"]=0, ["white_rock"]=0}
+    	a.contact_length = {["pitfall"]=0, ["spikes"]=0}
     end
 
 	for areanumber,connections in pairs(areas["exit"]) do
@@ -702,7 +703,6 @@ function content.create_simple_forest_map(areas, area_details, end_destination)
 	end
 
 	for areanumber, a in pairs(areas["walkable"]) do
-		a.contact_length = {["pitfall"]=0, ["spikes"]=0}
 		if table_util.contains({"P", "TP", "BOSS"}, area_details[areanumber].area_type) then
 			ex=ex+1
 			exclusion_areas_trees[ex] = a.area
@@ -859,6 +859,8 @@ function content.create_simple_dungeon_map(areas, area_details, end_destination)
 					 	{{"pipe_64x32_h"}, {"pipe_32x32_v"}, {"pipe_16x32_v", "pipe_32x16_h"}}} 
 		local filler = {"pipe_16x16_h", "pipe_16x16_v"}
 
+		a.contact_length = {["pitfall"]=0, ["spikes"]=0}
+
 		if not table_util.contains({"P", "TP", "BOSS"}, area_details[areanumber].area_type) then
 			maze_generator.set_room( a.area, 16, 0, nil )
 			local open, closed
@@ -887,7 +889,7 @@ function content.create_simple_dungeon_map(areas, area_details, end_destination)
 					table.insert(area_assignment.wall, c)
 				end
 			end
-			a.contact_length = {["pitfall"]=0, ["spikes"]=0}
+			
 			for _, t in ipairs({"pitfall", "spikes"}) do
 				for _, area in ipairs(area_assignment[t]) do
 					for _, o in ipairs(open) do
