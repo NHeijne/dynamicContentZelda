@@ -8,6 +8,10 @@ local boss_starting_life = 6
 local boss_movement_starting_speed = 50  -- Starting speed in pixels per second, it will gain 5 per life point lost.
 local boss_movement_speed = boss_movement_starting_speed
 
+function enemy:get_going_hero()
+	return true
+end
+
 function enemy:on_created()
 
   self:set_life(boss_starting_life)
