@@ -16,6 +16,7 @@ sprite:set_animation("egg")
 local in_egg = true
 
 function enemy:get_going_hero()
+	return not in_egg
 end
 
 -- The enemy was stopped for some reason and should restart.
