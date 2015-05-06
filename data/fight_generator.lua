@@ -276,7 +276,7 @@ function logTheRoom (room)
 	local playerBehaviourData = {}
 	local bias = 1
 	
-	-- egg,mandible,hardhat,knight,papillosaur,startLife,hasGlove,hasGlove2,hasBomb,pitfalls,spikes,grass,whiteRock
+	-- egg,mandible,hardhat,knight,papillosaur,startLife,hasGlove,hasGlove2,hasBomb,pitfalls,spikes,grass,whiteRock,inside,surface
 	fightRoomData[#fightRoomData+1] = room.monsterTypes.minillosaur_egg_fixed or 0
 	fightRoomData[#fightRoomData+1] = room.monsterTypes.mandible or 0
 	fightRoomData[#fightRoomData+1] = room.monsterTypes.blue_hardhat_beetle or 0
@@ -290,16 +290,16 @@ function logTheRoom (room)
 	fightRoomData[#fightRoomData+1] = room.spikes
 	fightRoomData[#fightRoomData+1] = room.grass
 	fightRoomData[#fightRoomData+1] = room.whiteRock
+	fightRoomData[#fightRoomData+1] = room.insideDungeon
+	fightRoomData[#fightRoomData+1] = room.surface
 	
-	-- inside,finished,swordHits,bombUsage,explodeHits,thrownHits,time,surface,dirChange,lifeLost,clangs,uselessKeys,moving,standing,percStanding,avgAggro
-	playerBehaviourData[#playerBehaviourData+1] = room.insideDungeon
+	-- finished,swordHits,bombUsage,explodeHits,thrownHits,time,dirChange,lifeLost,clangs,uselessKeys,moving,standing,percStanding,avgAggro
 	playerBehaviourData[#playerBehaviourData+1] = room.fightFinished
 	playerBehaviourData[#playerBehaviourData+1] = room.swordHits
 	playerBehaviourData[#playerBehaviourData+1] = room.bombUse
 	playerBehaviourData[#playerBehaviourData+1] = room.explodeHits
 	playerBehaviourData[#playerBehaviourData+1] = room.thrownHits
 	playerBehaviourData[#playerBehaviourData+1] = room.timeInRoom
-	playerBehaviourData[#playerBehaviourData+1] = room.surface
 	playerBehaviourData[#playerBehaviourData+1] = room.directionChange
 	playerBehaviourData[#playerBehaviourData+1] = room.lifeLostInRoom
 	playerBehaviourData[#playerBehaviourData+1] = room.swordClang
@@ -336,11 +336,7 @@ function logTheRoom (room)
 	--"boomerang", "bow", "forced walking", "hookshot", "jumping", 
 	--"plunging", "pulling", "pushing", "running", "stream", "swimming", "victory"
 	
-	roomDifficultyPrediction = { 0.1652 * room.swordHits + 
-			-0.0269 * room.standing + 
-			 0.499 * (room.heroStates.hurt or 0) + 
-			 0.0412 * (room.heroStates["sword swinging"] or 0) + 
-			 1.3787 }
+	roomDifficultyPrediction = { makeDifficultyPrediction(room) }
 	roomDifficultyIntention = { room.intendedDifficulty }
 	
 	writeTableToFile (fightRoomData, "roomSummaries.csv")
@@ -357,6 +353,15 @@ function logTheRoom (room)
 											bias}
 	roomDifficulties[#roomDifficulties+1] = roomDifficultyPrediction
 	
+end
+
+-- This line of code is the only thing this project is really about. I'm actually kind of amazed.
+function makeDifficultyPrediction(room) 
+	return 0.1652 * room.swordHits + 
+		  -0.0269 * room.standing + 
+		   0.499 * (room.heroStates.hurt or 0) + 
+		   0.0412 * (room.heroStates["sword swinging"] or 0) + 
+		   1.3787
 end
 
 function writeTableToFile (dataTable, file) 
