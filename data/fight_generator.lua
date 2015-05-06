@@ -252,6 +252,9 @@ function analyseGameplaySoFar(map)
 	local weights = learningAlgorithms.linearRegression(roomContentsData, roomDifficulties)
 	
 	if weights then updateWeights( weights ) end
+	
+	local game = map:get_game()
+	game:set_paused()
 end
 
 function updateWeights (weights)
