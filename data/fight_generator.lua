@@ -77,8 +77,9 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 					local diff = difficultyOfFights
 					local f = sol.file.open("userExperience.txt","a+"); f:write(diff .. "-difficulty\n"); f:flush(); f:close()
 					local enemiesInEncounter, resultingDiff = fight_generator.make(spawnAreas, diff, map, game:get_life()) 
-					if split_table[5] == "BOSS" then
+					if split_table[5] == "BOSS" then 
 						local hero = map:get_hero()
+						if not game:get_value("bomb_bag__1") then hero:start_treasure("bomb_bag", 1, "bomb_bag__1") end
 						local xPos, yPos = chooseAreaToSpawn(spawnAreas, hero)
 						enemiesInEncounter = {{name="generatedEnemy_thisOne", layer=0, x=xPos, y=yPos, direction=0, breed="papillosaur_king"}}
 						resultingDiff = 6
@@ -101,14 +102,13 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 							return false
 						end
 						
-						function theEnemyIJustMade:on_dead()
-							local f = sol.file.open("userExperience.txt","a+") 
-							f:write(theEnemyIJustMade:get_breed() .. "-waskilled\n")
-							f:flush(); f:close()
-							
-							if not map:has_entities("generatedEnemy") then 
-								map:open_doors("door_normal_area_"..split_table[3])
+						if split_table[5] == "BOSS" then
+							function theEnemyIJustMade:on_dead()
+								local f = sol.file.open("userExperience.txt","a+") 
+								f:write(theEnemyIJustMade:get_breed() .. "-waskilled\n")
+								f:flush(); f:close()
 								
+								map:open_doors("door_normal_area_".. split_table[3])
 								difficultyOfFights = difficultyOfFights + 1
 								if difficultyOfFights > highestDifficulty then difficultyOfFights = lowestDifficulty end
 								local game = map:get_game()
@@ -116,10 +116,28 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 								local f = sol.file.open("userExperience.txt","a+"); f:write(os.time() .. "-endtime\n"); f:flush(); f:close()
 								local f = sol.file.open("userExperience.txt","a+"); f:write("finished-thefight\n"); f:flush(); f:close()
 								analyseGameplaySoFar(map)
+								return false
 							end
-							return false
+						else
+							function theEnemyIJustMade:on_dead()
+								local f = sol.file.open("userExperience.txt","a+") 
+								f:write(theEnemyIJustMade:get_breed() .. "-waskilled\n")
+								f:flush(); f:close()
+								
+								if not map:has_entities("generatedEnemy") then
+									map:open_doors("door_normal_area_".. split_table[3])
+									
+									difficultyOfFights = difficultyOfFights + 1
+									if difficultyOfFights > highestDifficulty then difficultyOfFights = lowestDifficulty end
+									local game = map:get_game()
+									local f = sol.file.open("userExperience.txt","a+"); f:write(game:get_life() .. "-endlife\n"); f:flush(); f:close()
+									local f = sol.file.open("userExperience.txt","a+"); f:write(os.time() .. "-endtime\n"); f:flush(); f:close()
+									local f = sol.file.open("userExperience.txt","a+"); f:write("finished-thefight\n"); f:flush(); f:close()
+									analyseGameplaySoFar(map)
+								end
+								return false
+							end
 						end
-						
 					end
 					map:close_doors("door_normal_area_"..split_table[3])
 					
