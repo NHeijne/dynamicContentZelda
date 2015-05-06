@@ -348,8 +348,8 @@ function chooseAreaToSpawn(spawnAreas, hero)
 	local chosenArea = table_util.random(spawnAreas)
 	local xPos = math.random(chosenArea.x1+13, chosenArea.x2-13)
 	local yPos = math.random(chosenArea.y1+13, chosenArea.y2-13)
-	while hero:get_distance(xPos, yPos) <= 100 do
-		local chosenArea = table_util.random(spawnAreas)
+	while hero:get_distance(xPos, yPos) <= 100 or ( area_util.get_area_size(chosenArea).size <= 16*16 ) do
+		chosenArea = table_util.random(spawnAreas)
 		xPos = math.random(chosenArea.x1+13, chosenArea.x2-13)
 		yPos = math.random(chosenArea.y1+13, chosenArea.y2-13)
 	end
