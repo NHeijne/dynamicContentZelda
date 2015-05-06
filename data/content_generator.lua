@@ -849,7 +849,7 @@ function content.create_simple_dungeon_map(areas, area_details, end_destination)
 
 	-- start filling in floor
 	for areanumber, a in pairs(areas["walkable"]) do
-		local choices = {"pitfall", "spikes", "wall"}
+		local choices = {["pitfall"]=2, ["spikes"]=2, ["wall"]=6}
 		local filler_choices = {{{"bright_rock_64x64"}, {"bright_rock_48x48"}, {"bright_rock_32x32"}, {"pipe_16x32_v", "pipe_32x16_h"}},
 					 	{{"dark_rock_64x64"}, {"dark_rock_48x48"}, {"dark_rock_32x32"}, {"pipe_16x32_v", "pipe_32x16_h"}},
 					 	{{"pipe_64x32_h"}, {"pipe_32x32_v"}, {"pipe_16x32_v", "pipe_32x16_h"}}} 
@@ -863,7 +863,7 @@ function content.create_simple_dungeon_map(areas, area_details, end_destination)
 			local area_assignment = {["pitfall"]={}, ["spikes"]={}, ["wall"]={} }
 			
 			for _,c in ipairs(closed) do			
-				local choice_for_that_area = table_util.random(choices)
+				local choice_for_that_area = table_util.choose_random_key(choices)				
 				if choice_for_that_area == "pitfall" then
 					content.place_tile(c, 340, "pitfall", 0)
 					table.insert(area_assignment.pitfall, c)
