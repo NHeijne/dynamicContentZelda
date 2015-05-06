@@ -310,7 +310,7 @@ function logTheRoom (room)
 	playerBehaviourData[#playerBehaviourData+1] = room.monsterTypesKilled.blue_hardhat_beetle or 0
 	playerBehaviourData[#playerBehaviourData+1] = room.monsterTypesKilled.green_knight_soldier or 0
 
-	-- free,freezed,grabbing,hurt,stairs,loading,spin,swing,tap,carry,lift,treasure,useItem,falling
+	-- free,freezed,grabbing,hurt,stairs,loading,spin,swing,tap,carry,lift,treasure,useItem,falling,backOnFeet
 	playerBehaviourData[#playerBehaviourData+1] = room.heroStates.free or 0
 	playerBehaviourData[#playerBehaviourData+1] = room.heroStates.freezed or 0
 	playerBehaviourData[#playerBehaviourData+1] = room.heroStates.grabbing or 0
@@ -325,9 +325,10 @@ function logTheRoom (room)
 	playerBehaviourData[#playerBehaviourData+1] = room.heroStates["treasure"] or 0
 	playerBehaviourData[#playerBehaviourData+1] = room.heroStates["using item"] or 0
 	playerBehaviourData[#playerBehaviourData+1] = room.heroStates["falling"] or 0
+	playerBehaviourData[#playerBehaviourData+1] = room.heroStates["back to solid ground"] or 0
 	
 	-- The following aren't being logged because they are not very useful for now.
-	--"back to solid ground", "boomerang", "bow", "forced walking", "hookshot", "jumping", 
+	--"boomerang", "bow", "forced walking", "hookshot", "jumping", 
 	--"plunging", "pulling", "pushing", "running", "stream", "swimming", "victory"
 	
 	roomDifficultyPrediction = { 0.1652 * room.swordHits + 
