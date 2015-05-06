@@ -49,7 +49,7 @@ function content.start_test(given_map, params, end_destination)
 	if tileset_id == 1 or tileset_id == 2 then outside = true end
 	mission_grammar.update_keys_and_barriers(game)
 	params = params or {}
-	local standard_params = {branches=4, branch_length=2, fights=6, puzzles=0, length=6, outside=outside, mission_type="normal", area_size=1} 
+	local standard_params = {branches=0, branch_length=0, fights=6, puzzles=0, length=6, outside=outside, mission_type="normal", area_size=1}
 	for k,v in pairs(standard_params) do
 		if params[k] == nil then params[k]=v end
 	end

@@ -24,7 +24,7 @@ function sol.main:on_started()
   local language_menu = require("menus/language")
   local title_screen = require("menus/title")
   local savegame_menu = require("menus/savegames")
-  --[[
+  
   -- Show the Solarus logo first.
   sol.menu.start(self, solarus_logo)
 
@@ -48,8 +48,7 @@ function sol.main:on_started()
       sol.menu.start(self, savegame_menu)
     end
   end
-  --]]
-  sol.menu.start(self, savegame_menu)
+  --sol.menu.start(self, savegame_menu)
 end
 
 -- Event called when the program stops.
