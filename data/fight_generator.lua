@@ -43,7 +43,7 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 					local hero = map:get_hero()
 					function hero:on_state_changed(state)
 						local f = sol.file.open("userExperience.txt","a+"); f:write(state .. "-hero\n"); f:flush(); f:close()
-						if state == "hurt" and game:get_life() <= 2 then
+						if state == "hurt" and game:get_life() <= 2 and game:get_life() > 0 then
 							-- player is dying now, log the room.
 							local game = map:get_game()
 							local f = sol.file.open("userExperience.txt","a+"); f:write(game:get_life() .. "-endlife\n"); f:flush(); f:close()
