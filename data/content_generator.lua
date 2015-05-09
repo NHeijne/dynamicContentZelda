@@ -23,9 +23,8 @@ function content.start_test(given_map, params, end_destination)
 	hero = map:get_hero()
 	log.debug_log_reset()
 	hero:freeze()
-	if not game:get_value("mine_key") then hero:start_treasure("rock_key", 1, "mine_key") end
 	if not game:get_value("sword__1") then hero:start_treasure("sword", 1, "sword__1") end
-
+	
 	function hero:on_state_changed(state)
 		local f = sol.file.open("userExperience.txt","a+"); f:write(state .. "-hero\n"); f:flush(); f:close()
 		-- returning false gives it back to the engine to handle
