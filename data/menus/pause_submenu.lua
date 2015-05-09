@@ -61,7 +61,7 @@ function submenu:on_started()
   }
 
   self.game:set_custom_command_effect("action", nil)
-  self.game:set_custom_command_effect("attack", "save")
+  --self.game:set_custom_command_effect("attack", "save")
 end
 
 -- Sets the caption text.
@@ -135,7 +135,7 @@ function submenu:on_command_pressed(command)
   if self.save_dialog_state == 0 then
     -- The save dialog is not shown
     if command == "attack" then
-      sol.audio.play_sound("message_end")
+      --[[sol.audio.play_sound("message_end")
       self.save_dialog_state = 1
       self.save_dialog_choice = 0
       self.save_dialog_sprite:set_animation("left")
@@ -144,7 +144,7 @@ function submenu:on_command_pressed(command)
       self.action_command_effect_saved = self.game:get_custom_command_effect("action")
       self.game:set_custom_command_effect("action", "validate")
       self.attack_command_effect_saved = self.game:get_custom_command_effect("attack")
-      self.game:set_custom_command_effect("attack", "validate")
+      self.game:set_custom_command_effect("attack", "validate")]]
       handled = true
     end
   else

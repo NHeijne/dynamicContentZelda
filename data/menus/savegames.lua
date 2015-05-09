@@ -1002,7 +1002,7 @@ end
 
 function savegame_menu:set_initial_values(savegame)
 
-  savegame:set_starting_location("6", "start_position")
+  savegame:set_starting_location("2", "start_position")
   savegame:set_value("player_name", self.player_name)
 
   -- Initially give 3 hearts, the first tunic and the first wallet.
