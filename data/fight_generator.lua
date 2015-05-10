@@ -11,7 +11,6 @@ local highestDifficulty = 5
 local difficultyOfFights = lowestDifficulty
 local everyEnemyDealsDamage = 2
 local everyEnemyHasHealth = 3
-local baseStress = 1.3787
 local startLifeDifficulty = 0
 local monsterAmountDifficulty = 0
 local baseDifficulty = 0
@@ -19,10 +18,27 @@ local breedDifficulties = {	["minillosaur_egg_fixed"]	= 1,
 							["mandible"]				= 1,
 							["blue_hardhat_beetle"]		= 1,
 							["green_knight_soldier"]	= 1}
-							
+
+-- This line of code is the only thing this project is really about. I'm actually kind of amazed.
+function makeDifficultyPrediction(room)
+	return  2.7171 +
+		   -0.8188 * room.fightFinished +
+			0.0829 * room.swordHits +
+		   -0.0022 * room.standing +
+			0.6475 * room.percentageStanding +
+		   -0.0786 * room.averageAggro +
+			0.1711 * (room.heroStates.hurt or 0) +
+			0.2739 * (room.heroStates["sword loading"] or 0) +
+			0.0257 * (room.heroStates["lifting"] or 0)
+end
+
+local emptyRoom = {fightFinished=1, swordHits=0, explodeHits=0, thrownHits=0, monstersKilled=0, timeInRoom=0, surface=365, directionChange=0, 
+			lifeLostInRoom=0, uselessKeys=0, monsterTypes={}, monsterTypesKilled={}, heroStates={}, bombUse=0, swordClang=0,hasGlove=0,hasGlove2=0,
+			hasBomb=0,moving=0, standing=0, percentageStanding=0, startingLife=24, intendedDifficulty=1, insideDungeon=0, pitfalls=0, spikes=0,
+			grass=0, whiteRock=0, goingHero=0,countedGoingHero=0,averageAggro=0}
 local roomContentsData = {{0,0,0,0,1}}
-local roomDifficulties = {{baseStress}}
-		
+local roomDifficulties = {{makeDifficultyPrediction(emptyRoom)}}
+
 local enemyTried = 1 -- To initialize the training data, we need to try every enemy.
 
 function fight_generator.add_effects_to_sensors (map, areas, area_details)
@@ -176,11 +192,7 @@ end
 
 function analyseGameplaySoFar(map)
 	local f = sol.file.open("userExperience.txt","r")
-	local nothing = {fightFinished=0, swordHits=0, explodeHits=0, thrownHits=0, monstersKilled=0, timeInRoom=0, surface=0, directionChange=0, 
-			lifeLostInRoom=0, uselessKeys=0, monsterTypes={}, monsterTypesKilled={}, heroStates={}, bombUse=0, swordClang=0,hasGlove=0,hasGlove2=0,
-			hasBomb=0,moving=0, standing=0, percentageStanding=0, startingLife=0, intendedDifficulty=0, insideDungeon=0, pitfalls=0, spikes=0,
-			grass=0, whiteRock=0, goingHero=0,countedGoingHero=0,averageAggro=0}
-	local room = table_util.copy( nothing )
+	local room = table_util.copy( emptyRoom )
 
 	while true do
 		local line = f:read("*line")
@@ -227,7 +239,7 @@ function analyseGameplaySoFar(map)
 				and splitLine[1]~="c" and splitLine[1]~="space" and splitLine[1]~="x" and splitLine[1]~="v" and splitLine[1]~="d" then 
 			room.uselessKeys = room.uselessKeys + 1
 		end
-		if string.find(line, "areasensor") or string.find(line, "A NEW GAME IS STARTING NOW") then room = table_util.copy( nothing ) end	
+		if string.find(line, "areasensor") or string.find(line, "A NEW GAME IS STARTING NOW") then room = table_util.copy( emptyRoom ) end	
 		
 		if splitLine[2] == "intendedDifficulty" then room.intendedDifficulty = tonumber (splitLine[1]) end
 		if splitLine[2] == "hasGlove" then room.hasGlove = tonumber (splitLine[1]) end
@@ -351,15 +363,6 @@ function logTheRoom (room)
 											bias}
 	roomDifficulties[#roomDifficulties+1] = roomDifficultyPrediction
 	
-end
-
--- This line of code is the only thing this project is really about. I'm actually kind of amazed.
-function makeDifficultyPrediction(room) 
-	return 0.1652 * room.swordHits + 
-		  -0.0269 * room.standing + 
-		   0.499 * (room.heroStates.hurt or 0) + 
-		   0.0412 * (room.heroStates["sword swinging"] or 0) + 
-		   1.3787
 end
 
 function writeTableToFile (dataTable, file) 
