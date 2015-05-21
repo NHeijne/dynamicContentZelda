@@ -6,8 +6,8 @@ local learningAlgorithms = require("learningAlgorithms")
 local matrix			= require("matrix")
 
 local fight_generator = {}
-local lowestDifficulty = 2
-local highestDifficulty = 5
+local lowestDifficulty = 3
+local highestDifficulty = 6
 local difficultyOfFights = lowestDifficulty
 local everyEnemyDealsDamage = 2
 local everyEnemyHasHealth = 3
@@ -411,8 +411,8 @@ function fight_generator.make(areas, maxDiff, map, currentLife)
 	
 	-- For testing purposes only, to diversify the data.
 	local randomBadRoom = math.random()
-	if randomBadRoom > 0.96 then maxDiff = 6 end
-	if randomBadRoom < 0.04 then maxDiff = 1 end
+	if randomBadRoom > 0.96 then maxDiff = 7 end
+	if randomBadRoom < 0.04 then maxDiff = 2 end
 	-- Remove these three lines when testing is done.
 	
 	while difficulty < maxDiff do
