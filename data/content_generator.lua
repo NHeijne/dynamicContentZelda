@@ -98,7 +98,7 @@ function content.start_test(given_map, params, end_destination)
 	for k, a in pairs(content.areas["walkable"]) do
 		log.debug("filling in area "..k)
 		log.debug("creating area_type " .. content.area_details[k].area_type)
-		if content.area_details[k].area_type == "P" then 
+		if table_util.contains({"P", "TP"}, content.area_details[k].area_type) then 
 			maze_generator.set_room(a.area, 16, 8, "mazeprop_area_"..k)
 			content.makeSingleMaze(a.area, exit_areas[k], content.area_details, exclusion_areas[k], layer)
 		end
@@ -659,8 +659,6 @@ function content.create_simple_forest_map(areas, area_details, end_destination)
 	for areanumber,connections in pairs(areas["exit"]) do
 		exit_areas[areanumber]={}
 		exclusion_areas[areanumber]={}
-		-- log.debug("check this now")
-		-- log.debug(connections)
 		for _, connection in ipairs(connections) do
 			for direction, area in pairs(connection) do
 				ex=ex+1
@@ -676,6 +674,18 @@ function content.create_simple_forest_map(areas, area_details, end_destination)
 			end
 		end
 	end
+
+	for areanumber,connections in pairs(areas["entrance"]) do
+		for _, connection in pairs(connections) do
+			for direction, area in pairs(connection) do
+				ex=ex+1
+				exclusion_areas_trees[ex] = area
+				table.insert(exit_areas[areanumber], 1, area_util.get_side(area, (direction+2)%4))
+			end
+		end
+	end
+	log.debug("exit_areas")
+	log.debug(exit_areas)
 
 	for areanumber,connections in pairs(areas["other_map"]) do
 		for _, connection in ipairs(connections) do
@@ -822,6 +832,19 @@ function content.create_simple_dungeon_map(areas, area_details, end_destination)
 			end
 		end
 	end
+
+	for areanumber,connections in pairs(areas["entrance"]) do
+		for _, connection in pairs(connections) do
+			for direction, area in pairs(connection) do
+				if direction == 3 or direction == 0 then
+					content.place_prop("edge_doors_"..direction, area, 0, tileset, lookup.transitions)
+				end
+				table.insert(exit_areas[areanumber], 1, area_util.get_side(area, (direction+2)%4))
+				content.create_simple_door( area, areanumber, direction )
+			end
+		end
+	end
+
 	for areanumber,connections in pairs(areas["exit"]) do
 		for _, connection in ipairs(connections) do
 			for direction, area in pairs(connection) do
@@ -1104,6 +1127,9 @@ function content.plant_trees(area, exclude_these)
 	end
 	return treeline_area_list
 end
+
+
+
 
 
 

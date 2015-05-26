@@ -227,6 +227,7 @@ sprite{ id = "enemies/red_projectile", description = "Red Projectile Triple" }
 sprite{ id = "entities/teletransporter_destination", description = "Teletransporter Destination" }
 sprite{ id = "entities/outside_door_2", description = "Closed Mine Door" }
 sprite{ id = "entities/normal_bed", description = "Normal Bed" }
+sprite{ id = "entities/gray_switch", description = "Switch (gray)" }
 
 music{ id = "agahnim", description = "Agahnim theme" }
 music{ id = "beginning", description = "Beginning" }
