@@ -10,7 +10,7 @@ sp.sokoban_problems = false
 sp.sokoban_difficulty = false
 
 sp.sokoban_files={
-	"minicosmos_diff_1_.txt", 
+	"minicosmos_diff_1_.txt", -- Author: Aymeric du Peloux, aymeric.dupeloux@smile.fr, http://sneezingtiger.com/sokoban/levels/microcosmosText.html
 }
 
 sp.prop_types = {
@@ -35,6 +35,7 @@ function sp.parse_files ()
 		while true do
 			local level = file:read()
 			if level == nil or string.len(level) == 0 then break end
+			local lvl_nr = table_util.split(level, "_")[2]
 			local name = file:read()
 			local puzzle = {}
 			local line
@@ -48,9 +49,9 @@ function sp.parse_files ()
 					table.insert(puzzle, line)
 				else break end
 			end
-			sp.sokoban_problems[name]= {puzzle=puzzle, difficulty=difficulty_rating, dim={x=max_length, y=#puzzle}}
+			sp.sokoban_problems[lvl_nr]= {puzzle=puzzle, difficulty=difficulty_rating, dim={x=max_length, y=#puzzle}}
 			sp.sokoban_difficulty[difficulty_rating] = sp.sokoban_difficulty[difficulty_rating] or {}
-			table.insert(sp.sokoban_difficulty[difficulty_rating], name)
+			table.insert(sp.sokoban_difficulty[difficulty_rating], lvl_nr)
 		end
 	end
 end
@@ -80,7 +81,7 @@ function sp.select_puzzle( max_dimensions, difficulty )
 	if not sp.sokoban_problems then sp.parse_files() end
 	local puzzles = sp.sokoban_difficulty[difficulty]
 	while true do
-		local picked_puzzle = table.remove(puzzles, math.random(#puzzles))
+		local picked_puzzle = table.remove(puzzles, 1)--math.random(#puzzles))
 		local problem = sp.sokoban_problems[picked_puzzle]
 		if ( max_dimensions == nil or (problem.dim.x <= max_dimensions.x and problem.dim.y < max_dimensions.y) ) then
 

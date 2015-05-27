@@ -1,6 +1,6 @@
 local map = ...
 local game = map:get_game()
-
+village_logger = village_logger or require("village_logger")
 
 -- Hero's house
 -- HOUSE
@@ -163,9 +163,11 @@ function map:on_started(destination)
 end
 
 function dad:on_interaction( ... )
+	village_logger.log.NPC.dad.talked = true
 	if not game:get_value("shed_key") then
 		game:start_dialog("test.question", dad_talk_q1, function(answer) 
 			if answer == 1 then
+				village_logger.log.NPC.dad.options_explored[1] = true
 				game:start_dialog("test.variable", dad_talk_q1_ans1, function() 
 					hero:start_treasure("wooden_key", 1, "shed_key", function()
 		            	game:start_dialog("test.variable", dad_talk_after, function()
@@ -174,6 +176,7 @@ function dad:on_interaction( ... )
 		          	end)
 				end)
 			else
+				village_logger.log.NPC.dad.options_explored[2] = true
 				game:start_dialog("test.variable", dad_talk_q1_ans2, function() 
 					game:start_dialog("test.variable", dad_talk_q1_ans1, function() 
 						hero:start_treasure("wooden_key", 1, "shed_key", function()
@@ -191,14 +194,18 @@ function dad:on_interaction( ... )
 end
 
 function mom:on_interaction( ... )
+	village_logger.log.NPC.mom.talked = true
 	game:start_dialog("test.question", mom_talk_q1, function(answer) 
 		if answer == 1 then
+			village_logger.log.NPC.mom.options_explored[1] = true
 			game:start_dialog("test.variable", mom_talk_q1_ans1)
 		else
 			game:start_dialog("test.question", mom_talk_q2, function(answer) 
 				if answer == 1 then
+					village_logger.log.NPC.mom.options_explored[2] = true
 					game:start_dialog("test.variable", mom_talk_q2_ans1)
 				else
+					village_logger.log.NPC.mom.options_explored[3] = true
 					game:start_dialog("test.variable", mom_talk_q2_ans2)
 				end
 			end)
@@ -207,6 +214,8 @@ function mom:on_interaction( ... )
 end
 
 function brother:on_interaction( ... )
+	village_logger.log.NPC.brother.talked = true
+	village_logger.log.NPC.brother.options_explored[1] = true
 	if game:get_value("diluted_cure") or game:get_value("strong_cure") then
 		game:start_dialog("test.variable", brother_talk_2, function() 
 			local hero_x, hero_y = hero:get_position()

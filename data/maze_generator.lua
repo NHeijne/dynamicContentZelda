@@ -876,9 +876,11 @@ end
 
 
 
+-- plannin types of additions:
+-- pikes (hero near) and always moving
 
-
-
+-- speed related, being reckless:
+-- cracked floor
 
 -- params = {difficulty, ratio_speed, ratio_trick}
 function maze_gen.create_maze_puzzle( maze, exits, difficulty, ratio_speed, ratio_trick )
@@ -887,7 +889,9 @@ function maze_gen.create_maze_puzzle( maze, exits, difficulty, ratio_speed, rati
 	local exits_copy = table_util.copy(exits)
 	exits_copy[1] = maze_gen.put_in_sokoban_puzzle( maze, exits[1] ) 
 	local convergence_pos = exits_copy[1][#exits_copy[1]]
-	maze_gen.create_initial_paths( maze, exits_copy, convergence_pos )
+	paths = maze_gen.create_initial_paths( maze, exits_copy, convergence_pos )
+	-- determine the amount of trick templates added and the amount of speed obstacles added
+	-- create branches to a total of the amount of obstacles that require a branch
 
 end
 
@@ -964,35 +968,19 @@ function maze_gen.insert_template_into_maze( maze, template_table, topleft_pos )
 	end
 end
 
-function maze_gen.generate_branched_maze( maze, exits, difficulty )
+function maze_gen.generate_branched_maze( maze, nr_of_branches, paths )
 	--maze_gen.make_dark_room()
 	local length_till_exit
 	local distance_to_exit
 	local branches = {}
-	local correct_paths = maze_gen.create_initial_paths( maze, exits ) -- the first correct path from end to beginning is the entry point
-	-- log.debug(correct_paths)
-	-- log.debug("correct_paths")
-	-- so we reverse that one so we can always go forward with each path
-	correct_paths[1] = table_util.reverse_table(correct_paths[1])
 	-- deform and create branches
 	for i=1, 10 do
-		local path_nr = math.random(#correct_paths)
+		local path_nr = math.random(#paths)
 		branches[path_nr] = branches[path_nr] or {}
 		table.insert(branches[path_nr], maze_gen.create_straight_branch( maze, correct_paths[path_nr], 2))
 		table_util.add_table_to_table(maze_gen.deform( maze, correct_paths[path_nr] ), branches[path_nr])
 	end
-	-- form a plan of additions
-	-- analyse the game so far
-
-	-- replace parts of the maze with templates
-	-- switch
-	-- 
-
-	-- add those special parts based on order of placement priority
-	-- pikes
-	-- teleports
-	-- jumps
-	-- <open>
+	return branches
 end
 
 function maze_gen.deform( maze, correct_path )

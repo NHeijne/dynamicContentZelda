@@ -1,6 +1,6 @@
 map = ...
 local game = map:get_game()
-
+village_logger = village_logger or require("village_logger")
 -- Quest dialog 
 
 -----------------------
@@ -240,54 +240,77 @@ keep the bottle.
 -----------------------
 
 function lefttwin:on_interaction()
+	village_logger.log.NPC.lefttwin.talked = true
+	village_logger.log.NPC.lefttwin.options_explored[1] = true
 	game:start_dialog("test.variable", lefttwin_talk_1)
 end
 
 function righttwin:on_interaction()
+	village_logger.log.NPC.righttwin.talked = true
+	village_logger.log.NPC.righttwin.options_explored[1] = true
 	game:start_dialog("test.variable", righttwin_talk_1)
 end
 
 function glassesguy:on_interaction()
+	village_logger.log.NPC.glassesguy.talked = true
+	village_logger.log.NPC.glassesguy.options_explored[1] = true
 	game:start_dialog("test.variable", glassesguy_talk)
 end
 
 function oldwoman:on_interaction()
+	village_logger.log.NPC.oldwoman.talked = true
 	game:start_dialog("test.question", oldwoman_talk_q1, function(answer) 
 		if answer==1 then
+			village_logger.log.NPC.oldwoman.options_explored[1] = true
 			game:start_dialog("test.variable", oldwoman_talk_q1_ans1)
 		else
+			village_logger.log.NPC.oldwoman.options_explored[2] = true
 			game:start_dialog("test.variable", oldwoman_story)
 		end
 	end)
 end
 
 function oldguyleft:on_interaction()
+	village_logger.log.NPC.oldguyleft.talked = true
+	village_logger.log.NPC.oldguyleft.options_explored[1] = true
 	game:start_dialog("test.variable", oldguyleft_talk)
 end
 
 function oldguyright:on_interaction()
+	village_logger.log.NPC.oldguyright.talked = true
+	village_logger.log.NPC.oldguyright.options_explored[1] = true
 	game:start_dialog("test.variable", oldguyright_talk)
 end
 
 function innkeeper:on_interaction()
+	village_logger.log.NPC.innkeeper.talked = true
+	village_logger.log.NPC.innkeeper.options_explored[1] = true
 	game:start_dialog("test.variable", innkeeper_talk)
 end
 
 function youngfellow:on_interaction()
+	village_logger.log.NPC.youngfellow.talked = true
+	village_logger.log.NPC.youngfellow.options_explored[1] = true
 	game:start_dialog("test.variable", youngfellow_talk)
 end
 
 function merchant:on_interaction()
+	village_logger.log.NPC.merchant.talked = true
 	if game:get_value("marketguy_talked") and not game:get_value("free_apples") 
 		and (not game:has_item("apples_counter") or game:get_item("apples_counter"):get_amount() <= 7 ) then
+		village_logger.log.NPC.merchant.options_explored[2] = true
+		village_logger.log.apples = village_logger.log.apples+3
 		game:start_dialog("test.variable", merchant_talk, function() 
 			hero:start_treasure("apple", 1, "free_apples")
 		end)
 	else
+		village_logger.log.NPC.merchant.options_explored[1] = true
 		game:start_dialog("test.question", merchant_apple, function(answer) 
 			if answer == 1 and game:get_money() >= apple_price 
 				and (not game:has_item("apples_counter") or game:get_item("apples_counter"):get_amount() < 10) then 
 				game:remove_money(apple_price)
+				village_logger.log.rupees = village_logger.log.rupees+apple_price
+				village_logger.log.apples = village_logger.log.apples+1
 				hero:start_treasure("apple_single", 1)
 			elseif answer == 1 and game:has_item("apples_counter") and game:get_item("apples_counter"):has_amount(10) then
 				sol.audio.play_sound("wrong")
@@ -301,12 +324,16 @@ function merchant:on_interaction()
 end
 
 function marketguy:on_interaction()
+	village_logger.log.NPC.marketguy.talked = true
+	village_logger.log.NPC.marketguy.options_explored[1] = true
 	game:set_value("marketguy_talked", true)
 	game:start_dialog("test.variable", marketguy_talk)
 end
 
 function brewer:on_interaction()
+	village_logger.log.NPC.brewer.talked = true
 	if game:get_value("quest_flower") then
+		village_logger.log.cure_brewer = true
 		game:set_value("quest_flower", false)
 		game:start_dialog("test.variable", brewer_talk_cure, function() 
 			hero:start_treasure("cure", 1, "strong_cure", function()
@@ -318,8 +345,10 @@ function brewer:on_interaction()
 	else
 		game:start_dialog("test.question", brewer_talk_q1, function(answer) 
 			if answer==1 then
+				village_logger.log.NPC.brewer.options_explored[1] = true
 				game:start_dialog("test.variable", brewer_talk_q1_ans1)
 			else
+				village_logger.log.NPC.brewer.options_explored[2] = true
 				game:start_dialog("test.variable", brewer_talk_q1_ans2)
 			end
 		end)
@@ -327,9 +356,12 @@ function brewer:on_interaction()
 end
 
 function littleguy:on_interaction()
+	village_logger.log.NPC.littleguy.talked = true
 	if game:get_value("bottle_1") then
+		village_logger.log.NPC.littleguy.options_explored[2] = true
 		game:start_dialog("test.variable", littleguy_gotbottle)
 	else
+		village_logger.log.NPC.littleguy.options_explored[1] = true
 		game:start_dialog("test.variable", littleguy_talk)
 	end
 end
@@ -363,6 +395,10 @@ I think I'm forgetting
 something...
 ]])
 	else
+		if not village_logger.log.rupees_after_village_logged then
+			village_logger.log.rupees = village_logger.log.rupees+game:get_money()
+			village_logger.log.rupees_after_village_logged = true
+		end
 		quest_block_a:set_enabled(false)
 	end
 	

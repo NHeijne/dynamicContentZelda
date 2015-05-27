@@ -1,5 +1,6 @@
 local map = ...
 local game = map:get_game()
+village_logger = village_logger or require("village_logger")
 
 -- witch hut
 
@@ -91,18 +92,18 @@ local function potion_buying(shop_item)
     game:start_dialog("potion_shop.no_empty_bottle")
     return false
   end
-
+  village_logger.log.filled_bottle = true
   return true
 end
 diluted_red_potion.on_buying = potion_buying
 
 
-
-
 function witch:on_interaction( ... )
+	village_logger.log.NPC.witch.talked = true
 	if not game:get_value("mine_key") then
 		game:start_dialog("test.question", witch_talk_a, function(answer) 
 			if answer == 1 then
+				village_logger.log.NPC.witch.options_explored[1] = true
 				game:start_dialog("test.variable", witch_talk_a_ans1, function ()
 					hero:start_treasure("rock_key", 1, "mine_key", function()
 						game:start_dialog("test.variable", witch_talk_a_ans1_after)
@@ -120,6 +121,7 @@ function witch:on_interaction( ... )
 				if game:get_money() < cure_price then
 					game:start_dialog("test.variable", witch_not_enough_rupees)
 				else
+					village_logger.log.cure_witch = true
 					game:remove_money(cure_price) 
 					game:set_value("quest_flower", false)
 					hero:start_treasure("cure", 1, "diluted_cure", function()

@@ -162,7 +162,7 @@ function mission_grammar.initialize_tutorial_graph( params )
 	local non_terminals = {}
 	local task_length = params.length
 	for i=2, params.fights+1 do
-		nodes[i] = "TP"
+		nodes[i] = "TF"
 		edges[i-1]= edges[i-1] or {}
 		edges[i-1][i]="undir_fw"
 		edges[i]= edges[i] or {}
@@ -177,22 +177,6 @@ function mission_grammar.initialize_tutorial_graph( params )
 		edges[i][i-1]="undir_bk"
 		table.insert(non_terminals, i)
 	end
-	-- for i=2, params.fights+1 do
-	-- 	nodes[i] = "TF"
-	-- 	edges[i-1]= edges[i-1] or {}
-	-- 	edges[i-1][i]="undir_fw"
-	-- 	edges[i]= edges[i] or {}
-	-- 	edges[i][i-1]="undir_bk"
-	-- 	table.insert(non_terminals, i)
-	-- end
-	-- for i=params.fights+2, params.fights+params.puzzles+1 do
-	-- 	nodes[i] = "TP"
-	-- 	edges[i-1]= edges[i-1] or {}
-	-- 	edges[i-1][i]="undir_fw"
-	-- 	edges[i]= edges[i] or {}
-	-- 	edges[i][i-1]="undir_bk"
-	-- 	table.insert(non_terminals, i)
-	-- end
 	edges[task_length+1][task_length+2]="undir_fw"
 	edges[task_length+2]={[task_length+1]="undir_bk"}
 	table.insert(nodes, "goal")
