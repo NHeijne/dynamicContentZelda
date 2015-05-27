@@ -21,15 +21,16 @@ local breedDifficulties = {	["minillosaur_egg_fixed"]	= 1,
 
 -- This line of code is the only thing this project is really about. I'm actually kind of amazed.
 function makeDifficultyPrediction(room)
-	return  2.7171 +
-		   -0.8188 * room.fightFinished +
-			0.0829 * room.swordHits +
-		   -0.0022 * room.standing +
-			0.6475 * room.percentageStanding +
-		   -0.0786 * room.averageAggro +
-			0.1711 * (room.heroStates.hurt or 0) +
-			0.2739 * (room.heroStates["sword loading"] or 0) +
-			0.0257 * (room.heroStates["lifting"] or 0)
+	return  2.3193 +
+		   -0.9861 * room.fightFinished +
+			0.03   * room.swordHits +
+			0.0648 * room.lifeLostInRoom +
+		   -0.0038 * room.standing +
+			0.8371 * room.percentageStanding +
+			0.0734 * (room.heroStates.free or 0) + 
+			0.4135 * (room.heroStates.grabbing or 0) + 
+			0.7693 * (room.heroStates["falling"] or 0) + 
+		   -0.4608 * (room.heroStates["back to solid ground"] or 0) 
 end
 
 local emptyRoom = {fightFinished=1, swordHits=0, explodeHits=0, thrownHits=0, monstersKilled=0, timeInRoom=0, surface=365, directionChange=0, 
