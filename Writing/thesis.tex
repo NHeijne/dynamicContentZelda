@@ -1,0 +1,192 @@
+\documentclass[a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{multicol}
+\usepackage{hyperref}
+\usepackage[margin=1in]{geometry}
+\usepackage{natbib}
+\usepackage{graphicx}
+
+\title{Adjusting difficulty based on automatically generated models of player skill}
+\author{Arjen Swellengrebel}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{multicols*}{2}
+\begin{abstract}
+This thesis proposes a system which allows game designers to elicit specific levels of emotional intensity in players by learning their reaction to situations in the game.
+This is done using two subsystems, the first of which determines the level of emotional intensity of the player based on their behaviour in the game.
+Secondly, a method for modelling the emotional reaction of a player to game situations is presented.
+Finally, a practical example based on \emph{The Legend of Zelda} shows the accuracy of the results of this approach.
+\end{abstract}
+
+\section{Introduction}
+To enhance the accessibility of a video game, and thereby increase the potential audience for it, it is advisable to present each player with an experience personalized to them \cite{playercentered}. 
+
+Most video games are intimidating for new players, which severely limits the amount of older people who adopt the hobby. Additionally, even seasoned fans of the medium from time to time find themselves unable to enjoy the entirety of an experience. Difficulty is one of the most important factors that contribute to this inaccessibility, and designers often include some way of mitigating its effect. However, the usual difficulty selection menu is an imperfect solution, as players may not know what their skill level is before starting the game or feel playing on easy is not the "correct" way to play.
+
+Not many games have yet tried to improve on this model. Valve's \emph{Left 4 Dead} uses a system which changes the pacing of its combat sequences based on the performance of the players \cite{left4dead}, but few video games since have implemented such systems. In this paper, I present an example of a system which accurately estimates how difficult a player perceives a game to be based on their behaviour during the game and show how the game can be changed in real time to better suit the player.
+
+It should be noted that this by no means implies that every game should adjust its difficulty based on the player. Designers may want to remember that for a more free-form experience, it might be best to allow the player to somehow choose the level of tension themselves. Certain games benefit greatly from a static challenge to be overcome, and those games should be carefully designed so as to be to fair their players. The technique described herein is most likely to be useful in those genres that deliver a visceral experience, such as action or horror.
+
+\section{Related Work}
+
+\section{Background}
+This project is based on the open-source game \emph{Legend of Zelda: Mystery of Solarus DX} \cite{zeldasolarus}. Areas were randomly generated at runtime using Dormans and Bakkes' technique for generating missions and spaces \cite{missiongrammar}. For these experiments, however, missions were kept fairly linear so as to reduce time spent during user studies. 
+
+\subsection{Game description}
+Two types of locations were tested in the game, a forest and a dungeon area. In the forest, players can freely move between areas at any time, while the dungeon has doors which close when the player enters an area, only opening when every enemy has been defeated. Furthermore, dungeon rooms contain hazards which reduce the player's hit points on contact, while forest rooms do not.
+
+There are five types of enemies in the game, four of which are common enemies which can appear in any room. These consist of the \emph{mandible}, a simple walking enemy, the \emph{minillosaur egg}, which remains stationary until the player approaches, the \emph{hardhat beetle} which pushes the player back when hit, and the \emph{knight soldier} which holds a sword which must be circumvented. Every type of enemy must be hit three times to be defeated and deals two hit points of damage on a hit (equating half a heart). There is also a \emph{papillosaur king} which only appears in the final room. This enemy must be hit with a bomb three times and is impervious to sword attacks.
+
+The player starts the game with 24 life, which is represented as six hearts. Throughout the experiment, the player can pick up two "key" items, which stay with the player indefinitely and are needed to progress through the game. The first is a glove which lets them pick up and throw rocks and bushes (which do two damage to enemies on a hit). The second is a bag of bombs which can be placed on the ground or thrown at enemies, dealing two points of damage each. 
+
+\section{System}
+\subsection{Setup}
+The system consists of two subsystems. The first estimates the difficulty level of an encounter after it has been completed, using only information on player behaviour which can be gathered during the encounter. This model is constructed before runtime, using data labeled by the players themselves.
+
+The second subsystem uses the results of the first to construct a model which predicts the difficulty level of an encounter using only the data which is known before the encounter is presented to the player. This model is constructed and updated at runtime, using the results given by the first model as labels for supervision. It is then reverse-engineered to generate an encounter given a desired difficulty.
+
+The two models differ in three important ways. Importantly, the first model is assumed to apply to all players regardless of skill, while the second will be different for evey player. Since the first is general, it can be constructed based on data gathered ahead of time. The second however is specific to the player and will need to be constructed at runtime. Third, the second model must only use the data which is known before the player plays the encounter, since it will be used to construct encounters later. The first however must use all data which is only known after the encounter is played, since that is the only data that can show how the player actually experiences it.
+
+\subsection{Assumptions}
+The system relies on the assumption that the behaviour of a player experiencing some level of emotional intensity is the same regardless of skill. For example, a player who gets hit five times in a room will experience stress as a result of that fact, whether this is a skilled player fighting many enemies or a beginner fighting a single enemy. This assumption allows us to ascertain the stress level of a player without having to stop the game to ask them what it is.
+
+As will be shown in section \ref{fig:results}, this assumption is robust enough to show reasonable accuracy in the data. By including a variable denoting the player's experience with video games, that section will attempt to show exactly how robust the assumption is.
+
+\section{Experiment}
+\subsection{General setup}
+The challenge experienced by a player is expressed on a scale from 1 to 10. Grades 1 through 5 are enjoyable difficulties. A difficulty of 1 means a complete absence of any difficulty, while 5 marks the maximum difficulty which is still enjoyable to the player. Grades of 6 through 10 represent inappropriate difficulties, 6 being just slightly too high, and 10 impossible to succeed at even with extensive practice.
+
+Players were asked to play through a series of rooms containing variable numbers of enemies. In each of these rooms, three possible outcomes are possible: the player  defeats every enemy in the room, leaves the room prematurely, or loses all hearts and is defeated. In each of these cases the game was paused automatically and the player was asked to rate the perceived challenge of the room on the aforementioned scale. A description of the room was then recorded, along with a summary of the player's behaviour in that room and their report of its difficulty.
+
+\subsection{Room construction}
+To gather the largest amount of data possible from each room, each player should be presented with challenges they can conceivably overcome. To do this, rooms were created based on informal data gathered early in the development of the project. While this method does not produce results representative of the final product, it does produce setups which will result in somewhat appropriate challenges while still varying the data. To create additional variety in the dataset, eight percent of all encounters were set to an extreme difficulty. In all other rooms, players were presented with intended difficulties of 2 through 6.
+
+In order to start determining the right makeup of a combat encounter for a player, first gauge the reaction of that particular player to every possible enemy in the game must be estimated. Fortunately, this need coincides with the need to train the player in a reasonably safe environment. For these reasons, the player must first fight their way through a series of rooms that each contain one enemy, one room for each type. 
+
+Once every enemy has been encountered once, enough data will be available to make a first estimate of the appropriate difficulty. Subsequent rooms will be constructed to slowly increase the difficulty for this player to a desirable level, starting at the lowest level. Starting at a lower difficulty decreases the risk of an encounter being constructed based on faulty data, which is a concern at this point because of sparsity. Each of the progressively more difficult rooms will increase the amount of data and thus decrease the margin of error on the formula. This way errors are most likely to occur in rooms with a low difficulty, which reduces the chance of an overshoot creating an impossible challenge for the player.
+
+\section{Results} \label{fig:results}
+\subsection{Models}
+The final model was generated using Weka \cite{weka}.
+
+\subsection{Generalizability}
+
+\section{Acknowledgements}
+The authors gratefully acknowledge Much of the code for this project was provided by Norbert Heijne. His research using the same system can be found in an upcoming paper.
+
+\bibliographystyle{plain}
+\begin{thebibliography}{9}
+
+\bibitem{playercentered}
+D. Charles, M. McNeill, M. McAlister, M. Black, A. Moore, K. Stringer, J. Kucklich, and A. Kerr, 
+\emph{Player-centered design: Player modeling and
+adaptive digital games},
+DiGRA, pp. 285–298,
+2005.
+
+\bibitem{left4dead}
+Michael Booth,
+\emph{The AI systems of left 4 dead},
+Keynote, 5th Artif. Intell. Interactive Digit. Entertain. Conf.,
+2009.
+
+\bibitem{zeldasolarus}
+Christophe Thiery,
+\emph{Legend of Zelda: Mystery of Solarus DX},
+\url{solarus-games.org},
+2011.
+
+\bibitem{missiongrammar}
+Joris Dormans and Sander Bakkes,
+\emph{Generating Missions and Spaces for
+Adaptable Play Experiences},
+{IEEE} Trans. Comput. Intellig. and {AI} in Games, Volume 3, no. 3,
+2011.
+
+\bibitem{weka}
+Mark Hall, Eibe Frank, Geoffrey Holmes, Bernhard Pfahringer, Peter Reutemann, Ian H. Witten,
+\emph{The WEKA Data Mining Software: An Update},
+SIGKDD Explorations, Volume 11, Issue 1,
+2009.
+
+\end{thebibliography}
+\end{multicols*}
+
+\clearpage
+\appendix
+\section{Data used}
+The following is a list of the information recorded after the completion of every room during the experiment.
+
+\begin{multicols}{2}
+\subsection{User data}
+\begin{itemize}
+\item Player's video game experience
+\end{itemize}
+\subsection{Area}
+\begin{itemize}
+\item Minillosaur eggs
+\item Mandibles
+\item Blue hardhats
+\item Green knights
+\item Presence of papillosaur
+\item startLife
+\item hasGlove
+\item hasGlove2
+\item hasBomb
+\item Number of pits in the room
+\item Number of spikes in the room
+\item Bushes in the room
+\item Liftable rocks in the room
+\item Room location (forest, dungeon)
+\item Walkable area of the room
+\end{itemize}
+\subsection{Behaviour}
+\begin{itemize}
+\item finished
+\item Enemies hit by swords
+\item Bombs placed
+\item Enemies hit by bombs
+\item Enemies hit by thrown items
+\item Seconds spent in the room
+\item Direction changes
+\item Total life lost in this room
+\item clangs
+\item uselessKeys
+\item moving
+\item standing
+\item percStanding
+\item avgAggro
+\item Minillosaur eggs killed
+\item killMandible
+\item killHardhat
+\item killKnight
+\item free
+\item Times stunned in place
+\item Times attempted to pick up items
+\item Number of times hurt
+\item Stairs taken
+\item Times spin attack charged
+\item Spin attacks used
+\item Number of attacks made
+\item Number of sword taps on wall
+\item Number of heavy items carried
+\item Number of heavy items lifted
+\item Number of treasures picked up
+\item Number of items used
+\item Number of falls in pit
+\item Return to solid ground
+\end{itemize}
+\subsection{Difficulty}
+\begin{itemize}
+\item Estimated difficulty
+\item Intended difficulty
+\item Reported difficulty
+\end{itemize}
+
+\end{multicols}
+
+\end{document}
