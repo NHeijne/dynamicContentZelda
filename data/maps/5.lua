@@ -395,9 +395,11 @@ I think I'm forgetting
 something...
 ]])
 	else
-		if not village_logger.log.rupees_after_village_logged then
+		if not village_logger.log.village_logged then
 			village_logger.log.rupees = village_logger.log.rupees+game:get_money()
-			village_logger.log.rupees_after_village_logged = true
+			village_logger.log.village_logged = true
+			village_logger.end_time = os.clock()
+			village_logger.copy_log()
 		end
 		quest_block_a:set_enabled(false)
 	end
@@ -429,4 +431,20 @@ as possible!
 	else
 		quest_block_c:set_enabled(false)
 	end
+end
+
+function bush_area:on_activated()
+	village_logger.areas_visited.bush_area=true
+end
+
+function brewer_area:on_activated()
+	village_logger.areas_visited.brewer_area=true
+end
+
+function plaza:on_activated()
+	village_logger.areas_visited.plaza=true
+end
+
+function woods_exit:on_activated()
+	village_logger.areas_visited.woods_exit=true
 end

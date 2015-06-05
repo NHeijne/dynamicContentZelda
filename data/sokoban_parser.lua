@@ -14,7 +14,7 @@ sp.sokoban_files={
 }
 
 sp.prop_types = {
-	["exit_block"]={name="exit_block", layer=0, x=8, y=13, sprite="entities/gray_block", pushable=false, pullable=false, maximum_moves=0},
+	["exit_block"]={name="exit_block", layer=0, x=8, y=13, sprite="entities/block", pushable=false, pullable=false, maximum_moves=0},
 	["wall_block"]={name="unmovable_block", layer=0, x=8, y=13, sprite="entities/block", pushable=false, pullable=false, maximum_moves=0},
 	["move_block"]={name="movable_block_1", layer=0, x=8, y=13, sprite="entities/gray_block", pushable=true, pullable=false, maximum_moves=2},
 	["block_switch"]={name="block_switch_1", layer=0, x=0, y=0, subtype="walkable", sprite="entities/gray_switch", sound="switch", needs_block=true, inactivate_when_leaving=true},

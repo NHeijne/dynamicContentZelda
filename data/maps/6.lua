@@ -156,10 +156,14 @@ local function step_away_from_door(mom)
 end
 
 function map:on_started(destination)
+	village_logger.start_time = os.clock()
 	if destination == start_position then
 		sol.audio.play_music("beginning")
-		step_in_front_of_door(mom)
+		if not game:get_value("shed_key") then
+			step_in_front_of_door(mom)
+		end
 	end
+
 end
 
 function dad:on_interaction( ... )
@@ -260,6 +264,7 @@ Thanks For Playing!
 
 
 function game_over()
+	village_logger.to_file( game )
 	sol.audio.play_music("fanfare")
 	game:start_dialog("test.variable", credits, function()
 		    game:set_hud_enabled(false)

@@ -9342,6 +9342,42 @@ tile{
 
 sensor{
   layer = 0,
+  x = 88,
+  y = 637,
+  width = 208,
+  height = 144,
+  name = "bush_area",
+}
+
+sensor{
+  layer = 0,
+  x = 88,
+  y = 453,
+  width = 208,
+  height = 144,
+  name = "brewer_area",
+}
+
+sensor{
+  layer = 0,
+  x = 432,
+  y = 181,
+  width = 224,
+  height = 208,
+  name = "woods_exit",
+}
+
+sensor{
+  layer = 0,
+  x = 160,
+  y = 261,
+  width = 144,
+  height = 176,
+  name = "plaza",
+}
+
+sensor{
+  layer = 0,
   x = 1752,
   y = 573,
   width = 32,
