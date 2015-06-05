@@ -7,1058 +7,499 @@ properties{
   tileset = "3",
 }
 
-tile{
+sensor{
   layer = 0,
   x = 40,
-  y = 40,
-  width = 240,
-  height = 160,
-  pattern = "2",
-}
-
-tile{
-  layer = 0,
-  x = 184,
-  y = 136,
-  width = 16,
-  height = 24,
-  pattern = "226",
-}
-
-tile{
-  layer = 0,
-  x = 168,
-  y = 152,
-  width = 24,
-  height = 16,
-  pattern = "225",
-}
-
-tile{
-  layer = 0,
-  x = 192,
-  y = 152,
-  width = 24,
-  height = 16,
-  pattern = "227",
-}
-
-tile{
-  layer = 0,
-  x = 184,
-  y = 160,
-  width = 16,
-  height = 24,
-  pattern = "224",
-}
-
-tile{
-  layer = 0,
-  x = 168,
-  y = 160,
-  width = 24,
-  height = 24,
-  pattern = "67",
-}
-
-tile{
-  layer = 0,
-  x = 192,
-  y = 160,
-  width = 24,
-  height = 24,
-  pattern = "68",
-}
-
-tile{
-  layer = 0,
-  x = 192,
-  y = 136,
-  width = 24,
-  height = 24,
-  pattern = "66",
-}
-
-tile{
-  layer = 0,
-  x = 168,
-  y = 136,
-  width = 24,
-  height = 24,
-  pattern = "65",
-}
-
-tile{
-  layer = 0,
-  x = 192,
-  y = 88,
-  width = 24,
-  height = 32,
-  pattern = "225",
-}
-
-tile{
-  layer = 0,
-  x = 232,
-  y = 88,
-  width = 24,
-  height = 32,
-  pattern = "227",
-}
-
-tile{
-  layer = 0,
-  x = 208,
-  y = 112,
-  width = 32,
-  height = 24,
-  pattern = "224",
-}
-
-tile{
-  layer = 0,
-  x = 192,
-  y = 112,
-  width = 24,
-  height = 24,
-  pattern = "67",
-}
-
-tile{
-  layer = 0,
-  x = 232,
-  y = 112,
-  width = 24,
-  height = 24,
-  pattern = "68",
-}
-
-tile{
-  layer = 0,
-  x = 232,
-  y = 72,
-  width = 24,
-  height = 24,
-  pattern = "66",
-}
-
-tile{
-  layer = 0,
-  x = 192,
-  y = 72,
-  width = 24,
-  height = 24,
-  pattern = "65",
-}
-
-tile{
-  layer = 0,
-  x = 208,
-  y = 72,
-  width = 32,
-  height = 24,
-  pattern = "226",
-}
-
-tile{
-  layer = 0,
-  x = 64,
-  y = 40,
-  width = 24,
-  height = 24,
-  pattern = "65",
-}
-
-tile{
-  layer = 0,
-  x = 72,
-  y = 40,
-  width = 24,
-  height = 24,
-  pattern = "66",
-}
-
-tile{
-  layer = 0,
-  x = 64,
-  y = 48,
-  width = 24,
-  height = 24,
-  pattern = "67",
-}
-
-tile{
-  layer = 0,
-  x = 72,
-  y = 48,
-  width = 24,
-  height = 24,
-  pattern = "68",
-}
-
-tile{
-  layer = 0,
-  x = 72,
-  y = 56,
-  width = 8,
-  height = 8,
-  pattern = "213",
-}
-
-tile{
-  layer = 0,
-  x = 80,
-  y = 56,
-  width = 8,
-  height = 8,
-  pattern = "212",
-}
-
-tile{
-  layer = 0,
-  x = 80,
-  y = 48,
-  width = 8,
-  height = 8,
-  pattern = "214",
-}
-
-tile{
-  layer = 0,
-  x = 72,
-  y = 48,
-  width = 8,
-  height = 8,
-  pattern = "215",
-}
-
-tile{
-  layer = 0,
-  x = 232,
-  y = 40,
-  width = 24,
-  height = 24,
-  pattern = "65",
-}
-
-tile{
-  layer = 0,
-  x = 240,
-  y = 40,
-  width = 24,
-  height = 24,
-  pattern = "66",
-}
-
-tile{
-  layer = 0,
-  x = 232,
-  y = 48,
-  width = 24,
-  height = 24,
-  pattern = "67",
-}
-
-tile{
-  layer = 0,
-  x = 240,
-  y = 48,
-  width = 24,
-  height = 24,
-  pattern = "68",
-}
-
-tile{
-  layer = 0,
-  x = 240,
-  y = 56,
-  width = 8,
-  height = 8,
-  pattern = "213",
-}
-
-tile{
-  layer = 0,
-  x = 248,
-  y = 56,
-  width = 8,
-  height = 8,
-  pattern = "212",
-}
-
-tile{
-  layer = 0,
-  x = 248,
-  y = 48,
-  width = 8,
-  height = 8,
-  pattern = "214",
-}
-
-tile{
-  layer = 0,
-  x = 240,
-  y = 48,
-  width = 8,
-  height = 8,
-  pattern = "215",
-}
-
-tile{
-  layer = 0,
-  x = 152,
-  y = 176,
-  width = 16,
-  height = 16,
-  pattern = "364",
+  y = 45,
+  width = 256,
+  height = 176,
+  name = "moving_sensor",
 }
 
 destination{
   layer = 0,
-  x = 120,
-  y = 53,
+  x = 184,
+  y = 157,
   direction = 3,
-  default = true,
 }
 
-destructible{
+enemy{
   layer = 0,
-  x = 128,
-  y = 189,
-  sprite = "entities/stone_small_black",
-  weight = -1,
+  x = 40,
+  y = 45,
+  direction = 3,
+  breed = "pike_fixed",
 }
 
-destructible{
+enemy{
   layer = 0,
-  x = 144,
-  y = 189,
-  sprite = "entities/stone_small_white",
-  weight = -1,
+  x = 56,
+  y = 45,
+  direction = 3,
+  breed = "pike_fixed",
 }
 
-destructible{
+enemy{
   layer = 0,
-  x = 160,
-  y = 189,
-  sprite = "entities/pot",
+  x = 72,
+  y = 45,
+  direction = 3,
+  breed = "pike_fixed",
 }
 
-block{
+enemy{
+  layer = 0,
+  x = 88,
+  y = 45,
+  direction = 3,
+  breed = "pike_fixed",
+}
+
+enemy{
   layer = 0,
   x = 104,
-  y = 53,
-  direction = -1,
-  sprite = "entities/gray_block",
-  pushable = false,
-  pullable = false,
-  maximum_moves = 0,
+  y = 45,
+  direction = 3,
+  breed = "pike_fixed",
 }
 
-block{
+enemy{
+  layer = 0,
+  x = 120,
+  y = 45,
+  direction = 3,
+  breed = "pike_fixed",
+}
+
+enemy{
+  layer = 0,
+  x = 136,
+  y = 45,
+  direction = 3,
+  breed = "pike_fixed",
+}
+
+enemy{
   layer = 0,
   x = 152,
-  y = 53,
-  direction = -1,
-  sprite = "entities/block",
-  pushable = true,
-  pullable = false,
-  maximum_moves = 2,
+  y = 45,
+  direction = 3,
+  breed = "pike_fixed",
 }
 
-switch{
+enemy{
   layer = 0,
-  x = 160,
-  y = 40,
-  subtype = "walkable",
-  sprite = "entities/switch",
-  sound = "switch",
-  needs_block = true,
-  inactivate_when_leaving = false,
-}
-
-switch{
-  layer = 0,
-  x = 128,
-  y = 40,
-  subtype = "walkable",
-  sprite = "entities/gray_switch",
-  needs_block = true,
-  inactivate_when_leaving = false,
-}
-
-tile{
-  layer = 1,
-  x = 64,
-  y = 136,
-  width = 24,
-  height = 24,
-  pattern = "53",
-}
-
-tile{
-  layer = 1,
-  x = 64,
-  y = 144,
-  width = 24,
-  height = 24,
-  pattern = "55",
-}
-
-tile{
-  layer = 1,
-  x = 136,
-  y = 104,
-  width = 32,
-  height = 24,
-  pattern = "49",
-}
-
-tile{
-  layer = 1,
-  x = 120,
-  y = 80,
-  width = 24,
-  height = 32,
-  pattern = "50",
-}
-
-tile{
-  layer = 1,
-  x = 120,
-  y = 104,
-  width = 24,
-  height = 24,
-  pattern = "55",
-}
-
-tile{
-  layer = 1,
-  x = 88,
-  y = 104,
-  width = 24,
-  height = 16,
-  pattern = "51",
-}
-
-tile{
-  layer = 1,
-  x = 80,
-  y = 88,
-  width = 16,
-  height = 24,
-  pattern = "52",
-}
-
-tile{
-  layer = 1,
-  x = 80,
-  y = 112,
-  width = 16,
-  height = 24,
-  pattern = "49",
-}
-
-tile{
-  layer = 1,
-  x = 64,
-  y = 104,
-  width = 24,
-  height = 16,
-  pattern = "50",
-}
-
-tile{
-  layer = 1,
-  x = 8,
-  y = 8,
-  width = 24,
-  height = 24,
-  pattern = "45",
-}
-
-tile{
-  layer = 1,
-  x = 8,
-  y = 208,
-  width = 24,
-  height = 24,
-  pattern = "47",
-}
-
-tile{
-  layer = 1,
-  x = 288,
-  y = 8,
-  width = 24,
-  height = 24,
-  pattern = "46",
-}
-
-tile{
-  layer = 1,
-  x = 288,
-  y = 208,
-  width = 24,
-  height = 24,
-  pattern = "48",
-}
-
-tile{
-  layer = 1,
-  x = 8,
-  y = 32,
-  width = 24,
-  height = 176,
-  pattern = "51",
-}
-
-tile{
-  layer = 1,
-  x = 32,
-  y = 8,
-  width = 256,
-  height = 24,
-  pattern = "49",
-}
-
-tile{
-  layer = 1,
-  x = 288,
-  y = 32,
-  width = 24,
-  height = 176,
-  pattern = "50",
-}
-
-tile{
-  layer = 1,
-  x = 32,
-  y = 208,
-  width = 256,
-  height = 24,
-  pattern = "52",
-}
-
-tile{
-  layer = 1,
-  x = 32,
-  y = 40,
-  width = 8,
-  height = 160,
-  pattern = "181",
-}
-
-tile{
-  layer = 1,
-  x = 40,
-  y = 200,
-  width = 240,
-  height = 8,
-  pattern = "180",
-}
-
-tile{
-  layer = 1,
-  x = 280,
-  y = 40,
-  width = 8,
-  height = 160,
-  pattern = "182",
-}
-
-tile{
-  layer = 1,
-  x = 40,
-  y = 32,
-  width = 240,
-  height = 8,
-  pattern = "179",
-}
-
-tile{
-  layer = 1,
-  x = 32,
-  y = 200,
-  width = 8,
-  height = 8,
-  pattern = "16",
-}
-
-tile{
-  layer = 1,
-  x = 280,
-  y = 32,
-  width = 8,
-  height = 8,
-  pattern = "15",
-}
-
-tile{
-  layer = 1,
-  x = 32,
-  y = 32,
-  width = 8,
-  height = 8,
-  pattern = "14",
-}
-
-tile{
-  layer = 1,
-  x = 280,
-  y = 200,
-  width = 8,
-  height = 8,
-  pattern = "17",
-}
-
-tile{
-  layer = 1,
-  x = 72,
-  y = 144,
-  width = 24,
-  height = 24,
-  pattern = "56",
-}
-
-tile{
-  layer = 1,
-  x = 88,
-  y = 112,
-  width = 24,
-  height = 24,
-  pattern = "56",
-}
-
-tile{
-  layer = 1,
-  x = 88,
-  y = 88,
-  width = 24,
-  height = 24,
-  pattern = "54",
-}
-
-tile{
-  layer = 1,
-  x = 64,
-  y = 88,
-  width = 24,
-  height = 24,
-  pattern = "53",
-}
-
-tile{
-  layer = 1,
-  x = 64,
-  y = 112,
-  width = 24,
-  height = 24,
-  pattern = "55",
-}
-
-tile{
-  layer = 1,
-  x = 136,
-  y = 64,
-  width = 32,
-  height = 24,
-  pattern = "52",
-}
-
-tile{
-  layer = 1,
-  x = 160,
-  y = 80,
-  width = 24,
-  height = 32,
-  pattern = "51",
-}
-
-tile{
-  layer = 1,
-  x = 160,
-  y = 104,
-  width = 24,
-  height = 24,
-  pattern = "56",
-}
-
-tile{
-  layer = 1,
-  x = 160,
-  y = 64,
-  width = 24,
-  height = 24,
-  pattern = "54",
-}
-
-tile{
-  layer = 1,
-  x = 120,
-  y = 64,
-  width = 24,
-  height = 24,
-  pattern = "53",
-}
-
-tile{
-  layer = 1,
-  x = 72,
-  y = 136,
-  width = 24,
-  height = 24,
-  pattern = "54",
-}
-
-tile{
-  layer = 1,
-  x = 80,
-  y = 152,
-  width = 8,
-  height = 8,
-  pattern = "14",
-}
-
-tile{
-  layer = 1,
-  x = 80,
-  y = 144,
-  width = 8,
-  height = 8,
-  pattern = "16",
-}
-
-tile{
-  layer = 1,
-  x = 72,
-  y = 152,
-  width = 8,
-  height = 8,
-  pattern = "15",
-}
-
-tile{
-  layer = 1,
-  x = 72,
-  y = 144,
-  width = 8,
-  height = 8,
-  pattern = "17",
-}
-
-tile{
-  layer = 1,
-  x = 144,
-  y = 144,
-  width = 8,
-  height = 16,
-  pattern = "71",
-}
-
-tile{
-  layer = 1,
-  x = 112,
-  y = 160,
-  width = 16,
-  height = 8,
-  pattern = "70",
-}
-
-tile{
-  layer = 1,
-  x = 96,
-  y = 176,
-  width = 8,
-  height = 8,
-  pattern = "69",
-}
-
-tile{
-  layer = 1,
-  x = 104,
-  y = 184,
-  width = 8,
-  height = 8,
-  pattern = "69",
-}
-
-tile{
-  layer = 1,
-  x = 104,
-  y = 176,
-  width = 8,
-  height = 8,
-  pattern = "408",
-}
-
-tile{
-  layer = 1,
-  x = 96,
-  y = 184,
-  width = 8,
-  height = 8,
-  pattern = "408",
-}
-
-tile{
-  layer = 1,
-  x = 112,
-  y = 152,
-  width = 16,
-  height = 8,
-  pattern = "409",
-}
-
-tile{
-  layer = 1,
-  x = 104,
-  y = 160,
-  width = 8,
-  height = 8,
-  pattern = "69",
-}
-
-tile{
-  layer = 1,
-  x = 104,
-  y = 152,
-  width = 8,
-  height = 8,
-  pattern = "408",
-}
-
-tile{
-  layer = 1,
-  x = 128,
-  y = 152,
-  width = 8,
-  height = 8,
-  pattern = "408",
-}
-
-tile{
-  layer = 1,
-  x = 128,
-  y = 160,
-  width = 8,
-  height = 8,
-  pattern = "69",
-}
-
-tile{
-  layer = 1,
-  x = 136,
-  y = 160,
-  width = 8,
-  height = 8,
-  pattern = "408",
-}
-
-tile{
-  layer = 1,
-  x = 136,
-  y = 144,
-  width = 8,
-  height = 16,
-  pattern = "410",
-}
-
-tile{
-  layer = 1,
-  x = 136,
-  y = 136,
-  width = 8,
-  height = 8,
-  pattern = "408",
-}
-
-tile{
-  layer = 1,
-  x = 144,
-  y = 160,
-  width = 8,
-  height = 8,
-  pattern = "69",
-}
-
-tile{
-  layer = 1,
-  x = 144,
-  y = 136,
-  width = 8,
-  height = 8,
-  pattern = "69",
-}
-
-tile{
-  layer = 1,
   x = 168,
-  y = 88,
-  width = 8,
-  height = 16,
-  pattern = "486",
+  y = 45,
+  direction = 3,
+  breed = "pike_fixed",
 }
 
-tile{
-  layer = 1,
-  x = 40,
-  y = 168,
-  width = 32,
-  height = 32,
-  pattern = "340",
+enemy{
+  layer = 0,
+  x = 184,
+  y = 45,
+  direction = 3,
+  breed = "pike_fixed",
 }
 
-tile{
-  layer = 1,
-  x = 48,
-  y = 144,
-  width = 16,
-  height = 24,
-  pattern = "340",
+enemy{
+  layer = 0,
+  x = 200,
+  y = 45,
+  direction = 3,
+  breed = "pike_fixed",
 }
 
-tile{
-  layer = 1,
-  x = 56,
-  y = 168,
-  width = 8,
-  height = 8,
-  pattern = "339",
-}
-
-tile{
-  layer = 1,
-  x = 48,
-  y = 168,
-  width = 8,
-  height = 8,
-  pattern = "338",
-}
-
-tile{
-  layer = 1,
-  x = 40,
-  y = 168,
-  width = 8,
-  height = 8,
-  pattern = "328",
-}
-
-tile{
-  layer = 1,
-  x = 40,
-  y = 192,
-  width = 8,
-  height = 8,
-  pattern = "329",
-}
-
-tile{
-  layer = 1,
-  x = 64,
-  y = 192,
-  width = 8,
-  height = 8,
-  pattern = "330",
-}
-
-tile{
-  layer = 1,
-  x = 80,
-  y = 168,
-  width = 8,
-  height = 8,
-  pattern = "331",
-}
-
-tile{
-  layer = 1,
-  x = 56,
-  y = 144,
-  width = 8,
-  height = 8,
-  pattern = "331",
-}
-
-tile{
-  layer = 1,
-  x = 48,
-  y = 144,
-  width = 8,
-  height = 8,
-  pattern = "328",
-}
-
-tile{
-  layer = 1,
-  x = 48,
-  y = 152,
-  width = 8,
-  height = 16,
-  pattern = "333",
-}
-
-tile{
-  layer = 1,
-  x = 56,
-  y = 152,
-  width = 8,
-  height = 16,
-  pattern = "335",
-}
-
-tile{
-  layer = 1,
-  x = 64,
-  y = 176,
-  width = 8,
-  height = 16,
-  pattern = "335",
-}
-
-tile{
-  layer = 1,
-  x = 48,
-  y = 192,
-  width = 16,
-  height = 8,
-  pattern = "334",
-}
-
-tile{
-  layer = 1,
-  x = 40,
-  y = 176,
-  width = 8,
-  height = 16,
-  pattern = "333",
-}
-
-tile{
-  layer = 1,
-  x = 64,
-  y = 168,
-  width = 16,
-  height = 8,
-  pattern = "332",
-}
-
-tile{
-  layer = 2,
+enemy{
+  layer = 0,
   x = 216,
-  y = 96,
-  width = 16,
-  height = 16,
-  pattern = "481",
+  y = 45,
+  direction = 3,
+  breed = "pike_fixed",
 }
 
-tile{
-  layer = 2,
+enemy{
+  layer = 0,
+  x = 232,
+  y = 45,
+  direction = 3,
+  breed = "pike_fixed",
+}
+
+enemy{
+  layer = 0,
+  x = 248,
+  y = 45,
+  direction = 3,
+  breed = "pike_fixed",
+}
+
+enemy{
+  layer = 0,
+  x = 280,
+  y = 45,
+  direction = 3,
+  breed = "pike_fixed",
+}
+
+enemy{
+  layer = 0,
+  x = 280,
+  y = 61,
+  direction = 3,
+  breed = "pike_fixed",
+}
+
+enemy{
+  layer = 0,
+  x = 280,
+  y = 77,
+  direction = 3,
+  breed = "pike_fixed",
+}
+
+enemy{
+  layer = 0,
+  x = 280,
+  y = 93,
+  direction = 3,
+  breed = "pike_fixed",
+}
+
+enemy{
+  layer = 0,
+  x = 280,
+  y = 109,
+  direction = 3,
+  breed = "pike_fixed",
+}
+
+enemy{
+  layer = 0,
+  x = 280,
+  y = 125,
+  direction = 3,
+  breed = "pike_fixed",
+}
+
+enemy{
+  layer = 0,
+  x = 280,
+  y = 141,
+  direction = 3,
+  breed = "pike_fixed",
+}
+
+enemy{
+  layer = 0,
+  x = 280,
+  y = 157,
+  direction = 3,
+  breed = "pike_fixed",
+}
+
+enemy{
+  layer = 0,
+  x = 280,
+  y = 173,
+  direction = 3,
+  breed = "pike_fixed",
+}
+
+enemy{
+  layer = 0,
+  x = 264,
+  y = 205,
+  direction = 3,
+  breed = "pike_fixed",
+}
+
+enemy{
+  layer = 0,
+  x = 40,
+  y = 205,
+  direction = 3,
+  breed = "pike_fixed",
+}
+
+enemy{
+  layer = 0,
+  x = 56,
+  y = 205,
+  direction = 3,
+  breed = "pike_fixed",
+}
+
+enemy{
+  layer = 0,
+  x = 72,
+  y = 205,
+  direction = 3,
+  breed = "pike_fixed",
+}
+
+enemy{
+  layer = 0,
+  x = 88,
+  y = 205,
+  direction = 3,
+  breed = "pike_fixed",
+}
+
+enemy{
+  layer = 0,
+  x = 104,
+  y = 205,
+  direction = 3,
+  breed = "pike_fixed",
+}
+
+enemy{
+  layer = 0,
+  x = 120,
+  y = 205,
+  direction = 3,
+  breed = "pike_fixed",
+}
+
+enemy{
+  layer = 0,
+  x = 136,
+  y = 205,
+  direction = 3,
+  breed = "pike_fixed",
+}
+
+enemy{
+  layer = 0,
+  x = 152,
+  y = 205,
+  direction = 3,
+  breed = "pike_fixed",
+}
+
+enemy{
+  layer = 0,
+  x = 168,
+  y = 205,
+  direction = 3,
+  breed = "pike_fixed",
+}
+
+enemy{
+  layer = 0,
+  x = 184,
+  y = 205,
+  direction = 3,
+  breed = "pike_fixed",
+}
+
+enemy{
+  layer = 0,
+  x = 200,
+  y = 205,
+  direction = 3,
+  breed = "pike_fixed",
+}
+
+enemy{
+  layer = 0,
+  x = 216,
+  y = 205,
+  direction = 3,
+  breed = "pike_fixed",
+}
+
+enemy{
+  layer = 0,
+  x = 232,
+  y = 205,
+  direction = 3,
+  breed = "pike_fixed",
+}
+
+enemy{
+  layer = 0,
+  x = 248,
+  y = 205,
+  direction = 3,
+  breed = "pike_fixed",
+}
+
+enemy{
+  layer = 0,
+  x = 40,
+  y = 61,
+  direction = 3,
+  breed = "pike_fixed",
+}
+
+enemy{
+  layer = 0,
+  x = 40,
+  y = 77,
+  direction = 3,
+  breed = "pike_fixed",
+}
+
+enemy{
+  layer = 0,
+  x = 40,
+  y = 93,
+  direction = 3,
+  breed = "pike_fixed",
+}
+
+enemy{
+  layer = 0,
+  x = 40,
+  y = 109,
+  direction = 3,
+  breed = "pike_fixed",
+}
+
+enemy{
+  layer = 0,
+  x = 40,
+  y = 125,
+  direction = 3,
+  breed = "pike_fixed",
+}
+
+enemy{
+  layer = 0,
+  x = 40,
+  y = 141,
+  direction = 3,
+  breed = "pike_fixed",
+}
+
+enemy{
+  layer = 0,
+  x = 40,
+  y = 157,
+  direction = 3,
+  breed = "pike_fixed",
+}
+
+enemy{
+  layer = 0,
+  x = 40,
+  y = 173,
+  direction = 3,
+  breed = "pike_fixed",
+}
+
+enemy{
+  layer = 0,
+  x = 56,
+  y = 157,
+  direction = 3,
+  breed = "pike_fixed",
+}
+
+enemy{
+  layer = 0,
   x = 144,
-  y = 88,
-  width = 16,
-  height = 16,
-  pattern = "170",
+  y = 93,
+  direction = 3,
+  breed = "pike_fixed",
+}
+
+enemy{
+  layer = 0,
+  x = 88,
+  y = 93,
+  direction = 3,
+  breed = "pike_fixed",
+}
+
+enemy{
+  layer = 0,
+  x = 160,
+  y = 109,
+  direction = 3,
+  breed = "pike_fixed",
+}
+
+enemy{
+  layer = 0,
+  x = 104,
+  y = 109,
+  direction = 3,
+  breed = "pike_fixed",
+}
+
+enemy{
+  layer = 0,
+  x = 160,
+  y = 125,
+  direction = 3,
+  breed = "pike_fixed",
+}
+
+enemy{
+  layer = 0,
+  x = 88,
+  y = 125,
+  direction = 3,
+  breed = "pike_fixed",
+}
+
+enemy{
+  layer = 0,
+  x = 144,
+  y = 141,
+  direction = 3,
+  breed = "pike_fixed",
+}
+
+enemy{
+  layer = 0,
+  x = 72,
+  y = 141,
+  direction = 3,
+  breed = "pike_fixed",
+}
+
+enemy{
+  layer = 0,
+  x = 128,
+  y = 157,
+  direction = 3,
+  breed = "pike_fixed",
+}
+
+enemy{
+  layer = 0,
+  x = 280,
+  y = 205,
+  direction = 3,
+  breed = "pike_fixed",
+}
+
+enemy{
+  layer = 0,
+  x = 280,
+  y = 189,
+  direction = 3,
+  breed = "pike_fixed",
+}
+
+enemy{
+  layer = 0,
+  x = 264,
+  y = 45,
+  direction = 3,
+  breed = "pike_fixed",
+}
+
+enemy{
+  layer = 0,
+  x = 40,
+  y = 189,
+  direction = 3,
+  breed = "pike_fixed",
 }
 

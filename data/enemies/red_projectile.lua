@@ -18,6 +18,7 @@ function enemy:on_created()
   self:set_obstacle_behavior("flying")
   self:set_optimization_distance(0)
   self:set_layer_independent_collisions(true)
+  self:set_minimum_shield_needed(1)
 
   -- Two smaller fireballs just for the displaying.
   sprite2 = sol.sprite.create("enemies/red_projectile")
@@ -43,6 +44,9 @@ function enemy:on_movement_finished(movement)
   self:remove()
 end
 
+function enemy:on_obstacle_reached()
+  self:remove()
+end
 
 function enemy:on_pre_draw()
   if m ~= nil then
