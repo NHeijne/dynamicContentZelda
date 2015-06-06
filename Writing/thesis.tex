@@ -31,13 +31,16 @@ The purpose of this thesis is to show how it is possible to modify much of the g
 To answer this question, it is necessary to know the emotional reaction of a given player to a combination of game elements. Therefore, a secondary goal will be to estimate that reaction without pausing the game to ask the player.
 \begin{itemize} \item[\textbf{2.}] How can the emotional state of a player be accurately determined using in-game data? \end{itemize}
 
-To answer these questions, the proposed system has been applied to an example game based on \emph{The Legend of Zelda}. This environment is used to quantify the system's accuracy and demonstrates how it can be generalized over multiple situations and different types of players. 
+To answer these questions, the proposed system has been applied to an example game based on \emph{The Legend of Zelda}. This environment is used to quantify the system's accuracy and demonstrates how it can be applied to players' different skill levels. It also shows how the system can be applied generically over different in-game settings, and provides an approach for predicting the effect of unseen elements.
 
 \section{Related Work}
 
 \section{Method}
 \subsection{Setup}
-The system consists of two subsystems. The first estimates the difficulty level of an encounter after it has been completed, using only information on player behaviour which can be gathered during the encounter. This model is constructed before runtime, using data labeled by the players themselves.
+% stress measuring
+% player profiler
+
+The consists of two subsystems. The first estimates the difficulty level of an encounter after it has been completed, using only information on player behaviour which can be gathered during the encounter. This model is constructed before runtime, using data labeled by the players themselves.
 
 The second subsystem uses the results of the first to construct a model which predicts the difficulty level of an encounter using only the data which is known before the encounter is presented to the player. This model is constructed and updated at runtime, using the results given by the first model as labels for supervision. It is then reverse-engineered to generate an encounter given a desired difficulty.
 
@@ -74,6 +77,14 @@ Once every enemy has been encountered once, enough data will be available to mak
 \section{Results} \label{fig:results}
 \subsection{Models}
 The final model was generated using Weka \cite{weka}.
+
+\begin{tabular}{ | n | a | b | c | d | } \hline
+Classifier & MAE & RMSE & RAE (\%) & RRSE (\%) \\ \hline
+Pace regression & 1.1066 & 1.551 & 71.3851 & 82.9991 \\ \hline
+SMO regression & 1.0634 & 1.6185 & 68.6005 & 86.6108 \\ \hline
+M5 rules & 1.0933 & 1.4334 & 70.5283 & 76.7064 \\ \hline
+Gaussian processes & 0.999 & 1.294 & 64.4455 & 69.2444 \\ \hline
+\end{tabular}
 
 \subsection{Generalizability}
 
