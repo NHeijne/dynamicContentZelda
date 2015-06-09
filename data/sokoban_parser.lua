@@ -73,7 +73,7 @@ end
 function sp.get_sokoban_puzzle( area, difficulty )
 	if not sp.sokoban_problems then sp.parse_files() end
 	local max_x, max_y = math.floor((area.x2-area.x1)/16), math.floor((area.y2-area.y1)/16)
-	local max_dimensions = {x=max_x, y=max_y}
+	local max_dimensions = {max=math.max(max_x, max_y), min=math.min(max_y, max_x)}
 	return sp.select_puzzle( max_dimensions , difficulty )
 end
 
@@ -83,7 +83,10 @@ function sp.select_puzzle( max_dimensions, difficulty )
 	while true do
 		local picked_puzzle = table.remove(puzzles, 1)--math.random(#puzzles))
 		local problem = sp.sokoban_problems[picked_puzzle]
-		if ( max_dimensions == nil or (problem.dim.x <= max_dimensions.x and problem.dim.y < max_dimensions.y) ) then
+		if not problem then return false end
+		if ( max_dimensions == nil 
+			or (problem.dim.x <= max_dimensions.min and problem.dim.y <= max_dimensions.max) 
+			or (problem.dim.y <= max_dimensions.min and problem.dim.x <= max_dimensions.max) ) then
 
 			return problem
 		end
@@ -112,20 +115,20 @@ function sp.string_to_table ( str )
 end
 
 -- 0:east - 3:south
-function sp.get_direction_of_entrance( puzzle_table, max_dimensions )
+function sp.get_direction_of_entrance( puzzle_table, dimensions )
 	-- check left and right side
 	for i=1, #puzzle_table do
 		if puzzle_table[i][1] == "@" then return 2 end
-		if puzzle_table[i][max_dimensions.x] == "@" then return 0 end
+		if puzzle_table[i][dimensions.x] == "@" then return 0 end
 	end
 	-- check top and bottom side
 	for i=1, #puzzle_table[1] do
 		if puzzle_table[1][i] == "@" then return 1 end
-		if puzzle_table[max_dimensions.y][i] == "@" then return 3 end
+		if puzzle_table[dimensions.y][i] == "@" then return 3 end
 	end
 end
 
-function sp.get_sorted_list_of_objects( puzzle_table, max_dimensions, area ) -- objects are all 16 x 16
+function sp.get_sorted_list_of_objects( puzzle_table, area ) -- objects are all 16 x 16
 	log.debug("get_sorted_list_of_objects")
 	local conversion_table = { ["@"]={"entrance"}, ["#"]={"wall"}, ["*"]={"block", "goal"}, ["$"]={"block"}, ["."]={"goal"}, ["_"]={"floor"}, ["E"]={"exit"} }
 	local output_table = { ["wall"]={}, ["floor"]={}, ["block"]={}, ["goal"]={}, ["entrance"]={}, ["exit"]={} }

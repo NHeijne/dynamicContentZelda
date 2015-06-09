@@ -4,6 +4,7 @@ local space_gen 		= require("space_generator")
 local lookup 			= require("data_lookup")
 local fight_generator 	= require("fight_generator")
 local maze_generator 	= require("maze_generator")
+local pike_room 		= require("moving_pike_room")
 
 local log 				= require("log")
 local table_util 		= require("table_util")
@@ -49,7 +50,7 @@ function content.start_test(given_map, params, end_destination)
 	if tileset_id == 1 or tileset_id == 2 then outside = true end
 	mission_grammar.update_keys_and_barriers(game)
 	params = params or {}
-	local standard_params = {branches=4, branch_length=2, fights=6, puzzles=0, length=6, outside=outside, mission_type="normal", area_size=1} 
+	local standard_params = {branches=4, branch_length=0, fights=0, puzzles=3, length=3, outside=outside, mission_type="normal", area_size=1} 
 	for k,v in pairs(standard_params) do
 		if params[k] == nil then params[k]=v end
 	end
@@ -99,8 +100,9 @@ function content.start_test(given_map, params, end_destination)
 		log.debug("filling in area "..k)
 		log.debug("creating area_type " .. content.area_details[k].area_type)
 		if table_util.contains({"P", "TP"}, content.area_details[k].area_type) then 
-			maze_generator.set_room(a.area, 16, 8, "mazeprop_area_"..k)
-			content.makeSingleMaze(a.area, exit_areas[k], content.area_details, exclusion_areas[k], layer)
+			--maze_generator.set_room(a.area, 16, 8, "mazeprop_area_"..k)
+			--content.makeSingleMaze(a.area, exit_areas[k], content.area_details, exclusion_areas[k], layer)
+			pike_room.create_pike_room( k, content.area_details, map, a.area, exit_areas[k] )
 		end
 		if content.area_details[k].area_type == "C" then
 			local equipment = table_util.split(content.area_details[k].contains_items[1], ":")[2] -- quick solution, should be checked for normal and equipment items
@@ -654,6 +656,7 @@ function content.create_simple_forest_map(areas, area_details, end_destination)
     for areanumber, a in pairs(areas["walkable"]) do
     	a.throwables = {["bush"]=0, ["white_rock"]=0}
     	a.contact_length = {["pitfall"]=0, ["spikes"]=0}
+    	content.place_tile(area_util.resize_area(a.area, {-16, -16, 16, 16}), 7, "room_floor_"..areanumber, 0)
     end
 
 	for areanumber,connections in pairs(areas["exit"]) do
@@ -665,7 +668,7 @@ function content.create_simple_forest_map(areas, area_details, end_destination)
 				exclusion_areas_trees[ex] = area
 				table.insert(exit_areas[areanumber], area_util.get_side(area, (direction+2)%4))
 				--content.spread_props(area, 24, {{"flower1","flower2", "fullgrass"}}, 1) 
-				--content.place_tile(area, 8, "transition", 0)
+				content.place_tile(area, 7, "transition", 0)
 				local added_throwables = content.create_simple_barriers( area_details, area_util.from_center(area, 32, 32), direction, areanumber, area.to_area )
 				if added_throwables then 
 					areas["walkable"][areanumber].throwables.bush = areas["walkable"][areanumber].throwables.bush + added_throwables.bush
@@ -680,6 +683,7 @@ function content.create_simple_forest_map(areas, area_details, end_destination)
 			for direction, area in pairs(connection) do
 				ex=ex+1
 				exclusion_areas_trees[ex] = area
+				content.place_tile(area, 7, "transition", 0)
 				table.insert(exit_areas[areanumber], 1, area_util.get_side(area, (direction+2)%4))
 			end
 		end
@@ -793,6 +797,13 @@ end
 function content.create_simple_dungeon_map(areas, area_details, end_destination)
 	local tileset = area_details.tileset_id
 
+	for areanumber, a in pairs(areas["walkable"]) do
+    	a.throwables = {["bush"]=0, ["white_rock"]=0}
+    	log.debug("placing floor")
+		content.place_tile(area_util.resize_area(a.area, {-16, -16, 16, 16}), lookup.tiles["dungeon_floor"][tileset], "room_floor_"..areanumber, 0)
+		content.place_edge_tiles(a.area, 8, "floor")
+    end
+
     -- walls
     for areanumber, a in pairs(areas["nodes"]) do
 		content.place_edge_tiles(area_util.resize_area(a.area, {8, 8, -8, -8}), 24, "wall")
@@ -800,13 +811,6 @@ function content.create_simple_dungeon_map(areas, area_details, end_destination)
 			local side = area_util.get_side(a.area, dir, -8, 0)				
 			content.place_tile(side, lookup.tiles["dungeon_spacer"][tileset], "spacer", 1)
 		end
-    end
-
-    for areanumber, a in pairs(areas["walkable"]) do
-    	a.throwables = {["bush"]=0, ["white_rock"]=0}
-    	log.debug("placing floor")
-		content.place_tile(a.area, lookup.tiles["dungeon_floor"][tileset], "walkable", 0)
-		content.place_edge_tiles(a.area, 8, "floor")
     end
 
     -- transitions
@@ -1105,6 +1109,9 @@ function content.plant_trees(area, exclude_these)
 		previous_treeline = current_treeline
 	end
 	-- visualize
+	for _, tl in ipairs(treeline_area_list) do
+		content.place_tile(area_util.resize_area(tl, {-32, -16, 32, 0}), 7, "forest", 0)
+	end
 	for _, tl in ipairs(treeline_area_list) do
 		-- content.show_corners(tl)
 		--left side

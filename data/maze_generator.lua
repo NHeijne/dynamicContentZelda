@@ -210,6 +210,23 @@ function maze_gen.get_neighbors(maze, position, only_get_unvisited)
 	return neighbors
 end
 
+-- if width contains decimals it will grab one extra row and column on the leftbottom side
+function maze_gen.get_nodes_around_pos(maze, position, width, only_get_unvisited)
+	local nodes = {}
+	local pos_list = {}
+	for x=position.x-math.ceil(width), position.x+math.floor(width) do
+		if maze[x] then
+			for y=position.y-math.ceil(width), position.y+math.floor(width) do
+				if maze[x][y] and ( not only_get_unvisited or not maze[x][y].visited )then
+					table.insert(pos_list, {x=x, y=y})
+					table.insert(nodes, maze[x][y])
+				end
+			end
+		end
+	end
+	return nodes, pos_list
+end
+
 function maze_gen.pos_to_area( pos )
 	local x1 = room.x1 + room.wall_width.x + (pos.x-1)*(room.wall_width.x+room.corridor_width.x)
 	local y1 = room.y1 + room.wall_width.y + (pos.y-1)*(room.wall_width.y+room.corridor_width.y)
@@ -496,8 +513,9 @@ function maze_gen.recursive_rooms( maze, area_details, areanumber, pos )
 	maze[pos.x][pos.y].areanumber = areanumber
 	-- expand the area if P or F
 	local room_positions={pos}
-	if table_util.contains({"F", "P", "TP", "TF"}, area_details[areanumber].area_type) and area_size > 1 or area_details[areanumber].area_type == "BOSS" then
-		if area_size >= 2 or area_details[areanumber].area_type == "BOSS" then
+	local area_type = area_details[areanumber].area_type
+	if table_util.contains({"F", "TF"}, area_type) and area_size > 1 or table_util.contains({"BOSS", "P", "TP"}, area_type) then
+		if area_size >= 2 or table_util.contains({"BOSS", "P", "TP"}, area_type) then
 			local neighbors = maze_gen.get_neighbors(maze, pos, true)
 			local second_neighbor = maze_gen.get_most_isolated_neighbor( maze, neighbors )
 			room_positions[2] = second_neighbor.pos
@@ -629,18 +647,21 @@ end
 ------------------------------------------------------------------------------------------------------------------------------
 
 
-function maze_gen.generate_path( exit_areas, straight_path )
+function maze_gen.generate_path( exit_areas, straight_path, path_width, intersections )
 	-- for inside the areas
+	local intersections = intersections or {x=4, y=4}
+	local path_width = path_width or 0.5
 	local wall_width, corridor_width = room.wall_width, room.corridor_width
 	local maze = {}
 	maze_gen.initialize_maze( maze, room, wall_width, corridor_width )
+	log.debug(exit_areas)
 	local exits = maze_gen.open_exits( maze, exit_areas, room, wall_width, corridor_width )
 	-- check along the path what the max distance is to the exits
 	local paths = maze_gen.create_initial_paths( maze, exits )
 	if not straight_path then
 		-- get not visited, pick a spot, create a branch
 		local available_points = {}
-		local stepsize_x, stepsize_y = math.ceil(#maze/math.floor(#maze/6)), math.ceil(#maze[1]/math.floor(#maze[1]/6))
+		local stepsize_x, stepsize_y = math.ceil(#maze/math.floor(#maze/(intersections.x+2))), math.ceil(#maze[1]/math.floor(#maze[1]/(intersections.y+2)))
 		local max_x, max_y =  #maze-1, #maze[1]-1
 		for i=2, #maze-1, stepsize_x do
 			for j=2, #maze[1]-1, stepsize_y do
@@ -658,27 +679,25 @@ function maze_gen.generate_path( exit_areas, straight_path )
 	end
 	-- got a path to all exits
 	for _,path in ipairs(paths) do
-		for _, node in ipairs(path) do
-			local neighbors = maze_gen.get_neighbors(maze, node)
-			for _, n in ipairs(neighbors) do
-				maze[n.pos.x][n.pos.y].visited = true
+		for _, pos in ipairs(path) do
+			local nodes_to_clear = maze_gen.get_nodes_around_pos(maze, pos, path_width)
+			for _,node in ipairs(nodes_to_clear) do
+				node.visited = true
 			end
 		end
 	end
 	for _,exit_list in ipairs(exits) do
-		neighbors = maze_gen.get_neighbors(maze, exit_list[math.ceil(#exit_list/2)])
-		for _, n in ipairs(neighbors) do
-			neighbors = maze_gen.get_neighbors(maze, n.pos)
-			for _, n2 in ipairs(neighbors) do
-				maze[n2.pos.x][n2.pos.y].visited = "exit"
+		for _, pos in ipairs(exit_list) do
+			local nodes_to_clear = maze_gen.get_nodes_around_pos(maze, pos, 2)
+			for _,node in ipairs(nodes_to_clear) do
+				node.visited = "exit"
 			end
-			maze[n.pos.x][n.pos.y].visited = "exit"
 		end
 	end
 	-- we have an expanded path, now to make areas from those nodes
 	local closed_areas = maze_gen.maze_to_square_areas( maze, false )
 	local open_areas = maze_gen.maze_to_square_areas( maze, true )
-	return open_areas, closed_areas
+	return open_areas, closed_areas, maze
 end
 
 
@@ -859,23 +878,6 @@ end
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 -- plannin types of additions:
 -- pikes (hero near) and always moving
 
@@ -902,11 +904,22 @@ end
 function maze_gen.put_in_sokoban_puzzle( maze, maze_entrance )
 	log.debug("put_in_sokoban_puzzle")
 	local problem = sokoban.get_random_sized_sokoban_puzzle( 1 )
+	if not problem then 
+		log.debug("problem is nil")
+		return maze_entrance 
+		else log.debug("problem is not nil")
+	end
 	local puzzle = sokoban.get_corrected_puzzle_table( problem, maze_entrance.direction )
-	local size_x, size_y = #puzzle[1], #puzzle
-	local maze_x, maze_y = #maze, #maze[1]
 	local ww, cw = room.wall_width, room.corridor_width
+	local size_x, size_y = #puzzle[1], #puzzle
 	local required_x, required_y = math.ceil(size_x * 16 / (ww.x+cw.x)), math.ceil( size_y * 16 / (cw.y+ww.y)) 
+	local maze_x, maze_y = #maze, #maze[1]
+	if required_x > maze_x - 2 or required_y > maze_y -2 then 
+		puzzle = sokoban.rotate_table_ccw( puzzle )
+		size_x, size_y = #puzzle[1], #puzzle 
+		required_x, required_y = math.ceil(size_x * 16 / (ww.x+cw.x)), math.ceil( size_y * 16 / (cw.y+ww.y)) 
+	end
+	
 	-- placed at the entrance, so we have more room for other stuff
 
 	local topleft_pos = {x=maze_entrance[#maze_entrance].x, y=maze_entrance[#maze_entrance].y}
@@ -917,7 +930,7 @@ function maze_gen.put_in_sokoban_puzzle( maze, maze_entrance )
 	local bottomright_pos = {x=topleft_pos.x+required_x-1, y=topleft_pos.y+required_y-1}
 	maze_gen.open_up_area( maze, topleft_pos, bottomright_pos )
 	-- convert into areas and place
-	local area_list = sokoban.get_sorted_list_of_objects( puzzle, {x=size_x, y=size_y}, maze_gen.nodes_to_area( topleft_pos, bottomright_pos, true ) )
+	local area_list = sokoban.get_sorted_list_of_objects( puzzle, maze_gen.nodes_to_area( topleft_pos, bottomright_pos, true ) )
 	sokoban.place_sokoban_puzzle( map, area_list )
 
 	-- open up exits in the maze for the sokoban puzzle

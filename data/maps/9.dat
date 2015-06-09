@@ -744,6 +744,87 @@ tile{
   pattern = "806",
 }
 
+tile{
+  layer = 0,
+  x = 104,
+  y = 8,
+  width = 64,
+  height = 32,
+  pattern = "14",
+}
+
+tile{
+  layer = 0,
+  x = 104,
+  y = 40,
+  width = 64,
+  height = 40,
+  pattern = "275",
+}
+
+tile{
+  layer = 0,
+  x = 104,
+  y = 64,
+  width = 64,
+  height = 8,
+  pattern = "547",
+}
+
+tile{
+  layer = 0,
+  x = 104,
+  y = 72,
+  width = 64,
+  height = 8,
+  pattern = "548",
+}
+
+tile{
+  layer = 0,
+  x = 104,
+  y = 40,
+  width = 16,
+  height = 16,
+  pattern = "554",
+}
+
+tile{
+  layer = 0,
+  x = 104,
+  y = 40,
+  width = 16,
+  height = 16,
+  pattern = "551",
+}
+
+tile{
+  layer = 0,
+  x = 104,
+  y = 48,
+  width = 64,
+  height = 8,
+  pattern = "547",
+}
+
+tile{
+  layer = 0,
+  x = 104,
+  y = 40,
+  width = 8,
+  height = 16,
+  pattern = "550",
+}
+
+tile{
+  layer = 0,
+  x = 104,
+  y = 40,
+  width = 64,
+  height = 8,
+  pattern = "548",
+}
+
 destination{
   layer = 0,
   x = 24,
