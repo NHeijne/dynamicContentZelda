@@ -6,6 +6,9 @@
 \usepackage{natbib}
 \usepackage{graphicx}
 \usepackage{enumerate}
+\usepackage{float}
+\usepackage{color}
+\restylefloat{table}
 
 \title{Adjusting difficulty based on automatically generated models of player skill}
 \author{Arjen Swellengrebel}
@@ -34,26 +37,24 @@ To answer this question, it is necessary to know the emotional reaction of a giv
 To answer these questions, the proposed system has been applied to an example game based on \emph{The Legend of Zelda}. This environment is used to quantify the system's accuracy and demonstrates how it can be applied to players' different skill levels. It also shows how the system can be applied generically over different in-game settings, and provides an approach for predicting the effect of unseen elements.
 
 \section{Related Work}
-%write
+\textcolor{red}{write}
 
 \section{Method}
-%write
-\subsection{Setup}
-%improve
-The consists of two subsystems. The first estimates the difficulty level of an encounter after it has been completed, using only information on player behaviour which can be gathered during the encounter. This model is constructed before runtime, using data labeled by the players themselves.
+The system proposed here consists of two subsystems. The first (hereafter the \emph{estimator}) estimates the amount of stress experienced after an encounter has been completed. This estimate is made using only information specific to the player's behaviour during that encounter. The estimator is constructed before runtime, using labeled data, and is applied equally to every player regardless of skill.
 
-The second subsystem uses the results of the first to construct a model which predicts the difficulty level of an encounter using only the data which is known before the encounter is presented to the player. This model is constructed and updated at runtime, using the results given by the first model as labels for supervision. It is then reverse-engineered to generate an encounter given a desired difficulty.
+The second subsystem (hereafter the \emph{builder}) predicts the difficulty level of an encounter before it is presented to the player. By necessity, it uses only information which is set when the encounter starts. This model is constructed and updated at runtime, using the results of the estimator as a supervisory signal. The model is created individually for each player.
 
-The two models differ in three important ways. Importantly, the first model is assumed to apply to all players regardless of skill, while the second will be different for evey player. Since the first is general, it can be constructed based on data gathered ahead of time. The second however is specific to the player and will need to be constructed at runtime. Third, the second model must only use the data which is known before the player plays the encounter, since it will be used to construct encounters later. The first however must use all data which is only known after the encounter is played, since that is the only data that can show how the player actually experiences it.
+\subsection{Application}
+\textcolor{red}{write}
 
 \subsection{Data}
-%improve
-The challenge experienced by a player is expressed on a scale from 1 to 10. Grades 1 through 5 are enjoyable difficulties. A difficulty of 1 means a complete absence of any difficulty, while 5 marks the maximum difficulty which is still enjoyable to the player. Grades of 6 through 10 represent inappropriate difficulties, 6 being just slightly too high, and 10 impossible to succeed at even with extensive practice.
+\textcolor{red}{improve}
+The emotional intensity experienced by a player is measured on a scale from 1 to 10. Intensities of grade 1 through 5 are enjoyable difficulties. A difficulty of 1 means a complete absence of any difficulty, while 5 marks the maximum difficulty which is still enjoyable to the player. Grades of 6 through 10 represent inappropriate difficulties, 6 being just slightly too high, and 10 impossible to succeed at even with extensive practice.
 
 Players were asked to play through a series of rooms containing variable numbers of enemies. In each of these rooms, three possible outcomes are possible: the player  defeats every enemy in the room, leaves the room prematurely, or loses all hearts and is defeated. In each of these cases the game was paused automatically and the player was asked to rate the perceived challenge of the room on the aforementioned scale. A description of the room was then recorded, along with a summary of the player's behaviour in that room and their report of its difficulty.
 
 \subsection{Assumptions}
-%improve
+\textcolor{red}{improve}
 The system relies on the assumption that the behaviour of a player experiencing some level of emotional intensity is the same regardless of skill. For example, a player who gets hit five times in a room will experience stress as a result of that fact, whether this is a skilled player fighting many enemies or a beginner fighting a single enemy. This assumption allows us to ascertain the stress level of a player without having to stop the game to ask them what it is.
 
 As will be shown in section \ref{fig:results}, this assumption is robust enough to show reasonable accuracy in the data. By including a variable denoting the player's experience with video games, that section will attempt to show exactly how robust the assumption is.
@@ -71,7 +72,7 @@ Enemies are decided and placed each time the player enters a room. Normal rooms 
 Two exceptions to this model are the tutorial room and the boss room. The tutorial rooms are simple forest locations which contain a single enemy each. The boss room is located at the end of the dungeon and contains a single \emph{papillosaur king}, a large enemy which shoots weaker versions of the \emph{minillosaur egg} enemy. This enemy must be defeated with three bombs, as it cannot be attacked with the sword.
 
 \subsection{Room construction}
-%improve
+\textcolor{red}{improve}
 To gather the largest amount of data possible from each room, each player should be presented with challenges they can conceivably overcome. To do this, rooms were created based on informal data gathered early in the development of the project. While this method does not produce results representative of the final product, it does produce setups which will result in somewhat appropriate challenges while still varying the data. To create additional variety in the dataset, eight percent of all encounters were set to an extreme difficulty. In all other rooms, players were presented with intended difficulties of 2 through 6.
 
 In order to start determining the right makeup of a combat encounter for a player, first gauge the reaction of that particular player to every possible enemy in the game must be estimated. Fortunately, this need coincides with the need to train the player in a reasonably safe environment. For these reasons, the player must first fight their way through a series of rooms that each contain one enemy, one room for each type. 
@@ -79,27 +80,37 @@ In order to start determining the right makeup of a combat encounter for a playe
 Once every enemy has been encountered once, enough data will be available to make a first estimate of the appropriate difficulty. Subsequent rooms will be constructed to slowly increase the difficulty for this player to a desirable level, starting at the lowest level. Starting at a lower difficulty decreases the risk of an encounter being constructed based on faulty data, which is a concern at this point because of sparsity. Each of the progressively more difficult rooms will increase the amount of data and thus decrease the margin of error on the formula. This way errors are most likely to occur in rooms with a low difficulty, which reduces the chance of an overshoot creating an impossible challenge for the player.
 
 \section{Results} \label{fig:results}
-%write
+\textcolor{red}{write}
+
 \subsection{Models}
-%complete
+\textcolor{red}{complete}
 The final model was generated using Weka \cite{weka}.
+
+\textcolor{red}{prettify}
+\begin{table*}[t]
+\centering
 \begin{tabular}{|l|c|c|c|c|} \hline
-Classifier & MAE & RMSE & RAE (\%) & RRSE (\%) \\ \hline
+Classifier & 
+\begin{tabular}{c} Mean\\absolute\\error \end{tabular} & 
+\begin{tabular}{c} Root\\mean\\squared\\error \end{tabular} & 
+\begin{tabular}{c} Relative\\absolute\\error (\%) \end{tabular} & 
+\begin{tabular}{c} Root\\relative\\squared\\error (\%) \end{tabular} \\
+\hline
 Pace regression & 1.1066 & 1.551 & 71.3851 & 82.9991 \\ \hline
 SMO regression & 1.0634 & 1.6185 & 68.6005 & 86.6108 \\ \hline
 M5 rules & 1.0933 & 1.4334 & 70.5283 & 76.7064 \\ \hline
 Gaussian processes & 0.999 & 1.294 & 64.4455 & 69.2444 \\ \hline
 \end{tabular}
+\end{table*}
 
 \subsection{Generalizability}
-%write
+\textcolor{red}{write}
 
 \section{Future Work}
-%complete
+\textcolor{red}{complete}
 As written, the game places enemies in discrete encounters. Planning for emotional intensity will likely be more difficult when enemies are allowed to move into or out of the space the player is currently in. 
 
 \section{Acknowledgements}
-%complete
 Much of the code for this project was provided by Norbert Heijne. His research concerning this engine can be found in an upcoming paper.
 
 \bibliographystyle{plain}
