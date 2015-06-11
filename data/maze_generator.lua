@@ -4,7 +4,6 @@ local log = require("log")
 local table_util = require("table_util")
 local area_util = require("area_util")
 local num_util = require("num_util")
-sokoban = sokoban or require("sokoban_parser")
 
 ------------------------------------------------------------------------------------------------------------------------------
 -------------------------------------       General purpose functions       --------------------------------------------------
@@ -749,21 +748,16 @@ end
 ------------------------------------------------------------------------------------------------------------------------------
 
 -- http://wiki.roblox.com/index.php?title=Recursive_Backtracker
-function maze_gen.standard_recursive_maze( maze )
+function maze_gen.standard_recursive_maze( maze, exits )
 	-- Create a table of cells, starting with just one random one
-	local Cells = {[1]={x=math.random(#maze), y=math.random(#maze[1])}}
+	local Cells = {table_util.random(exits[1])}
 	maze[Cells[1].x][Cells[1].y].visited = true
 	repeat
 	     -- Select the most recent cell from the cells list (see note at bottom)
 	     local CurCellIndex = #Cells
 	     local CurCell = Cells[CurCellIndex]
-	     local neighbors = maze_gen.get_neighbors(maze, CurCell)
 	     -- Make sure that this cell has unvisited neighbors
-	     local unvisited = {}
-	     -- Collect all unvisited neighbors...
-	     for _, v in ipairs(neighbors) do
-	     	if not v.node.visited then unvisited[#unvisited+1] = v end
-	     end
+	     local unvisited = maze_gen.get_neighbors(maze, CurCell, true)
 	     if #unvisited > 0 then
 	          -- ...and select a random one.
 	          local next_node = unvisited[math.random(#unvisited)]
@@ -778,6 +772,15 @@ function maze_gen.standard_recursive_maze( maze )
 	          table.remove(Cells, CurCellIndex)
 	     end
 	until #Cells == 0
+	for i=2, #exits, 1 do
+		for _,exit_pos in ipairs(exits[i]) do
+			local unvisited = maze_gen.get_neighbors(maze, exit_pos, true)
+			if #unvisited > 0  then
+				maze_gen.open_path(maze, {exit_pos, table_util.random(unvisited)})
+				break
+			end
+		end
+	end
 end
 
 function maze_gen.convert_maze_to_area_list( maze, area, corridor_width, wall_width )
@@ -854,105 +857,15 @@ function maze_gen.generate_maze( area, exit_areas, exclusion)
 	
 	local exits = maze_gen.open_exits( maze, exit_areas, area, wall_width, corridor_width )
 
-	maze_gen.create_maze_puzzle( maze, exits )
-
-	local area_list, prop_list = maze_gen.convert_maze_to_area_list( maze, area, corridor_width, wall_width )
-
- 	return area_list, prop_list
-end
-
-function maze_gen.make_dark_room()
-	local room_sensor = map:create_sensor({layer=0, x=room.x1, y=room.y1, width=room.x2-room.x1, height=room.y2-room.y1})
-	room_sensor.on_activated = 
-		function() 
-			local map=map; map:set_light(0) 
-		end
-	room_sensor.on_left = 
-		function() 
-			local map=map; map:set_light(1) 
-		end
+	return maze, exits
 end
 
 
 ------------------------------------------------------------------------------------------------------------------------------
 
 
-
--- plannin types of additions:
--- pikes (hero near) and always moving
-
--- speed related, being reckless:
--- cracked floor
-
--- params = {difficulty, ratio_speed, ratio_trick}
-function maze_gen.create_maze_puzzle( maze, exits, difficulty, ratio_speed, ratio_trick )
-	log.debug("create_maze_puzzle")
-	local paths = {}
-	local exits_copy = table_util.copy(exits)
-	exits_copy[1] = maze_gen.put_in_sokoban_puzzle( maze, exits[1] ) 
-	local convergence_pos = exits_copy[1][#exits_copy[1]]
-	paths = maze_gen.create_initial_paths( maze, exits_copy, convergence_pos )
-	-- determine the amount of trick templates added and the amount of speed obstacles added
-	-- create branches to a total of the amount of obstacles that require a branch
-
-end
-
 function maze_gen.generate_normal_maze( maze )
 	-- after opening up the exits create a normal maze afterwards
-end
-
-function maze_gen.put_in_sokoban_puzzle( maze, maze_entrance )
-	log.debug("put_in_sokoban_puzzle")
-	local problem = sokoban.get_random_sized_sokoban_puzzle( 1 )
-	if not problem then 
-		log.debug("problem is nil")
-		return maze_entrance 
-		else log.debug("problem is not nil")
-	end
-	local puzzle = sokoban.get_corrected_puzzle_table( problem, maze_entrance.direction )
-	local ww, cw = room.wall_width, room.corridor_width
-	local size_x, size_y = #puzzle[1], #puzzle
-	local required_x, required_y = math.ceil(size_x * 16 / (ww.x+cw.x)), math.ceil( size_y * 16 / (cw.y+ww.y)) 
-	local maze_x, maze_y = #maze, #maze[1]
-	if required_x > maze_x - 2 or required_y > maze_y -2 then 
-		puzzle = sokoban.rotate_table_ccw( puzzle )
-		size_x, size_y = #puzzle[1], #puzzle 
-		required_x, required_y = math.ceil(size_x * 16 / (ww.x+cw.x)), math.ceil( size_y * 16 / (cw.y+ww.y)) 
-	end
-	
-	-- placed at the entrance, so we have more room for other stuff
-
-	local topleft_pos = {x=maze_entrance[#maze_entrance].x, y=maze_entrance[#maze_entrance].y}
-	if maze_entrance.direction == 0 then 		topleft_pos.x = topleft_pos.x - required_x; topleft_pos.y = topleft_pos.y - math.ceil(required_y/2)
-	elseif maze_entrance.direction == 1 then 	topleft_pos.x = topleft_pos.x - math.ceil(required_x/2); topleft_pos.y = topleft_pos.y + 1
-	elseif maze_entrance.direction == 2 then 	topleft_pos.x = topleft_pos.x +1; topleft_pos.y = topleft_pos.y - math.ceil(required_y/2)
-	elseif maze_entrance.direction == 3 then 	topleft_pos.x = topleft_pos.x - math.ceil(required_x/2); topleft_pos.y = topleft_pos.y - required_y end
-	local bottomright_pos = {x=topleft_pos.x+required_x-1, y=topleft_pos.y+required_y-1}
-	maze_gen.open_up_area( maze, topleft_pos, bottomright_pos )
-	-- convert into areas and place
-	local area_list = sokoban.get_sorted_list_of_objects( puzzle, maze_gen.nodes_to_area( topleft_pos, bottomright_pos, true ) )
-	sokoban.place_sokoban_puzzle( map, area_list )
-
-	-- open up exits in the maze for the sokoban puzzle
-	local sokoban_entrance_area, sokoban_exit_area = area_list.entrance[1], area_list.exit[1]
-	local entrance_addition = area_util.get_side(area_list.entrance[1], maze_entrance.direction, 24, 8)
-	local exit_addition = area_util.get_side(area_list.exit[1], (maze_entrance.direction+2)%4, 24, 8)
-
-	local entrance_pos_list = maze_gen.area_to_pos (  area_util.merge_areas(sokoban_entrance_area, entrance_addition) )
-	local exit_pos_list = maze_gen.area_to_pos (  area_util.merge_areas(sokoban_exit_area, exit_addition) )
-
-	maze_gen.open_up_area( maze, entrance_pos_list[1], entrance_pos_list[#entrance_pos_list] )
-	maze_gen.open_up_area( maze, exit_pos_list[1], exit_pos_list[#exit_pos_list] )
-
-	local sb_entrance_pos_list = maze_gen.area_to_pos ( entrance_addition )
-	local sb_exit_pos_list = maze_gen.area_to_pos ( exit_addition )
-
-	-- create path from first exit to sokoban entrance
-	local pos1, pos2 = maze_gen.get_closest_positions(maze_entrance, sb_entrance_pos_list)
-
-	maze_gen.open_path( maze, maze_gen.create_direct_path( pos1, pos2, maze ) )
-
-	return sb_exit_pos_list
 end
 
 function maze_gen.open_up_area( maze, topleft_pos, bottomright_pos )
@@ -1124,11 +1037,6 @@ function maze_gen.create_pike_trap( maze, branches, nr_pikes )
 	end
 end
 
-function maze_gen.create_fireball_statue( maze )
-	-- check the unused parts of the maze for this
-	-- use mostly corners or far away points, which is likely the most interesting way to use the fireball statues
-end
-
 function maze_gen.get_closest_positions( pos_list1, pos_list2 )
 	local max_dist, pos1, pos2 = math.huge, nil, nil
 	for _,p1 in ipairs(pos_list1) do
@@ -1140,6 +1048,16 @@ function maze_gen.get_closest_positions( pos_list1, pos_list2 )
 		end
 	end
 	return pos1, pos2
+end
+
+-- Creating the puzzle
+function maze_gen.make( parameters )
+
+end
+
+function maze_gen.create_fireball_statue( maze )
+	-- check the unused parts of the maze for this
+	-- use mostly corners or far away points, which is likely the most interesting way to use the fireball statues
 end
 
 return maze_gen

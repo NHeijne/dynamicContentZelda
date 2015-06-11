@@ -1,8 +1,9 @@
-local log = require("log")
-local table_util = require("table_util")
-local area_util = require("area_util")
-local num_util = require("num_util")
-local maze_generator = require("maze_generator")
+maze_gen 		= maze_gen or require("maze_gen")
+
+local log 			= require("log")
+local table_util 	= require("table_util")
+local area_util 	= require("area_util")
+local num_util 		= require("num_util")
 
 local space_gen = {}
 
@@ -997,11 +998,11 @@ function space_gen.generate_simple_space( area_details, given_map )
 	-- dimensions for outside rooms: -- ground 224 x 160 -- wallwidth 56 x 64
 	-- if the plan contains more than one task, we place the other ones at proper distance as if we place a new area
 	-- we then place openings that connect with each other
-	maze_generator.set_map( map )
-	if area_details.outside then maze_generator.set_room( {x1=128, y1=128, x2=width-128, y2=height-128}, {x=224, y=224}, {x=112, y=160} )
-							else maze_generator.set_room( {x1=128, y1=128, x2=width-128, y2=height-128}, {x=256, y=176}, 32*2 ) end
-	local areas = maze_generator.generate_rooms( area_details )
-	log.debug("returned areas from maze_generator")
+	maze_gen.set_map( map )
+	if area_details.outside then maze_gen.set_room( {x1=128, y1=128, x2=width-128, y2=height-128}, {x=224, y=224}, {x=112, y=160} )
+							else maze_gen.set_room( {x1=128, y1=128, x2=width-128, y2=height-128}, {x=256, y=176}, 32*2 ) end
+	local areas = maze_gen.generate_rooms( area_details )
+	log.debug("returned areas from maze_gen")
 	log.debug(areas)
 	space_gen.create_simple_area_sensors( area_details, areas )
 	space_gen.create_simple_enemy_stoppers( areas )

@@ -1,5 +1,10 @@
-local table_util = require("table_util")
-local log = require("log")
+maze_gen 		= maze_gen or require("maze_generator")
+placement 			= placement or require("object_placement")
+
+local log 				= require("log")
+local table_util 		= require("table_util")
+local area_util 		= require("area_util")
+local num_util 			= require("num_util")
 
 local sp = {}
 
@@ -9,8 +14,10 @@ sp.sokoban_problems = false
 
 sp.sokoban_difficulty = false
 
+sp.puzzles_completed = {}
+
 sp.sokoban_files={
-	"minicosmos_diff_1_.txt", -- Author: Aymeric du Peloux, aymeric.dupeloux@smile.fr, http://sneezingtiger.com/sokoban/levels/microcosmosText.html
+	"minicosmos.txt", -- Author: Aymeric du Peloux, aymeric.dupeloux@smile.fr, http://sneezingtiger.com/sokoban/levels/microcosmosText.html
 }
 
 sp.prop_types = {
@@ -31,11 +38,13 @@ function sp.parse_files ()
 	sp.sokoban_difficulty = {}
 	for _,filename in ipairs(sp.sokoban_files) do
 		local file = sol.file.open("internetsources/sokoban/"..filename)
-		local difficulty_rating = tonumber(table_util.split(filename, "_")[3])
 		while true do
-			local level = file:read()
-			if level == nil or string.len(level) == 0 then break end
-			local lvl_nr = table_util.split(level, "_")[2]
+			local first_line = file:read()
+			if first_line == nil or string.len(first_line) == 0 then break end
+			local level = table_util.split(first_line, "_")
+			local lvl_id = tonumber(level[2])
+			local lvl_id2= tonumber(level[3])
+			local difficulty_rating = tonumber(table_util.split(file:read(), "_")[2])
 			local name = file:read()
 			local puzzle = {}
 			local line
@@ -49,9 +58,10 @@ function sp.parse_files ()
 					table.insert(puzzle, line)
 				else break end
 			end
-			sp.sokoban_problems[lvl_nr]= {puzzle=puzzle, difficulty=difficulty_rating, dim={x=max_length, y=#puzzle}}
+			sp.sokoban_problems[lvl_id] = sp.sokoban_problems[lvl_id] or {}
+			sp.sokoban_problems[lvl_id][lvl_id2] = {puzzle=puzzle, difficulty=difficulty_rating, dim={x=max_length, y=#puzzle}}
 			sp.sokoban_difficulty[difficulty_rating] = sp.sokoban_difficulty[difficulty_rating] or {}
-			table.insert(sp.sokoban_difficulty[difficulty_rating], lvl_nr)
+			table.insert(sp.sokoban_difficulty[difficulty_rating], {lvl_id, lvl_id2})
 		end
 	end
 end
@@ -80,15 +90,16 @@ end
 function sp.select_puzzle( max_dimensions, difficulty )
 	if not sp.sokoban_problems then sp.parse_files() end
 	local puzzles = sp.sokoban_difficulty[difficulty]
-	while true do
-		local picked_puzzle = table.remove(puzzles, 1)--math.random(#puzzles))
-		local problem = sp.sokoban_problems[picked_puzzle]
-		if not problem then return false end
-		if ( max_dimensions == nil 
-			or (problem.dim.x <= max_dimensions.min and problem.dim.y <= max_dimensions.max) 
-			or (problem.dim.y <= max_dimensions.min and problem.dim.x <= max_dimensions.max) ) then
-
-			return problem
+	if not puzzles then return false end
+	for i,id_pair in ipairs(puzzles) do
+		if id_pair[2] == 1 or (sp.puzzles_completed[id_pair[1]] and sp.puzzles_completed[id_pair[1]][id_pair[2]-1]) then 
+			local problem = sp.sokoban_problems[id_pair[1]][id_pair[2]]
+			if ( max_dimensions == nil 
+				or (problem.dim.x <= max_dimensions.min and problem.dim.y <= max_dimensions.max) 
+				or (problem.dim.y <= max_dimensions.min and problem.dim.x <= max_dimensions.max) ) then
+				table.remove(puzzles, i)
+				return problem
+			end
 		end
 	end
 end
@@ -142,7 +153,7 @@ function sp.get_sorted_list_of_objects( puzzle_table, area ) -- objects are all 
 	return output_table
 end
 
-function sp.place_sokoban_puzzle( map, area_list )
+function sp.place_sokoban_puzzle( map, area_list, puzzle_area, areanumber )
 	log.debug("place_sokoban_puzzle")
 	-- place normal blocks as walls, cannot be pushed
 	for _, area in ipairs(area_list.wall) do
@@ -160,6 +171,13 @@ function sp.place_sokoban_puzzle( map, area_list )
 	reset_switch.x, reset_switch.y = reset_switch.x+area_list.entrance[1].x1, reset_switch.y+area_list.entrance[1].y1
 	reset_switch = map:create_switch(reset_switch)
 	sp.puzzles_created[next_index] = area_list
+	local i_quit_sensor = placement.place_sensor( puzzle_area, "sokoban_quit_sensor_"..areanumber )
+	i_quit_sensor.on_activated_repeat =
+		function()
+			if sol.input.is_key_pressed("q") then
+				sp.remove_sokoban( next_index, map )
+			end
+		end
 	reset_switch.on_activated = 
 		function() 
 			local index = next_index
@@ -206,7 +224,11 @@ function sp.check_switches( index, map, nr_of_switches )
 	for switch in map:get_entities("sokoban_"..index.."_block_switch") do
 		if not switch:is_activated() then return end
 	end
+	sp.remove_sokoban( index, map )
 	-- log completion of sokoban puzzle 
+end
+
+function sp.remove_sokoban( index, map )
 	for sokoban_object in map:get_entities("sokoban_"..index) do
 		sokoban_object:remove()
 	end
@@ -237,5 +259,112 @@ function sp.rotate_table_ccw( tbl )
 	end
 	return rotated_table
 end
+
+function sp.make( parameters ) -- difficulty, maze, exits
+	sp.create_sokoban_puzzle( parameters.difficulty, parameters.area, parameters.areanumber, parameters.area_details, parameters.exit_areas, parameters.exclusion ) 
+end
+
+
+function sp.create_sokoban_puzzle( difficulty, area, areanumber, area_details, exit_areas, exclusion )
+	local map = area_details.map
+	local outside_sensor = map:get_entity("areasensor_outside_"..areanumber.."_type_"..area_details[areanumber].area_type )
+	outside_sensor.on_activated = 
+		function() 
+			if not map:get_entity("sokoban_quit_sensor_"..areanumber) then
+				maze_gen.set_map( map )
+				local cw, ww = {x=16, y=16}, {x=0, y=0}
+				maze_gen.set_room( area, cw, ww, "sokoban_room"..areanumber )
+				local maze, exits = maze_gen.generate_maze( area, exit_areas, exclusion)
+				local area_list, puzzle_area = sp.put_in_sokoban_puzzle( area, difficulty, maze, exits[1], cw, ww )
+				sp.place_sokoban_puzzle( map, area_list, puzzle_area, areanumber )
+				if area_list then 
+					exits[1] = sp.connect_to_maze( area_list, maze, exits[1] ) 
+				end
+				local convergence_pos = exits[1][#exits[1]]
+				maze_gen.create_initial_paths( maze, exits, convergence_pos )
+				local prop_area_list = maze_gen.maze_to_square_areas( maze, false )
+				local open_area_list = maze_gen.maze_to_square_areas( maze, true )
+				sp.place_props( prop_area_list, area_details.outside )
+			end
+		end
+end
+
+function sp.put_in_sokoban_puzzle( area, difficulty, maze, maze_entrance, corridor_width, wall_width )
+	local difficulty = difficulty
+	local problem
+	local tried_once_before = false
+	repeat
+		problem = sp.get_random_sized_sokoban_puzzle( difficulty )
+		if not problem then
+			difficulty = difficulty - 1
+			if difficulty == 0 and not tried_once_before then 
+				difficulty = 2
+				tried_once_before = true
+			end
+		end
+	until problem
+	local puzzle = sp.get_corrected_puzzle_table( problem, maze_entrance.direction )
+	local ww, cw = wall_width, corridor_width
+	local size_x, size_y = #puzzle[1], #puzzle
+	local required_x, required_y = math.ceil(size_x * 16 / (ww.x+cw.x)), math.ceil( size_y * 16 / (cw.y+ww.y)) 
+	local maze_x, maze_y = #maze, #maze[1]
+	if required_x > maze_x - 2 or required_y > maze_y -2 then 
+		puzzle = sp.rotate_table_ccw( puzzle )
+		size_x, size_y = #puzzle[1], #puzzle 
+		required_x, required_y = math.ceil(size_x * 16 / (ww.x+cw.x)), math.ceil( size_y * 16 / (cw.y+ww.y)) 
+	end
+	-- placed at the entrance, so we have more room for other stuff
+	local topleft_pos = {x=maze_entrance[#maze_entrance].x, y=maze_entrance[#maze_entrance].y}
+	if maze_entrance.direction == 0 then 		topleft_pos.x = topleft_pos.x - required_x; topleft_pos.y = topleft_pos.y - math.ceil(required_y/2)
+	elseif maze_entrance.direction == 1 then 	topleft_pos.x = topleft_pos.x - math.ceil(required_x/2); topleft_pos.y = topleft_pos.y + 1
+	elseif maze_entrance.direction == 2 then 	topleft_pos.x = topleft_pos.x +1; topleft_pos.y = topleft_pos.y - math.ceil(required_y/2)
+	elseif maze_entrance.direction == 3 then 	topleft_pos.x = topleft_pos.x - math.ceil(required_x/2); topleft_pos.y = topleft_pos.y - required_y end
+	local bottomright_pos = {x=topleft_pos.x+required_x-1, y=topleft_pos.y+required_y-1}
+	maze_gen.open_up_area( maze, topleft_pos, bottomright_pos )
+	-- convert into areas and place
+	local puzzle_area = {x1=0, y1=0, x2=size_x*16, y2=size_y*16}
+	puzzle_area = area_util.move_area(puzzle_area, area.x1, area.y1)
+	puzzle_area = area_util.move_area(puzzle_area, (topleft_pos.x-1)*16, (topleft_pos.y-1)*16)
+	local area_list = sp.get_sorted_list_of_objects( puzzle, maze_gen.nodes_to_area( topleft_pos, bottomright_pos, true ) )
+	return area_list, puzzle_area
+end
+
+function sp.connect_to_maze( area_list, maze, maze_entrance )
+	-- open up exits in the maze for the sokoban puzzle
+	local sokoban_entrance_area, sokoban_exit_area = area_list.entrance[1], area_list.exit[1]
+	local entrance_addition = area_util.get_side(area_list.entrance[1], maze_entrance.direction, 24, 8)
+	local exit_addition = area_util.get_side(area_list.exit[1], (maze_entrance.direction+2)%4, 24, 8)
+
+	local entrance_pos_list = maze_gen.area_to_pos (  area_util.merge_areas(sokoban_entrance_area, entrance_addition) )
+	local exit_pos_list = maze_gen.area_to_pos (  area_util.merge_areas(sokoban_exit_area, exit_addition) )
+
+	maze_gen.open_up_area( maze, entrance_pos_list[1], entrance_pos_list[#entrance_pos_list] )
+	maze_gen.open_up_area( maze, exit_pos_list[1], exit_pos_list[#exit_pos_list] )
+
+	local sb_entrance_pos_list = maze_gen.area_to_pos ( entrance_addition )
+	local sb_exit_pos_list = maze_gen.area_to_pos ( exit_addition )
+
+	-- create path from first exit to sokoban entrance
+	local pos1, pos2 = maze_gen.get_closest_positions(maze_entrance, sb_entrance_pos_list)
+
+	maze_gen.open_path( maze, maze_gen.create_direct_path( pos1, pos2, maze ) )
+
+	return sb_exit_pos_list
+end
+
+function sp.place_props( area_list, outside )
+	if outside then
+		local filler = {{"green_tree"}, {"small_green_tree"}, {"tiny_yellow_tree"}}
+		for _,area in ipairs(area_list) do
+			placement.spread_props(area, 0, filler, 1)
+		end
+	else
+		for _,area in ipairs(area_list) do
+			placement.place_tile(area, 420, "sokoban_room_spikes", 0)
+		end
+	end
+end
+
+
 
 return sp

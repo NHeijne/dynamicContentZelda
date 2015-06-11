@@ -1,4 +1,5 @@
-Level_1
+Level_1_1
+Difficulty_1
 'MINICOSMOS_01'
 __#E###
 ###___#
@@ -9,7 +10,8 @@ __#E###
 _#___###
 _##@##
 
-Level_2
+Level_1_2
+Difficulty_2
 'MINICOSMOS_02'
 __#E###
 ###___#
@@ -20,7 +22,8 @@ __#E###
 _#___###
 _##@##
 
-Level_3
+Level_1_3
+Difficulty_3
 'MINICOSMOS_03'
 __#E###
 ###___#
@@ -31,7 +34,8 @@ __#E###
 _#___###
 _##@##
 
-Level_4
+Level_2_1
+Difficulty_1
 'MINICOSMOS_04'
 ____#E##
 #####__#
@@ -43,7 +47,8 @@ ____#E##
 #__#####
 ##@#
 
-Level_5
+Level_2_2
+Difficulty_2
 'MINICOSMOS_05'
 ____#E##
 #####__#
@@ -55,7 +60,8 @@ ____#E##
 #__#####
 ##@#
 
-Level_6
+Level_2_3
+Difficulty_3
 'MINICOSMOS_06'
 ____#E##
 #####__#
@@ -67,7 +73,8 @@ ____#E##
 #__#####
 ##@#
 
-Level_7
+Level_3_1
+Difficulty_2
 'MINICOSMOS_07'
 _###E#
 _#___##
@@ -79,7 +86,8 @@ __#_#_#
 __#___#
 __##@##
 
-Level_8
+Level_3_2
+Difficulty_3
 'MINICOSMOS_08'
 _###E#
 _#___##
@@ -91,7 +99,8 @@ __#_#_#
 __#___#
 __##@##
 
-Level_9
+Level_4_1
+Difficulty_2
 'MINICOSMOS_09'
 _#####
 _#___#
@@ -102,7 +111,8 @@ E___$__@
 #___####
 #####
 
-Level_10
+Level_4_2
+Difficulty_3
 'MINICOSMOS_10'
 _#####
 _#___#
@@ -113,7 +123,8 @@ E__.$__@
 #___####
 #####
 
-Level_11
+Level_5_1
+Difficulty_2
 'MINICOSMOS_11'
 _#####
 ##___###
@@ -124,7 +135,8 @@ E____$$_@
 __#___###
 __#####
 
-Level_12
+Level_5_2
+Difficulty_3
 'MINICOSMOS_12'
 _#####
 ##___###
@@ -135,7 +147,8 @@ E____$$_@
 __#___###
 __#####
 
-Level_13
+Level_6_1
+Difficulty_2
 'MINICOSMOS_13'
 ____####
 _####__#
@@ -147,7 +160,8 @@ _#______#
 _#__#####
 _####
 
-Level_14
+Level_6_2
+Difficulty_3
 'MINICOSMOS_14'
 ____####
 _####__#
@@ -159,7 +173,8 @@ _#___$__#
 _#__#####
 _####
 
-Level_15
+Level_7_1
+Difficulty_2
 'MINICOSMOS_15'
 ___#E##
 ####__#
@@ -170,7 +185,8 @@ ___#E##
 #___####
 ###@#
 
-Level_16
+Level_7_2
+Difficulty_3
 'MINICOSMOS_16'
 ___#E##
 ####__#
@@ -181,7 +197,8 @@ ___#E##
 #.__####
 ###@#
 
-Level_17
+Level_8_1
+Difficulty_2
 'MINICOSMOS_17'
 ____#####
 ___##___##
@@ -193,7 +210,8 @@ E__$_#####
 #__##
 ####
 
-Level_18
+Level_8_2
+Difficulty_3
 'MINICOSMOS_18'
 ____#####
 ___##___##
@@ -205,7 +223,8 @@ E__$_#####
 #__##
 ####
 
-Level_19
+Level_9_1
+Difficulty_2
 'MINICOSMOS_19'
 ##E#
 #__####
@@ -217,7 +236,8 @@ Level_19
 ####___#
 ___#@###
 
-Level_20
+Level_9_2
+Difficulty_3
 'MINICOSMOS_20'
 ##E#
 #__####
@@ -229,7 +249,8 @@ Level_20
 ####___#
 ___#@###
 
-Level_21
+Level_10_1
+Difficulty_2
 'MINICOSMOS_21'
 #####
 #___###
@@ -241,7 +262,8 @@ Level_21
 ###._.#
 __#####
 
-Level_22
+Level_10_2
+Difficulty_3
 'MINICOSMOS_22'
 #####
 #___###
@@ -253,7 +275,8 @@ Level_22
 ###._.#
 __#####
 
-Level_23
+Level_11_1
+Difficulty_3
 'MINICOSMOS_23'
 ______####
 #######__#
@@ -265,7 +288,8 @@ __###__#__#
 ____##.__##
 _____#####
 
-Level_24
+Level_11_2
+Difficulty_4
 'MINICOSMOS_24'
 ______####
 #######__#
@@ -277,7 +301,8 @@ __###__#__#
 ____##.__##
 _____#####
 
-Level_25
+Level_12_1
+Difficulty_3
 'MINICOSMOS_25'
 _____####
 ___###__#
@@ -289,7 +314,8 @@ E_______@
 ######__#
 _____####
 
-Level_26
+Level_12_2
+Difficulty_4
 'MINICOSMOS_26'
 _____####
 ___###__#
@@ -301,7 +327,8 @@ E__*____@
 ######__#
 _____####
 
-Level_27
+Level_13_1
+Difficulty_3
 'MINICOSMOS_27'
 _##E#
 _#__####
@@ -313,7 +340,8 @@ _#_#.__#
 #____###
 ####@#
 
-Level_28
+Level_13_2
+Difficulty_4
 'MINICOSMOS_28'
 _##E#
 _#__####
@@ -325,7 +353,8 @@ _#_#.__#
 #____###
 ####@#
 
-Level_29
+Level_14_1
+Difficulty_3
 'MINICOSMOS_29'
 ###E####
 #___#__#
@@ -337,7 +366,8 @@ Level_29
 ###___#
 __#@###
 
-Level_30
+Level_14_2
+Difficulty_4
 'MINICOSMOS_30'
 ###E####
 #___#__#
@@ -349,7 +379,8 @@ Level_30
 ###___#
 __#@###
 
-Level_31
+Level_15_1
+Difficulty_3
 'MINICOSMOS_31'
 #####
 #___##
@@ -360,7 +391,8 @@ Level_31
 #____#
 ######
 
-Level_32
+Level_15_2
+Difficulty_4
 'MINICOSMOS_32'
 ####
 #__###
@@ -371,7 +403,8 @@ _#.#$##
 _#___#
 _#####
 
-Level_33
+Level_16_1
+Difficulty_4
 'MINICOSMOS_33'
 _#######
 _#__#__##
@@ -381,7 +414,8 @@ _#__#__##
 #__####
 ####
 
-Level_34
+Level_16_2
+Difficulty_5
 'MINICOSMOS_34'
 _#######
 ##__#__#
@@ -391,7 +425,8 @@ E__**$.##
 __####__#
 _____####
 
-Level_35
+Level_17_1
+Difficulty_3
 'MINICOSMOS_35'
 __####
 ###__###
@@ -401,7 +436,8 @@ E_#__#_@
 #___####
 #####
 
-Level_36
+Level_17_2
+Difficulty_4
 'MINICOSMOS_36'
 #####
 #___##
@@ -412,7 +448,8 @@ __#_*._#
 __#__###
 __####
 
-Level_37
+Level_17_3
+Difficulty_5
 'MINICOSMOS_37'
 __####
 _##__#
@@ -424,7 +461,8 @@ E_#_#_@
 __#__#
 __####
 
-Level_38
+Level_18_1
+Difficulty_3
 'MINICOSMOS_38'
 __####
 __#__###
@@ -435,7 +473,8 @@ _##_.__E
 #__##
 ####
 
-Level_39
+Level_18_2
+Difficulty_4
 'MINICOSMOS_39'
 __#####
 ###___#
@@ -447,7 +486,8 @@ _#_____#
 _#__####
 _####
 
-Level_40
+Level_18_3
+Difficulty_5
 'MINICOSMOS_40'
 __####
 _##__#
