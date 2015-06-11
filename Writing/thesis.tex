@@ -8,6 +8,10 @@
 \usepackage{enumerate}
 \usepackage{float}
 \usepackage{color}
+\usepackage{caption}
+\usepackage{wrapfig}
+\usepackage{caption}
+\usepackage{subcaption}
 \restylefloat{table}
 
 \title{Adjusting difficulty based on automatically generated models of player skill}
@@ -20,7 +24,6 @@
 
 \begin{multicols*}{2}
 \begin{abstract}
-This thesis proposes a system which allows game designers to elicit specific levels of emotional intensity in players by learning their reaction to situations in the game.
 This is done using two subsystems, the first of which determines the level of emotional intensity of the player based on their behaviour in the game.
 Secondly, a method for modelling the emotional reaction of a player to game situations is presented.
 Finally, a practical example based on \emph{The Legend of Zelda} shows the accuracy of the results of this approach.
@@ -34,13 +37,13 @@ The purpose of this thesis is to show how it is possible to modify much of the g
 To answer this question, it is necessary to know the emotional reaction of a given player to a combination of game elements. Therefore, a secondary goal will be to estimate that reaction without pausing the game to ask the player.
 \begin{itemize} \item[\textbf{2.}] How can the emotional state of a player be accurately determined using in-game data? \end{itemize}
 
-To answer these questions, the proposed system has been applied to an example game based on \emph{The Legend of Zelda}. This environment is used to quantify the system's accuracy and demonstrates how it can be applied to players' different skill levels. It also shows how the system can be applied generically over different in-game settings, and provides an approach for predicting the effect of unseen elements.
+To answer these questions, the proposed method has been applied to an example game based on \emph{The Legend of Zelda}. This environment is used to quantify the accuracy of this approach and demonstrates how it can be applied to players' different skill levels. It also shows how the system can be applied generically over different in-game settings, and provides an approach for predicting the effect of unseen elements.
 
 \section{Related Work}
 \textcolor{red}{write}
 
 \section{Method}
-The system proposed here consists of two subsystems. The first (hereafter the \emph{estimator}) estimates the amount of stress experienced after an encounter has been completed. This estimate is made using only information specific to the player's behaviour during that encounter. The estimator is constructed before runtime, using labeled data, and is applied equally to every player regardless of skill.
+The method proposed here consists of two subsystems. The first (hereafter the \emph{estimator}) estimates the amount of stress experienced after an encounter has been completed. This estimate is made using only information specific to the player's behaviour during that encounter. The estimator is constructed before runtime, using labeled data, and is applied equally to every player regardless of skill.
 
 The second subsystem (hereafter the \emph{builder}) predicts the difficulty level of an encounter before it is presented to the player. By necessity, it uses only information which is set when the encounter starts. This model is constructed and updated at runtime, using the results of the estimator as a supervisory signal. The model is created individually for each player.
 
@@ -71,6 +74,26 @@ Enemies are decided and placed each time the player enters a room. Normal rooms 
 
 Two exceptions to this model are the tutorial room and the boss room. The tutorial rooms are simple forest locations which contain a single enemy each. The boss room is located at the end of the dungeon and contains a single \emph{papillosaur king}, a large enemy which shoots weaker versions of the \emph{minillosaur egg} enemy. This enemy must be defeated with three bombs, as it cannot be attacked with the sword.
 
+\begin{figure*}
+\centering
+\begin{subfigure}[b]{0.45\textwidth}
+  \includegraphics[width=\textwidth]{tutorialroom}
+  \captionof{figure}{Tutorial room}
+\end{subfigure} \hfill
+\begin{subfigure}[b]{0.45\textwidth}
+  \includegraphics[width=\textwidth]{forestroom}
+  \captionof{figure}{Example forest room}
+\end{subfigure} \hfill
+\begin{subfigure}[b]{0.45\textwidth}
+  \includegraphics[width=\textwidth]{dungeonroom}
+  \captionof{figure}{Example dungeon room}
+\end{subfigure} \hfill
+\begin{subfigure}[b]{0.45\textwidth}
+  \includegraphics[width=\textwidth]{bossroom}
+  \captionof{figure}{Final boss room}
+\end{subfigure} \hfill
+\end{figure*}
+
 \subsection{Room construction}
 \textcolor{red}{improve}
 To gather the largest amount of data possible from each room, each player should be presented with challenges they can conceivably overcome. To do this, rooms were created based on informal data gathered early in the development of the project. While this method does not produce results representative of the final product, it does produce setups which will result in somewhat appropriate challenges while still varying the data. To create additional variety in the dataset, eight percent of all encounters were set to an extreme difficulty. In all other rooms, players were presented with intended difficulties of 2 through 6.
@@ -80,7 +103,7 @@ In order to start determining the right makeup of a combat encounter for a playe
 Once every enemy has been encountered once, enough data will be available to make a first estimate of the appropriate difficulty. Subsequent rooms will be constructed to slowly increase the difficulty for this player to a desirable level, starting at the lowest level. Starting at a lower difficulty decreases the risk of an encounter being constructed based on faulty data, which is a concern at this point because of sparsity. Each of the progressively more difficult rooms will increase the amount of data and thus decrease the margin of error on the formula. This way errors are most likely to occur in rooms with a low difficulty, which reduces the chance of an overshoot creating an impossible challenge for the player.
 
 \section{Results} \label{fig:results}
-\textcolor{red}{write}
+Data was recorded from a total of 16 test subjects. In total, 302 encounters were recorded, each participant completing an average of 18.88 encounters with a standard deviation of 7.191. Five of the test subjects had no experience with action video games, six had some experience but no experience with the Legend of Zelda, and five had previous experience with the game. These groups account for 23.5\%, 43\% and 33\% of the data. Finally, 54\% of all recorded fights were inside the dungeon, and the final boss was seen eleven times in total. The intended difficulty of the encounters presented ranged from 1 to 7.558, with a 3.371 mean and 1.807 standard deviation.
 
 \subsection{Models}
 \textcolor{red}{complete}
@@ -89,7 +112,7 @@ The final model was generated using Weka \cite{weka}.
 \textcolor{red}{prettify}
 \begin{table*}[t]
 \centering
-\begin{tabular}{|l|c|c|c|c|} \hline
+\begin{tabular}{lcccc} \hline
 Classifier & 
 \begin{tabular}{c} Mean\\absolute\\error \end{tabular} & 
 \begin{tabular}{c} Root\\mean\\squared\\error \end{tabular} & 
@@ -101,6 +124,7 @@ SMO regression & 1.0634 & 1.6185 & 68.6005 & 86.6108 \\ \hline
 M5 rules & 1.0933 & 1.4334 & 70.5283 & 76.7064 \\ \hline
 Gaussian processes & 0.999 & 1.294 & 64.4455 & 69.2444 \\ \hline
 \end{tabular}
+\captionof{figure}{Accuracy of the builder}
 \end{table*}
 
 \subsection{Generalizability}
