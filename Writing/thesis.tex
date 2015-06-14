@@ -106,9 +106,15 @@ Once every enemy has been encountered once, enough data will be available to mak
 \section{Results} \label{fig:results}
 Data was recorded from a total of 16 test subjects. In total, 302 encounters were recorded, each participant completing an average of 18.88 encounters with a standard deviation of 7.191. Five of the test subjects had no experience with action video games, six had some experience but no experience with the \emph{Legend of Zelda} series, and five had previous experience with the game. These groups account for 23.5\%, 43\% and 33\% of the data. Finally, 54\% of all recorded fights were inside the dungeon, and the final boss was seen eleven times in total. The intended difficulty of the encounters presented ranged from 1 to 7.558, with a 3.371 mean and 1.807 standard deviation.
 
-\subsection{Models}
+\subsection{Evaluation criteria}
+The two parts of the model will primarily be tested using ten-fold cross-validation on the test set. However, since the builder is trained using data from the estimator, errors may propagate even when the accuracy of each system is high. To give an indication of the overall accuracy of the system, the results of the builder during testing will be compared to the labels. Since these results were collected during application of the system, they are based on premature iterations of the estimator. Three such iterations will be shown, while the final model regrettably must remain untested.
+
+% Forest-dungeon difference, boss prediction.
+% And what about the experience assumption and its accuracy?
+
+\subsection{Accuracy}
 \textcolor{red}{complete}
-The final model was generated using Weka \cite{weka}.
+The following figures were obtained using Weka \cite{weka}.
 
 \textcolor{red}{prettify}
 \begin{table*}[t]
@@ -125,7 +131,7 @@ SMO regression & 1.0634 & 1.6185 & 68.6005 & 86.6108 \\ \hline
 M5 rules & 1.0933 & 1.4334 & 70.5283 & 76.7064 \\ \hline
 Gaussian processes & 0.999 & 1.294 & 64.4455 & 69.2444 \\ \hline
 \end{tabular}
-\captionof{figure}{Accuracy of the builder}
+\captionof{figure}{Accuracy of the estimator}
 \end{table*}
 
 \subsection{Generalizability}
