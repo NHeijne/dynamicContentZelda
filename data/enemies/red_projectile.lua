@@ -7,8 +7,12 @@ local sprite2 = nil
 local sprite3 = nil
 local m = nil
 
-function enemy:on_created()
+local map, hero
 
+function enemy:on_created()
+  map = self:get_map()
+  hero = map:get_entity("hero")
+  
   self:set_life(1)
   self:set_damage(2)
   self:create_sprite("enemies/red_projectile")
@@ -49,6 +53,7 @@ function enemy:on_obstacle_reached()
 end
 
 function enemy:on_pre_draw()
+  if not self:is_in_same_region(hero) then self:remove() end
   if m ~= nil then
 	  local angle = m:get_angle()
 	  local x, y = self:get_position()

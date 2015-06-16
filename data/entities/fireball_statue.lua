@@ -38,7 +38,7 @@ end
 function custom_entity:check()
   local distance = self:get_distance(hero)
   if attack_on then
-    if distance < 200 then self:attack() end
+    if distance < 200 and self:is_in_same_region(hero) then self:attack() end
     sol.timer.start(self, interval, function()
       self:check()
     end)

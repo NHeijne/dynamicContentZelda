@@ -171,8 +171,8 @@ function sp.place_sokoban_puzzle( map, area_list, puzzle_area, areanumber )
 	reset_switch.x, reset_switch.y = reset_switch.x+area_list.entrance[1].x1, reset_switch.y+area_list.entrance[1].y1
 	reset_switch = map:create_switch(reset_switch)
 	sp.puzzles_created[next_index] = area_list
-	local i_quit_sensor = placement.place_sensor( puzzle_area, "sokoban_quit_sensor_"..areanumber )
-	i_quit_sensor.on_activated_repeat =
+	local sensor = placement.place_sensor( puzzle_area, "sokoban_sensor_"..areanumber )
+	sensor.on_activated_repeat =
 		function()
 			if sol.input.is_key_pressed("q") then
 				sp.remove_sokoban( next_index, map )
@@ -260,7 +260,7 @@ function sp.rotate_table_ccw( tbl )
 	return rotated_table
 end
 
-function sp.make( parameters ) -- difficulty, maze, exits
+function sp.make( parameters )
 	sp.create_sokoban_puzzle( parameters.difficulty, parameters.area, parameters.areanumber, parameters.area_details, parameters.exit_areas, parameters.exclusion ) 
 end
 
@@ -270,7 +270,7 @@ function sp.create_sokoban_puzzle( difficulty, area, areanumber, area_details, e
 	local outside_sensor = map:get_entity("areasensor_outside_"..areanumber.."_type_"..area_details[areanumber].area_type )
 	outside_sensor.on_activated = 
 		function() 
-			if not map:get_entity("sokoban_quit_sensor_"..areanumber) then
+			if not map:get_entity("sokoban_sensor_"..areanumber) then
 				maze_gen.set_map( map )
 				local cw, ww = {x=16, y=16}, {x=0, y=0}
 				maze_gen.set_room( area, cw, ww, "sokoban_room"..areanumber )

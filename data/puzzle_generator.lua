@@ -23,7 +23,7 @@ function pg.create_puzzle( puzzle_type, area, areanumber, exit_areas, exclusion,
 	local difficulty = math.random(pg[puzzle_type.."_min_difficulty"], pg[puzzle_type.."_max_difficulty"])
 	-- determine parameters to be used
 	local parameters = pg.get_parameters( puzzle_type, difficulty )
-	parameters.area = area; 			parameters.areanumber = areanumber
+	parameters.area = area; 			parameters.areanumber = areanumber    
 	parameters.exit_areas = exit_areas; parameters.exclusion = exclusion
 	parameters.area_details = area_details
 	-- create a puzzle for a given room using the parameters
@@ -63,7 +63,7 @@ end
 function pg.get_maze_parameters( difficulty )
 	parameters = {darkness=false, fireball_statues=0}
 	if difficulty >=2 then parameters.darkness = true end
-	if difficulty >=3 then parameters.fireball_statues = num_util.difficulty-2 end
+	if difficulty >=3 then parameters.fireball_statues = difficulty-2 end
 	return parameters
 end
 

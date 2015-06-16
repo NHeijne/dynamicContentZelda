@@ -2,6 +2,8 @@ maze_gen 			= maze_gen or require("maze_generator")
 pike_room 			= pike_room or require("moving_pike_room")
 puzzle_gen			= puzzle_gen or require("puzzle_generator")
 placement 			= placement or require("object_placement")
+lookup 				= lookup or require("data_lookup")
+
 
 local mission_grammar 	= require("mission_grammar")
 local space_gen 		= require("space_generator")
@@ -103,7 +105,7 @@ function content.start_test(given_map, params, end_destination)
 			--content.makeSingleMaze(a.area, exit_areas[areanumber], content.area_details, exclusion_areas[areanumber], layer)
 
 			--pike_room.create_pike_room( areanumber, content.area_details, map, a.area, exit_areas[areanumber] )
-			puzzle_gen.create_puzzle( "sokoban", a.area, areanumber, exit_areas[areanumber], exclusion_areas[areanumber], content.area_details )
+			puzzle_gen.create_puzzle( "maze", a.area, areanumber, exit_areas[areanumber], exclusion_areas[areanumber], content.area_details )
 		end
 		if content.area_details[areanumber].area_type == "C" then
 			local equipment = table_util.split(content.area_details[areanumber].contains_items[1], ":")[2] -- quick solution, should be checked for normal and equipment items
@@ -154,15 +156,7 @@ function content.makeSingleMaze(area, exit_areas, area_details, exclusion_area, 
 	end
 end
 
-function content.show_corners(area, tileset, layer)
-	local layer = layer or 0
-	if tileset == nil then tileset = tonumber(map:get_tileset()) end
-	local tile_id = lookup.tiles["debug_corner"][tileset]
-	placement.place_tile({x1=area.x1, y1=area.y1, x2=area.x1+8, y2=area.y1+8}, tile_id, "corner", layer)--topleft
-	placement.place_tile({x1=area.x2-8, y1=area.y1, x2=area.x2, y2=area.y1+8}, tile_id, "corner", layer)--topright
-	placement.place_tile({x1=area.x2-8, y1=area.y2-8, x2=area.x2, y2=area.y2}, tile_id, "corner", layer)--bottomright
-	placement.place_tile({x1=area.x1, y1=area.y2-8, x2=area.x1+8, y2=area.y2}, tile_id, "corner", layer)--bottomleft
-end
+
 
 
 
