@@ -790,6 +790,34 @@ function maze_gen.standard_recursive_maze( maze, exits )
 	until #Cells == 0
 end
 
+function maze_gen.prims_algorithm( maze, exits )
+	local starting_pos = table_util.random(exits[1])
+	maze[starting_pos.x][starting_pos.y].visited = true
+	for i=2, #exits, 1 do
+		for _,exit_pos in ipairs(exits[i]) do
+			local unvisited = maze_gen.get_neighbors(maze, exit_pos, true)
+			if #unvisited > 0  then
+				local nb = table_util.random(unvisited)
+				maze[exit_pos.x][exit_pos.y][nb.wall_to]=false
+	            maze[nb.pos.x][nb.pos.y][nb.wall_from]=false
+				break
+			end
+		end
+	end
+	local unvisited_list=maze_gen.get_neighbors( maze, starting_pos, true )
+	repeat
+		local un = table.remove(unvisited_list, math.random(#unvisited_list))
+		if not un.node.visited then
+			maze[un.pos.x][un.pos.y][un.wall_from]=false
+	        maze[un.from_pos.x][un.from_pos.y][un.wall_to]=false
+	        un.node.visited = true
+	        local new_unvisited_neighbors = maze_gen.get_neighbors (maze, un.pos, true)
+	        table_util.add_table_to_table(new_unvisited_neighbors, unvisited_list)
+		end
+	until #unvisited_list == 0 
+end
+
+
 function maze_gen.convert_maze_to_area_list( maze, area, corridor_width, wall_width )
 	-- standard 8x8 patterns
 	local max_x=#maze
@@ -1076,10 +1104,21 @@ function maze_gen.generate_maze_puzzle( area, areanumber, area_details, exit_are
 				maze_gen.set_room( area, cw, ww, "maze_room"..areanumber )
 				local maze, exits = maze_gen.generate_maze( area, exit_areas, exclusion)
 				-- pick spots in the corners of the maze for fireball_statues
-				local corners = {{x=1, y=1}, {x=#maze, y=1}, {x=1, y=#maze[1]}, {x=#maze, y=#maze[1]}}
+				local possible_locations = {hor={}, ver={}}
+				for i=1, fireball_statues, 1 do
+					table.insert(possible_locations.hor, {x=math.ceil((#maze/(fireball_statues+1))*i), y=math.ceil(#maze[1]/2)})
+					table.insert(possible_locations.ver, {x=math.ceil(#maze/2), y=math.ceil((#maze[1]/(fireball_statues+1))*i)})
+				end
+				log.debug(possible_locations)
+				log.debug(#maze)
+				log.debug(#maze[1])
+				local use_this_list = nil
+				if area.x2-area.x1 > area.y2-area.y1 then use_this_list = possible_locations.hor
+				else use_this_list = possible_locations.ver end
 				local fb_statue_entity_list = {}
 				for i=1, fireball_statues, 1 do
-					local pos = table.remove( corners, math.random( #corners ) )
+					local pos = use_this_list[i]
+					log.debug(pos)
 					local new_fireball_area = maze_gen.pos_to_area( pos )
 					local entity = map:create_custom_entity({name="fireball_statue", direction=0, 
 															layer=0, x=new_fireball_area.x1+8, y=new_fireball_area.y1+13, 
@@ -1088,19 +1127,20 @@ function maze_gen.generate_maze_puzzle( area, areanumber, area_details, exit_are
 					maze[pos.x][pos.y].visited = true
 				end
 				-- create maze
-				maze_gen.standard_recursive_maze( maze, exits )
+				--maze_gen.standard_recursive_maze( maze, exits )
+				maze_gen.prims_algorithm(maze, exits)
 				local area_list, prop_list = maze_gen.convert_maze_to_area_list( maze, area, cw, ww )
 				for _,v in ipairs(area_list) do
 					placement.place_tile(v.area, lookup.tiles[v.pattern][area_details.tileset_id], "maze", 0)
 				end
 				-- place darkness sensor if darkness
-				if darkness then maze_gen.make_dark_room(area) end
+				--if darkness then maze_gen.make_dark_room(area) end
 			end
 		end
 end
 
 function maze_gen.make_dark_room(area, layer)
-	local area = area_util.resize_area( area_util.copy(area), {-32, -32, 32, 32} )
+	local area = area_util.resize_area( table_util.copy(area), {-32, -32, 32, 32} )
 	placement.show_corners(area)
 	local room_sensor = map:create_sensor({layer=layer or 0, x=area.x1, y=area.y1, width=area.x2-area.x1, height=area.y2-area.y1})
 	room_sensor.on_activated = 
