@@ -267,26 +267,22 @@ end
 
 function sp.create_sokoban_puzzle( difficulty, area, areanumber, area_details, exit_areas, exclusion )
 	local map = area_details.map
-	local outside_sensor = map:get_entity("areasensor_outside_"..areanumber.."_type_"..area_details[areanumber].area_type )
-	outside_sensor.on_activated = 
-		function() 
-			if not map:get_entity("sokoban_sensor_"..areanumber) then
-				maze_gen.set_map( map )
-				local cw, ww = {x=16, y=16}, {x=0, y=0}
-				maze_gen.set_room( area, cw, ww, "sokoban_room"..areanumber )
-				local maze, exits = maze_gen.generate_maze( area, exit_areas, exclusion)
-				local area_list, puzzle_area = sp.put_in_sokoban_puzzle( area, difficulty, maze, exits[1], cw, ww )
-				sp.place_sokoban_puzzle( map, area_list, puzzle_area, areanumber )
-				if area_list then 
-					exits[1] = sp.connect_to_maze( area_list, maze, exits[1] ) 
-				end
-				local convergence_pos = exits[1][#exits[1]]
-				maze_gen.create_initial_paths( maze, exits, convergence_pos )
-				local prop_area_list = maze_gen.maze_to_square_areas( maze, false )
-				local open_area_list = maze_gen.maze_to_square_areas( maze, true )
-				sp.place_props( prop_area_list, area_details.outside )
-			end
+	if not map:get_entity("sokoban_sensor_"..areanumber) then
+		maze_gen.set_map( map )
+		local cw, ww = {x=16, y=16}, {x=0, y=0}
+		maze_gen.set_room( area, cw, ww, "sokoban_room"..areanumber )
+		local maze, exits = maze_gen.generate_maze( area, exit_areas, exclusion)
+		local area_list, puzzle_area = sp.put_in_sokoban_puzzle( area, difficulty, maze, exits[1], cw, ww )
+		sp.place_sokoban_puzzle( map, area_list, puzzle_area, areanumber )
+		if area_list then 
+			exits[1] = sp.connect_to_maze( area_list, maze, exits[1] ) 
 		end
+		local convergence_pos = exits[1][#exits[1]]
+		maze_gen.create_initial_paths( maze, exits, convergence_pos )
+		local prop_area_list = maze_gen.maze_to_square_areas( maze, false )
+		local open_area_list = maze_gen.maze_to_square_areas( maze, true )
+		sp.place_props( prop_area_list, area_details.outside )
+	end
 end
 
 function sp.put_in_sokoban_puzzle( area, difficulty, maze, maze_entrance, corridor_width, wall_width )

@@ -1093,50 +1093,43 @@ end
 function maze_gen.generate_maze_puzzle( area, areanumber, area_details, exit_areas, exclusion, darkness, fireball_statues )
 	-- after opening up the exits create a normal maze afterwards
 	local map = area_details.map
-	local outside_sensor = map:get_entity("areasensor_outside_"..areanumber.."_type_"..area_details[areanumber].area_type )
-	outside_sensor.on_activated = 
-		function() 
-			if not map:get_entity("maze_sensor_"..areanumber) then
-				-- initialize
-				local sensor = placement.place_sensor( area, "maze_sensor_"..areanumber )
-				maze_gen.set_map( map )
-				local cw, ww = {x=16, y=16}, {x=8, y=8}
-				maze_gen.set_room( area, cw, ww, "maze_room"..areanumber )
-				local maze, exits = maze_gen.generate_maze( area, exit_areas, exclusion)
-				-- pick spots in the corners of the maze for fireball_statues
-				local possible_locations = {hor={}, ver={}}
-				for i=1, fireball_statues, 1 do
-					table.insert(possible_locations.hor, {x=math.ceil((#maze/(fireball_statues+1))*i), y=math.ceil(#maze[1]/2)})
-					table.insert(possible_locations.ver, {x=math.ceil(#maze/2), y=math.ceil((#maze[1]/(fireball_statues+1))*i)})
-				end
-				log.debug(possible_locations)
-				log.debug(#maze)
-				log.debug(#maze[1])
-				local use_this_list = nil
-				if area.x2-area.x1 > area.y2-area.y1 then use_this_list = possible_locations.hor
-				else use_this_list = possible_locations.ver end
-				local fb_statue_entity_list = {}
-				for i=1, fireball_statues, 1 do
-					local pos = use_this_list[i]
-					log.debug(pos)
-					local new_fireball_area = maze_gen.pos_to_area( pos )
-					local entity = map:create_custom_entity({name="fireball_statue", direction=0, 
-															layer=0, x=new_fireball_area.x1+8, y=new_fireball_area.y1+13, 
-															model="fireball_statue"})
-					table.insert(fb_statue_entity_list, entity)
-					maze[pos.x][pos.y].visited = true
-				end
-				-- create maze
-				--maze_gen.standard_recursive_maze( maze, exits )
-				maze_gen.prims_algorithm(maze, exits)
-				local area_list, prop_list = maze_gen.convert_maze_to_area_list( maze, area, cw, ww )
-				for _,v in ipairs(area_list) do
-					placement.place_tile(v.area, lookup.tiles[v.pattern][area_details.tileset_id], "maze", 0)
-				end
-				-- place darkness sensor if darkness
-				--if darkness then maze_gen.make_dark_room(area) end
-			end
+	if not map:get_entity("maze_sensor_"..areanumber) then
+		-- initialize
+		local sensor = placement.place_sensor( area, "maze_sensor_"..areanumber )
+		maze_gen.set_map( map )
+		local cw, ww = {x=16, y=16}, {x=8, y=8}
+		maze_gen.set_room( area, cw, ww, "maze_room"..areanumber )
+		local maze, exits = maze_gen.generate_maze( area, exit_areas, exclusion)
+		-- pick spots in the corners of the maze for fireball_statues
+		local possible_locations = {hor={}, ver={}}
+		for i=1, fireball_statues, 1 do
+			table.insert(possible_locations.hor, {x=math.ceil((#maze/(fireball_statues+1))*i), y=math.ceil(#maze[1]/2)})
+			table.insert(possible_locations.ver, {x=math.ceil(#maze/2), y=math.ceil((#maze[1]/(fireball_statues+1))*i)})
 		end
+		local use_this_list = nil
+		if area.x2-area.x1 > area.y2-area.y1 then use_this_list = possible_locations.hor
+		else use_this_list = possible_locations.ver end
+		local fb_statue_entity_list = {}
+		for i=1, fireball_statues, 1 do
+			local pos = use_this_list[i]
+			log.debug(pos)
+			local new_fireball_area = maze_gen.pos_to_area( pos )
+			local entity = map:create_custom_entity({name="fireball_statue", direction=0, 
+													layer=0, x=new_fireball_area.x1+8, y=new_fireball_area.y1+13, 
+													model="fireball_statue"})
+			table.insert(fb_statue_entity_list, entity)
+			maze[pos.x][pos.y].visited = true
+		end
+		-- create maze
+		--maze_gen.standard_recursive_maze( maze, exits )
+		maze_gen.prims_algorithm(maze, exits)
+		local area_list, prop_list = maze_gen.convert_maze_to_area_list( maze, area, cw, ww )
+		for _,v in ipairs(area_list) do
+			placement.place_tile(v.area, lookup.tiles[v.pattern][area_details.tileset_id], "maze", 0)
+		end
+		-- place darkness sensor if darkness
+		if darkness then maze_gen.make_dark_room(area) end
+	end
 end
 
 function maze_gen.make_dark_room(area, layer)

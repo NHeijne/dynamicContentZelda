@@ -101,11 +101,13 @@ function content.start_test(given_map, params, end_destination)
 		log.debug("filling in area "..areanumber)
 		log.debug("creating area_type " .. content.area_details[areanumber].area_type)
 		if table_util.contains({"P", "TP"}, content.area_details[areanumber].area_type) then 
-			--maze_gen.set_room(a.area, 16, 8, "mazeprop_area_"..areanumber)
-			--content.makeSingleMaze(a.area, exit_areas[areanumber], content.area_details, exclusion_areas[areanumber], layer)
-
-			--pike_room.create_pike_room( areanumber, content.area_details, map, a.area, exit_areas[areanumber] )
-			puzzle_gen.create_puzzle( "maze", a.area, areanumber, exit_areas[areanumber], exclusion_areas[areanumber], content.area_details )
+			local maze_types = {["MP"]="maze", ["PP"]="pike_room", ["SP"]="sokoban"}
+			local outside_sensor = map:get_entity("areasensor_outside_"..areanumber.."_type_"..content.area_details[areanumber].area_type )
+			outside_sensor.on_activated = 
+				function() 
+					local puzzle_type = maze_types[content.area_details[areanumber].area_type] or "maze"
+					puzzle_gen.create_puzzle( puzzle_type, a.area, areanumber, exit_areas[areanumber], exclusion_areas[areanumber], content.area_details )
+				end
 		end
 		if content.area_details[areanumber].area_type == "C" then
 			local equipment = table_util.split(content.area_details[areanumber].contains_items[1], ":")[2] -- quick solution, should be checked for normal and equipment items
