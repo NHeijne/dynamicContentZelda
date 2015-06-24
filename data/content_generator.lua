@@ -105,8 +105,7 @@ function content.start_test(given_map, params, end_destination)
 			local outside_sensor = map:get_entity("areasensor_outside_"..areanumber.."_type_"..content.area_details[areanumber].area_type )
 			outside_sensor.on_activated = 
 				function() 
-					local puzzle_type = maze_types[content.area_details[areanumber].area_type] or "maze"
-					puzzle_gen.create_puzzle( puzzle_type, a.area, areanumber, exit_areas[areanumber], exclusion_areas[areanumber], content.area_details )
+					puzzle_gen.create_puzzle( "equal_amounts", a.area, areanumber, exit_areas[areanumber], exclusion_areas[areanumber], content.area_details )
 				end
 		end
 		if content.area_details[areanumber].area_type == "C" then
@@ -260,10 +259,13 @@ function content.create_simple_forest_map(areas, area_details, end_destination)
 			a.open_areas = {a.area}
 		else
 			maze_gen.set_room( a.area, 16, 0, nil )
+			local maze = {}
+			maze_gen.initialize_maze( maze )
+			local exits = maze_gen.open_exits( maze, exit_areas[areanumber] )
 			if table_util.contains({"E", "TF"}, area_details[areanumber].area_type) then 
-				open, closed = maze_gen.generate_path( exit_areas[areanumber], true )
+				open, closed = maze_gen.generate_path( maze, exits, true )
 			else
-				open, closed = maze_gen.generate_path( exit_areas[areanumber], false )
+				open, closed = maze_gen.generate_path( maze, exits, false )
 			end
 			exclusion_areas[areanumber] = closed
 			a.open_areas = open
@@ -316,6 +318,27 @@ function content.create_simple_forest_map(areas, area_details, end_destination)
 			local leftovers = placement.spread_props(l, 0, choice_for_that_area, 1)
 		end
 	end 
+
+	for areanumber,connections in pairs(areas["exit"]) do
+		for _, connection in ipairs(connections) do
+			for direction, area in pairs(connection) do
+				for _,con in ipairs(area_details[areanumber]) do
+					if con.main and con.areanumber == area.to_area then
+						local new_area
+						if direction == 0 or direction == 2 then 
+							new_area = area_util.merge_areas(area, area_util.get_side(area, direction, 56, 0))
+						else
+							new_area = area_util.merge_areas(area, area_util.get_side(area, direction, 80, 0))
+						end
+						content.display_main_path( area_details.outside, new_area, direction )
+					end 
+				end
+			end
+		end
+	end
+
+
+
 	return exit_areas, exclusion_areas
 end
 
@@ -363,6 +386,14 @@ function content.create_simple_dungeon_map(areas, area_details, end_destination)
 				if direction == 3 or direction == 0 then
 					placement.place_prop("edge_doors_"..direction, area, 0, tileset, lookup.transitions)
 				end
+				-- check if main path
+				for _,con in ipairs(area_details[areanumber]) do
+					if con.main and con.areanumber == area.to_area then
+						local new_area = area_util.merge_areas(area, area_util.get_side(area, direction, 32, 0))
+						content.display_main_path( area_details.outside, new_area, direction )
+					end 
+				end
+
 				table.insert(exit_areas[areanumber], area_util.get_side(area, (direction+2)%4))
 				
 				local added_throwables = content.create_simple_barriers( area_details, area_util.get_side(area, (direction+2)%4, 32, 0), direction, areanumber, area.to_area )
@@ -428,11 +459,14 @@ function content.create_simple_dungeon_map(areas, area_details, end_destination)
 
 		if not table_util.contains({"P", "TP", "BOSS"}, area_details[areanumber].area_type) then
 			maze_gen.set_room( a.area, 16, 0, nil )
+			local maze = {}
+			maze_gen.initialize_maze( maze )
+			local exits = maze_gen.open_exits( maze, exit_areas[areanumber] )
 			local open, closed
 			if table_util.contains({"E", "TF"}, area_details[areanumber].area_type) then 
-				open, closed = maze_gen.generate_path( exit_areas[areanumber], true )
+				open, closed = maze_gen.generate_path( maze, exits, true )
 			else
-				open, closed = maze_gen.generate_path( exit_areas[areanumber], false )
+				open, closed = maze_gen.generate_path( maze, exits, false )
 			end
 			exclusion_areas[areanumber] = closed
 			a.open_areas = open
@@ -648,7 +682,7 @@ function content.plant_trees(area, exclude_these)
 	end
 	-- visualize
 	for _, tl in ipairs(treeline_area_list) do
-		placement.place_tile(area_util.resize_area(tl, {-32, -16, 32, 0}), 7, "forest", 0)
+		placement.place_tile(area_util.resize_area(tl, {-16, -16, 16, 0}), 7, "forest", 0)
 	end
 	for _, tl in ipairs(treeline_area_list) do
 		-- content.show_corners(tl)
@@ -673,7 +707,46 @@ function content.plant_trees(area, exclude_these)
 	return treeline_area_list
 end
 
+function content.display_main_path( outside, area, direction )
+	if outside then
+		-- place signs beside the exit saying either, towards mines, towards village
+		local sign_to, sign_from
+		if direction == 0 then
+			sign_to = map:create_npc{layer=0, x=area.x1+24, y=area.y1-3, direction=3, subtype=0, sprite="entities/normal_sign"}
+			sign_from = map:create_npc{layer=0, x=area.x2-24, y=area.y1-3, direction=3, subtype=0, sprite="entities/normal_sign"}
+		elseif direction == 1 then
+			sign_to = map:create_npc{layer=0, x=area.x2+8, y=area.y2-19, direction=3, subtype=0, sprite="entities/normal_sign"}
+			sign_from = map:create_npc{layer=0, x=area.x1-8, y=area.y1+29, direction=3, subtype=0, sprite="entities/normal_sign"}
+		elseif direction == 2 then
+			sign_from = map:create_npc{layer=0, x=area.x1+24, y=area.y1-3, direction=3, subtype=0, sprite="entities/normal_sign"}
+			sign_to = map:create_npc{layer=0, x=area.x2-24, y=area.y1-3, direction=3, subtype=0, sprite="entities/normal_sign"}
+		elseif direction == 3 then
+			sign_from = map:create_npc{layer=0, x=area.x2+8, y=area.y2-19, direction=3, subtype=0, sprite="entities/normal_sign"}
+			sign_to = map:create_npc{layer=0, x=area.x1-8, y=area.y1+29, direction=3, subtype=0, sprite="entities/normal_sign"}
+		end
+		function sign_to:on_interaction() game:start_dialog("test.variable", lookup.sign_to) end
+		function sign_from:on_interaction() game:start_dialog("test.variable", lookup.sign_from) end
+	else
+		-- place signs beside the exit saying either, towards exit, towards entrance
+		local sign_to, sign_from
+		if direction == 0 then
+			sign_to = map:create_npc{layer=0, x=area.x1+8, y=area.y1-3, direction=2, subtype=0, sprite="entities/hint_stone"}
+			sign_from = map:create_npc{layer=0, x=area.x2-8, y=area.y1-3, direction=0, subtype=0, sprite="entities/hint_stone"}
+		elseif direction == 1 then
+			sign_to = map:create_npc{layer=0, x=area.x2+8, y=area.y2-3, direction=3, subtype=0, sprite="entities/hint_stone"}
+			sign_from = map:create_npc{layer=0, x=area.x1-8, y=area.y1+13, direction=1, subtype=0, sprite="entities/hint_stone"}
+		elseif direction == 2 then
+			sign_from = map:create_npc{layer=0, x=area.x1+8, y=area.y1-3, direction=2, subtype=0, sprite="entities/hint_stone"}
+			sign_to = map:create_npc{layer=0, x=area.x2-8, y=area.y1-3, direction=0, subtype=0, sprite="entities/hint_stone"}
+		elseif direction == 3 then
+			sign_from = map:create_npc{layer=0, x=area.x2+8, y=area.y2-3, direction=3, subtype=0, sprite="entities/hint_stone"}
+			sign_to = map:create_npc{layer=0, x=area.x1-8, y=area.y1+13, direction=1, subtype=0, sprite="entities/hint_stone"}
+		end
+		function sign_to:on_interaction() game:start_dialog("test.variable", lookup.hint_stone_to) end
+		function sign_from:on_interaction() game:start_dialog("test.variable", lookup.hint_stone_from) end
+	end
 
+end
 
 
 

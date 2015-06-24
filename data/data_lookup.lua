@@ -367,4 +367,29 @@ lookup.props =
 
 }
 
+
+lookup.sign_to=[[
+
+     To the mines
+     
+]]
+
+lookup.sign_from=[[
+
+    To the village
+     
+]]
+
+lookup.hint_stone_to=[[
+
+     To the exit
+     
+]]
+
+lookup.hint_stone_from=[[
+
+   To the entrance
+     
+]]
+
 return lookup

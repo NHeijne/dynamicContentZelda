@@ -11,16 +11,41 @@ local num_util 		= require("num_util")
 local pg ={}
 
 pg.pike_room_min_difficulty = 1
-pg.pike_room_max_difficulty = 5
+pg.pike_room_max_difficulty = 1
 pg.sokoban_min_difficulty = 1
-pg.sokoban_max_difficulty = 5
+pg.sokoban_max_difficulty = 1
 pg.maze_min_difficulty = 1
-pg.maze_max_difficulty = 5
+pg.maze_max_difficulty = 1
 
+pg.puzzles_instantiated = {["maze"]=0, ["sokoban"]=0, ["pike_room"]=0}
+pg.time_requirements = {["maze"]=30, ["sokoban"]=90, ["pike_room"]=20}
+pg.areanumbers_filled = {}
 
-function pg.create_puzzle( puzzle_type, area, areanumber, exit_areas, exclusion, area_details )
+function pg.create_puzzle( selection_type, area, areanumber, exit_areas, exclusion, area_details )
+	local map_id = tonumber(map:get_id())
+	pg.areanumbers_filled[map_id] = pg.areanumbers_filled[map_id] or {}
+	if not pg.areanumbers_filled[map_id][areanumber] then pg.areanumbers_filled[map_id][areanumber] = true 
+	else return end
+	-- determine puzzle type
+	local puzzle_type
+	if table_util.contains({"maze", "pike_room", "sokoban"}, selection_type) then
+		puzzle_type = selection_type
+	elseif selection_type == "equal_amounts" then
+		local min_amount = math.huge
+		local puzzle_types_available = table_util.get_keys(pg.puzzles_instantiated)
+		table_util.shuffleTable( puzzle_types_available )
+		for _,pt in pairs(puzzle_types_available) do
+			if pg.puzzles_instantiated[pt] < min_amount then 
+				puzzle_type = pt
+				min_amount = pg.puzzles_instantiated[pt]
+			end
+		end
+		pg.puzzles_instantiated[puzzle_type] = pg.puzzles_instantiated[puzzle_type] + 1
+	else puzzle_type = table_util.random({"maze", "pike_room", "sokoban"}) end
+
 	-- determine difficulty to be used
-	local difficulty = math.random(pg[puzzle_type.."_min_difficulty"], pg[puzzle_type.."_max_difficulty"])
+	local difficulty = pg[puzzle_type.."_min_difficulty"]
+	if game:get_life() > 16 then difficulty = pg[puzzle_type.."_max_difficulty"] end
 	-- determine parameters to be used
 	local parameters = pg.get_parameters( puzzle_type, difficulty )
 	parameters.area = area; 			parameters.areanumber = areanumber    
@@ -30,9 +55,13 @@ function pg.create_puzzle( puzzle_type, area, areanumber, exit_areas, exclusion,
 	return pg.make_puzzle( puzzle_type, parameters )
 end
 
-function pg.interpret_log( log )
-	-- decide whether to increase/decrease the difficulty based on the log
-	-- iff fast enough and not lost too many hearts then increase else decrease
+function pg.interpret_log( completed_puzzle_log )
+	local cl = completed_puzzle_log
+	if cl.deaths > 0 or cl.quit or ( cl.got_hurt > 4 and cl.time_end-cl.time_start > pg.time_requirements[cl.puzzle_type] )  then
+		pg.decrease_min_max_difficulty( cl.puzzle_type )
+	else
+		pg.increase_min_max_difficulty( cl.puzzle_type )
+	end
 end
 
 function pg.increase_min_max_difficulty( puzzle_type )

@@ -1,5 +1,6 @@
 maze_gen 		= maze_gen or require("maze_generator")
-placement 			= placement or require("object_placement")
+placement 		= placement or require("object_placement")
+puzzle_logger 	= puzzle_logger or require("puzzle_logger")
 
 local log 				= require("log")
 local table_util 		= require("table_util")
@@ -172,14 +173,18 @@ function sp.place_sokoban_puzzle( map, area_list, puzzle_area, areanumber )
 	reset_switch = map:create_switch(reset_switch)
 	sp.puzzles_created[next_index] = area_list
 	local sensor = placement.place_sensor( puzzle_area, "sokoban_sensor_"..areanumber )
+	sensor.on_activated = function () puzzle_logger.start_recording("sokoban", areanumber) end
+	sensor.on_left = function () puzzle_logger.stop_recording()	end
 	sensor.on_activated_repeat =
 		function()
 			if sol.input.is_key_pressed("q") then
-				sp.remove_sokoban( next_index, map )
+				if puzzle_logger.pressed_quit() then sp.remove_sokoban( next_index, map ) end
 			end
 		end
 	reset_switch.on_activated = 
 		function() 
+			puzzle_logger.start_recording("sokoban", areanumber)
+			puzzle_logger.retry()
 			local index = next_index
 			local map = map
 			for sokoban_object in map:get_entities("sokoban_"..index) do
@@ -202,7 +207,8 @@ function sp.place_sokoban_puzzle( map, area_list, puzzle_area, areanumber )
 				local move_block = table_util.copy(sp.prop_types.move_block)
 				move_block.name = "sokoban_"..index.."_"..move_block.name
 				move_block.x, move_block.y = move_block.x+area.x1, move_block.y+area.y1
-				map:create_block(move_block)
+				local block = map:create_block(move_block)
+				block.on_moved = function () end
 			end
 			-- place wall for the blocks at the entrance
 			for _, area in ipairs(area_list.exit) do
@@ -226,6 +232,7 @@ function sp.check_switches( index, map, nr_of_switches )
 	end
 	sp.remove_sokoban( index, map )
 	-- log completion of sokoban puzzle 
+	puzzle_logger.complete_puzzle()
 end
 
 function sp.remove_sokoban( index, map )

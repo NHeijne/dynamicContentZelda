@@ -1,5 +1,6 @@
-maze_gen 			= maze_gen or require("maze_generator")
-placement 	= placement or require("object_placement")
+maze_gen 		= maze_gen or require("maze_generator")
+placement 		= placement or require("object_placement")
+puzzle_logger 	= puzzle_logger or require("puzzle_logger")
 
 local log 			= require("log")
 local table_util 	= require("table_util")
@@ -16,82 +17,104 @@ end
 function pr.create_pike_room( areanumber, area_details, area, exit_areas, speed, width, movement )
 	local map = area_details.map
 	if not map:get_entity("pikeroom_sensor_"..areanumber) then 
+		maze_gen.set_map( map )
+		maze_gen.set_room( area, 16, 0, "pikeroom_"..areanumber )
+		local maze = {}
+		maze_gen.initialize_maze( maze )
+		local exits = maze_gen.open_exits( maze, exit_areas )
+		local floor
 		if area_details.outside then
-			maze_gen.set_map( map )
-			maze_gen.set_room( area, 16, 0, "pikeroom_"..areanumber )
-			local _, closed, _ = maze_gen.generate_path( exit_areas, false, width )
-			local floor = map:get_entity("room_floor_"..areanumber)
-			local floor_x, floor_y, layer = floor:get_position()
-			local floor_w, floor_h = floor:get_size()
-			floor:remove()
-			local new_floor = map:create_dynamic_tile{name="room_floor_"..areanumber, layer=0, x=floor_x-24, y=floor_y-24, width=floor_w+48, height=floor_h+48, pattern=14, enabled_at_start=true}
-			new_floor:bring_to_back()
-			new_floor:set_optimization_distance(600)
-			for i,area in ipairs(closed) do
-				map:create_dynamic_tile{layer=0, x=area.x1, y=area.y1, width=area.x2-area.x1, height=area.y2-area.y1, pattern=275, enabled_at_start=true}
+			local outer_ring = maze_gen.get_outer_ring( maze, 1, false )
+			for _,pos in ipairs(outer_ring) do
+				maze[pos.x][pos.y].visited = "outer_ring"
 			end
-			local hero_x, hero_y, layer = map:get_hero():get_position()
-			local direction =  math.random(0, 3)*2
-			local stream = map:create_stream{name="stream_area_"..areanumber, 
-						  layer=0, x=floor_x, y=floor_y, 
-						  direction=direction, speed=speed}
-			local x, y, layer = new_floor:get_position()
-			new_floor.position, new_floor.direction, new_floor.speed, new_floor.times_till_change, new_floor.stream = {x=x, y=y}, direction, speed, 4, stream
-			pr.move_recurrent( new_floor, movement )
+			local _, closed, _ = maze_gen.generate_path( maze, exits, false, width-0.5, nil, 0 )
+			local old_floor = map:get_entity("room_floor_"..areanumber)
+			local floor_x, floor_y, layer = old_floor:get_position()
+			local floor_w, floor_h = old_floor:get_size()
+			old_floor:remove()
+			floor = map:create_dynamic_tile{name="room_floor_"..areanumber, layer=0, 
+											x=floor_x+24, y=floor_y+24, width=floor_w-48, height=floor_h-48, 
+											pattern=14, enabled_at_start=true}
+			floor:bring_to_back()
+
+			table_util.add_table_to_table(maze_gen.maze_to_square_areas( maze, "exit" ), closed)
+			for i,area in ipairs(closed) do
+				map:create_dynamic_tile{layer=0, x=area.x1, y=area.y1, width=area.x2-area.x1, 
+										height=area.y2-area.y1, pattern=275, enabled_at_start=true}
+			end
+			local outer_ring_areas = maze_gen.maze_to_square_areas( maze, "outer_ring" )
+			for i,area in ipairs(outer_ring_areas) do
+				map:create_dynamic_tile{layer=0, x=area.x1, y=area.y1, width=area.x2-area.x1, 
+										height=area.y2-area.y1, pattern=275, enabled_at_start=true}
+				map:create_dynamic_tile{layer=0, x=area.x1, y=area.y1, width=area.x2-area.x1, 
+										height=area.y2-area.y1, pattern=10, enabled_at_start=true}
+			end
 		else
-			maze_gen.set_map( map )
-			maze_gen.set_room( area, 16, 0, "pikeroom_"..areanumber )
 			local pikes = {}
-			local _, _, maze = maze_gen.generate_path( exit_areas, false, width )
+			local _, _, maze = maze_gen.generate_path( maze, exits, false, width )
 			local area_list = {}
 			local unvisited = maze_gen.get_not_visited( maze )
 			for i,pos in ipairs(unvisited) do
 				area_list[i] = maze_gen.pos_to_area(pos)
 			end
 			for i,area in ipairs(area_list) do
-				local pike = map:create_enemy{name="pike_area_"..areanumber.."_nr_1", layer=0, x=area.x1+8, y=area.y1+13, direction=3, breed="pike_fixed"}
+				local pike = map:create_enemy{name="pike_area_"..areanumber.."_nr_1", 
+											  layer=0, x=area.x1+8, y=area.y1+13, 
+											  direction=3, breed="pike_fixed"}
 				pikes[i]=pike
 			end
-			local direction =  math.random(0, 3)*2
-			local stream = map:create_stream{name="stream_area_"..areanumber, 
-						  layer=0, x=area.x1, y=area.y1, 
-						  direction=direction, speed=speed}
-			local floor = map:get_entity("room_floor_"..areanumber)
-			floor:set_optimization_distance(600)
-			local x, y, layer = floor:get_position()
-			floor.position, floor.direction, floor.speed, floor.times_till_change, floor.stream = {x=x, y=y}, direction, speed, 4, stream
-			pr.move_recurrent( floor, movement )
+			floor = map:get_entity("room_floor_"..areanumber)
 		end
-		local sensor_area = area_util.resize_area(area, {-32, -32, 32, 32})
-		local room_sensor = placement.place_sensor( sensor_area, "pikeroom_sensor_"..areanumber, 0 )
+
+		local direction =  math.random(0, 3)*2
+		local x, y, layer = floor:get_position()
+		local stream = map:create_stream{name="stream_area_"..areanumber, 
+					  layer=0, x=area.x1, y=area.y1, 
+					  direction=direction, speed=speed}
+
+		floor:set_optimization_distance(600)
+		floor.position, floor.direction, floor.speed, floor.times_till_change, floor.stream = {x=x, y=y}, direction, speed, 4, stream
+		local x_offset, y_offset = 0, 0
+		if 		floor.direction == 0 then x_offset = -8; y_offset =  8 
+		elseif 	floor.direction == 2 then x_offset = -8; y_offset =  8
+		elseif 	floor.direction == 4 then x_offset =  8; y_offset = -8
+		elseif 	floor.direction == 6 then x_offset =  8; y_offset = -8 end
+		floor:set_position(floor.position.x+x_offset, floor.position.y+y_offset, 0)
+		pr.move_recurrent( floor, movement )
+
+		local room_sensor = placement.place_sensor( area, "pikeroom_sensor_"..areanumber, 0 )
 		room_sensor.on_activated = 
 			function() 
 				local hero_x, hero_y, layer = map:get_hero():get_position()
 				map:get_hero():save_solid_ground(hero_x, hero_y, layer)
-				map:get_entity("stream_area_"..areanumber):set_position(hero_x, hero_y, layer)
-				pr.start_logging( area_details, areanumber )
+				map:get_entity("stream_area_"..areanumber):set_position(num_util.clamp(hero_x, area.x1+8, area.x2-8), num_util.clamp(hero_y, area.y1+13, area.y2-3), layer)
+				puzzle_logger.start_recording( "pike_room", areanumber )
 			end
 		room_sensor.on_activated_repeat = 
 			function() 
 				local hero_x, hero_y, layer = map:get_hero():get_position()
-				map:get_entity("stream_area_"..areanumber):set_position(hero_x, hero_y, layer)
+				map:get_entity("stream_area_"..areanumber):set_position(num_util.clamp(hero_x, area.x1+8, area.x2-8), num_util.clamp(hero_y, area.y1+13, area.y2-3), layer)
 			end
 		room_sensor.on_left =
 			function()
 				map:get_hero():reset_solid_ground()
-				pr.stop_logging()
+				puzzle_logger.stop_recording()
 			end
+		for i, exit in ipairs(exit_areas) do
+			local area_to_use = area_util.expand_line( exit, 16 )
+			local exit_sensor = placement.place_sensor( area_to_use, "pikeroom_"..areanumber.."_exit_"..i, 0 )
+			if i > 1 then 
+				exit_sensor.on_activated = 
+				function () 
+					puzzle_logger.complete_puzzle() 
+				end
+			end
+		end
 	else
 		local hero_x, hero_y, layer = map:get_hero():get_position()
 		map:get_entity("stream_area_"..areanumber):set_position(hero_x, hero_y, layer)
 	end
-end
-
-function pr.start_logging( area_details, areanumber )
-	
-end
-
-function pr.stop_logging()
 end
 
 function pr.move_recurrent( obj, movement_type )
@@ -101,7 +124,6 @@ function pr.move_recurrent( obj, movement_type )
 	m:set_ignore_obstacles()
 	m.on_finished = 
 		function ()
-			obj:set_position(obj.position.x, obj.position.y, 0)
 			if obj.times_till_change == 0 then
 				if movement_type == "random" then
 					obj.direction = math.random(0, 3)*2
@@ -117,6 +139,12 @@ function pr.move_recurrent( obj, movement_type )
 			else
 				obj.times_till_change = obj.times_till_change -1
 			end
+			local x_offset, y_offset = 0, 0
+			if 		obj.direction == 0 then x_offset = -8; y_offset =  8 
+			elseif 	obj.direction == 2 then x_offset = -8; y_offset =  8
+			elseif 	obj.direction == 4 then x_offset =  8; y_offset = -8
+			elseif 	obj.direction == 6 then x_offset =  8; y_offset = -8 end
+			obj:set_position(obj.position.x+x_offset, obj.position.y+y_offset, 0)
 			pr.move_recurrent( obj, movement_type  )
 		end
 	m:start(obj)

@@ -1,5 +1,6 @@
-lookup 				= lookup or require("data_lookup")
-placement 			= placement or require("object_placement")
+lookup 			= lookup or require("data_lookup")
+placement 		= placement or require("object_placement")
+puzzle_logger 	= puzzle_logger or require("puzzle_logger")
 
 
 local log = require("log")
@@ -123,6 +124,9 @@ function maze_gen.area_to_pos ( area )
 end 
 
 function maze_gen.initialize_maze( maze, area, wall_width, corridor_width )
+	wall_width = wall_width or room.wall_width
+	corridor_width = corridor_width or room.corridor_width
+	area = area or room
 	local width = area.x2-area.x1
 	local height = area.y2-area.y1
 	local x_amount = math.floor((width-wall_width.x)/(wall_width.x+corridor_width.x))
@@ -161,7 +165,11 @@ function maze_gen.open_unvisited( maze )
 	end
 end
 
-function maze_gen.open_exits( maze, exit_areas, area, wall_width, corridor_width )
+function maze_gen.open_exits( maze, exit_areas, extra_width, area, wall_width, corridor_width )
+	local wall_width = wall_width or room.wall_width
+	local corridor_width = corridor_width or room.corridor_width
+	local area = area or room
+	local extra_width = extra_width or 0
 	local width = area.x2-area.x1
 	local height = area.y2-area.y1
 	local exits = {}
@@ -172,10 +180,10 @@ function maze_gen.open_exits( maze, exit_areas, area, wall_width, corridor_width
 		local x2 = (v.x2-area.x1-wall_width.x)/(wall_width.x+corridor_width.x)
 		local y2 = (v.y2-area.y1-wall_width.y)/(wall_width.y+corridor_width.y)
 
-		local selected_x_min = num_util.clamp(math.ceil(x1), 1, #maze)
-		local selected_x_max = num_util.clamp(math.ceil(x2), 1, #maze)
-		local selected_y_min = num_util.clamp(math.ceil(y1), 1, #maze[1])
-		local selected_y_max = num_util.clamp(math.ceil(y2), 1, #maze[1])
+		local selected_x_min = num_util.clamp(math.ceil(x1)-extra_width, 1, #maze)
+		local selected_x_max = num_util.clamp(math.ceil(x2)+extra_width, 1, #maze)
+		local selected_y_min = num_util.clamp(math.ceil(y1)-extra_width, 1, #maze[1])
+		local selected_y_max = num_util.clamp(math.ceil(y2)+extra_width, 1, #maze[1])
 		
 		local direction 
 		-- direction (number): between 0 (East of the room) and 3 (South of the room).
@@ -651,15 +659,12 @@ end
 ------------------------------------------------------------------------------------------------------------------------------
 
 
-function maze_gen.generate_path( exit_areas, straight_path, path_width, intersections )
+function maze_gen.generate_path( maze, exits, straight_path, path_width, intersections, exit_width )
 	-- for inside the areas
 	local intersections = intersections or {x=4, y=4}
 	local path_width = path_width or 0.5
+	local exit_width = exit_width or 1
 	local wall_width, corridor_width = room.wall_width, room.corridor_width
-	local maze = {}
-	maze_gen.initialize_maze( maze, room, wall_width, corridor_width )
-	log.debug(exit_areas)
-	local exits = maze_gen.open_exits( maze, exit_areas, room, wall_width, corridor_width )
 	-- check along the path what the max distance is to the exits
 	local paths = maze_gen.create_initial_paths( maze, exits )
 	if not straight_path then
@@ -686,13 +691,13 @@ function maze_gen.generate_path( exit_areas, straight_path, path_width, intersec
 		for _, pos in ipairs(path) do
 			local nodes_to_clear = maze_gen.get_nodes_around_pos(maze, pos, path_width)
 			for _,node in ipairs(nodes_to_clear) do
-				node.visited = true
+				if not node.visited then node.visited = true end
 			end
 		end
 	end
 	for _,exit_list in ipairs(exits) do
 		for _, pos in ipairs(exit_list) do
-			local nodes_to_clear = maze_gen.get_nodes_around_pos(maze, pos, 2)
+			local nodes_to_clear = maze_gen.get_nodes_around_pos(maze, pos, exit_width)
 			for _,node in ipairs(nodes_to_clear) do
 				node.visited = "exit"
 			end
@@ -890,7 +895,7 @@ function maze_gen.generate_maze( area, exit_areas, exclusion)
 
 	maze_gen.place_walls_around( maze, maze_gen.get_not_visited( maze ) )
 	
-	local exits = maze_gen.open_exits( maze, exit_areas, area, wall_width, corridor_width )
+	local exits = maze_gen.open_exits( maze, exit_areas )
 
 	return maze, exits
 end
@@ -1096,6 +1101,8 @@ function maze_gen.generate_maze_puzzle( area, areanumber, area_details, exit_are
 	if not map:get_entity("maze_sensor_"..areanumber) then
 		-- initialize
 		local sensor = placement.place_sensor( area, "maze_sensor_"..areanumber )
+		sensor.on_activated = function () puzzle_logger.start_recording("maze", areanumber) end
+		sensor.on_left = function () puzzle_logger.stop_recording()	end
 		maze_gen.set_map( map )
 		local cw, ww = {x=16, y=16}, {x=8, y=8}
 		maze_gen.set_room( area, cw, ww, "maze_room"..areanumber )
@@ -1127,6 +1134,16 @@ function maze_gen.generate_maze_puzzle( area, areanumber, area_details, exit_are
 		for _,v in ipairs(area_list) do
 			placement.place_tile(v.area, lookup.tiles[v.pattern][area_details.tileset_id], "maze", 0)
 		end
+		for i, exit in ipairs(exit_areas) do
+			local area_to_use = area_util.expand_line( exit, 16 )
+			local exit_sensor = placement.place_sensor( area_to_use, "maze_"..areanumber.."_exit_"..i, 0 )
+			if i > 1 then 
+				exit_sensor.on_activated = 
+				function () 
+					puzzle_logger.complete_puzzle() 
+				end
+			end
+		end
 		-- place darkness sensor if darkness
 		if darkness then maze_gen.make_dark_room(area) end
 	end
@@ -1144,6 +1161,21 @@ function maze_gen.make_dark_room(area, layer)
 		function() 
 			local map=map; map:set_light(1) 
 		end
+end
+
+
+function maze_gen.get_outer_ring( maze, width, custom_value )
+	local resulting_positions = {}
+	for x,column in ipairs(maze) do
+		for y,node in ipairs(column) do
+			if (x <=width or x >= #maze-(width-1)) or (y <= width or y >= #maze[1]-(width-1)) then
+				if custom_value and node.visited == custom_value or not custom_value then
+					table.insert(resulting_positions, {x=x, y=y})
+				end
+			end
+		end
+	end
+	return resulting_positions
 end
 
 return maze_gen

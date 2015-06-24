@@ -563,8 +563,23 @@ function mission_grammar.transform_to_space( params )
 			end
 		end
 		area_details.nr_of_areas=areas_assigned
+		mission_grammar.add_main_path_info( area_details, "start" )
 		return area_details
 	end
+end
+
+function mission_grammar.add_main_path_info( area_details, areanumber )
+	if areanumber == "goal" then return true end
+	for con_nr, con in ipairs(area_details[areanumber]) do
+		if con.type == "twoway" then
+			local is_main = mission_grammar.add_main_path_info( area_details, con.areanumber )
+			if is_main then
+				con.main = true
+				return true
+			end
+		end
+	end
+	return false
 end
 
 function mission_grammar.update_grammar()
