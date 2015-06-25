@@ -57,7 +57,7 @@ Players were asked to play through a series of rooms containing variable numbers
 \subsection{Assumptions}
 The system relies on the assumption that the behaviour of a player experiencing some level of emotional intensity is the same regardless of skill. For example, a player who gets hit five times in a room will experience stress as a result of that fact, whether this is a skilled player fighting many enemies or a beginner fighting a single enemy. This assumption allows us to ascertain the stress level of a player without having to stop the game to ask them what it is.
 
-As will be shown in section \ref{fig:results}, this assumption is robust enough to show reasonable accuracy in the data. By including a variable denoting the player's experience with video games, that section will attempt to show exactly how robust the assumption is.
+As will be shown in section \ref{results}, this assumption is robust enough to show reasonable accuracy in the data. By including a variable denoting the player's experience with video games, that section will attempt to show exactly how robust the assumption is.
 
 \section{Implementation}
 This project is based on the open-source video game \emph{Legend of Zelda: Mystery of Solarus DX} \cite{zeldasolarus}. Areas were randomly generated at runtime using Dormans and Bakkes' technique for generating missions and spaces \cite{missiongrammar}. For these experiments, however, areas were kept fairly linear so as to reduce time spent during user studies. 
@@ -98,7 +98,7 @@ In order to start determining the right makeup of a combat encounter for a playe
 
 Once every enemy has been encountered once, enough data will be available to make a first estimate of the appropriate difficulty. Subsequent rooms will be constructed to slowly increase the difficulty for this player to a desirable level, starting at the lowest level. Starting at a lower difficulty decreases the risk of an encounter being constructed based on faulty data, which is a concern at this point because of sparsity. Each of the progressively more difficult rooms will increase the amount of data and thus decrease the margin of error on the formula. This way errors are most likely to occur in rooms with a low difficulty, which reduces the chance of an overshoot creating an impossible challenge for the player.
 
-\section{Results} \label{fig:results}
+\section{Results} \label{results}
 Data was recorded from a total of 16 test subjects. In total, 302 encounters were recorded, each participant completing an average of 18.88 encounters with a standard deviation of 7.191. Five of the test subjects had no experience with action video games, six had some experience but no experience with the \emph{Legend of Zelda} series, and five had previous experience with the game. These groups account for 23.5\%, 43\% and 33\% of the data. Finally, 54\% of all recorded fights were inside the dungeon, and the final boss was seen eleven times in total. The intended difficulty of the encounters presented ranged from 1 to 7.558, with a 3.371 mean and standard deviation of 1.807.
 
 \subsection{Evaluation criteria}
@@ -111,8 +111,6 @@ Finally, it is useful to be able to use previously gathered data to predict new 
 % And what about the experience assumption and its accuracy?
 
 \subsection{Accuracy}
-The following figures were obtained using Weka \cite{weka}.
-
 \begin{table*}[t]
 \centering
 \begin{tabular}{l|cccc|}
@@ -127,25 +125,51 @@ SMO regression & 1.0634 & 1.6185 & 68.6005 & 86.6108 \\ \hline
 M5 rules & 1.0933 & 1.4334 & 70.5283 & 76.7064 \\ \hline
 Gaussian processes & 0.999 & 1.294 & 64.4455 & 69.2444 \\ \hline
 \end{tabular}
-\captionof{figure}{Accuracy of the estimator}
+\captionof{table}{Accuracy of the estimator}
+\label{tab:estimator}
 \end{table*}
 
 \begin{table*}[t]
 \centering
-\begin{tabular}{c|c|c|c|c|}
+\begin{tabular}{l|ccc|}
+Iteration & 
+\begin{tabular}{c} Mean\\absolute\\error \end{tabular} & 
+\begin{tabular}{c} Root\\mean\\squared\\error \end{tabular} &
+\begin{tabular}{c} Instances \end{tabular} \\
+\hline
+First & 1.329391354 & 1.673463207 & 72 \\ \hline
+Second & 1.369322858 & 1.705159509 & 108 \\ \hline
+Third & 1.915672157 & 2.314933135 & 39 \\ \hline
+
+\end{tabular}
+\captionof{table}{Overall accuracy}
+\label{tab:overall}
+\end{table*}
+
+\begin{table*}[t]
+\centering
+\begin{tabular}{l|cccc|}
 \begin{tabular}{c} Test\\subject \end{tabular} &
 \begin{tabular}{c} Mean\\absolute\\error \end{tabular} & 
 \begin{tabular}{c} Root\\mean\\squared\\error \end{tabular} & 
-\begin{tabular}{c} Mean\\absolute\\error \end{tabular} & 
-\begin{tabular}{c} Root\\mean\\squared\\error \end{tabular} \\
+\begin{tabular}{c} Samples\\in\\forest \end{tabular} & 
+\begin{tabular}{c} Samples\\in\\dungeon \end{tabular} \\
 \hline
-Jan & 1.1369 & 1.5545 & 7 & 7 \\ \hline
-2 & 7 & 7 & 7 & 7 \\ \hline
-3 & 7 & 7 & 7 & 7 \\ \hline
+Jan & 1.1235 & 1.5402 & 13 & 14 \\ \hline
+Sjo & 1.4125 & 1.7272 & 10 & 11 \\ \hline
+3 & 0.963 & 1.1089 & 11 & 10 \\ \hline
 4 & 7 & 7 & 7 & 7 \\ \hline
 \end{tabular}
-\captionof{figure}{Generalizability to multiple settings}
+\captionof{table}{Generalizability to new settings}
+\label{tab:generalizability}
 \end{table*}
+
+The figures in this paper were obtained using Weka \cite{weka}.
+
+Table \ref{tab:overall} compares the builder's intent with the user's experience. Note that the builder used Linear Regression in the engine. 
+Due to sparsity of data and specificity to players, it is difficult to determine the optimal learning algorithm for the builder; however, it is reasonable to assume results could be improved with the use of different learning algorithms. 
+Note that for these results, tutorial rooms and boss rooms have been removed from the calculation, since the difficulty of those encounters cannot be predicted during the game.
+Finally, note that this is the average accuracy and includes predictions made with varying sparsity of data.
 
 \subsection{Generalizability}
 
@@ -153,7 +177,7 @@ Jan & 1.1369 & 1.5545 & 7 & 7 \\ \hline
 As written, the game places enemies in discrete encounters. Planning for emotional intensity will likely be more difficult when enemies are allowed to move into or out of the space the player is currently in. 
 
 \section{Acknowledgements}
-Much of the code for this project was provided by Norbert Heijne. His research concerning this engine can be found in an upcoming paper.
+Much of the code for this project was provided by Norbert Heijne. His research concerning this game engine can be found in an upcoming paper.
 
 \bibliographystyle{plain}
 \begin{thebibliography}{9}
@@ -267,3 +291,31 @@ The following is a list of the information recorded after the completion of ever
 \end{multicols}
 
 \end{document}
+
+
+
+
+
+
+% I probably won't complete this table.
+\iffalse
+\begin{table*}[t]
+\centering
+\begin{tabular}{l|cccc|}
+Classifier & 
+\begin{tabular}{c} Linear\\regression \end{tabular} & 
+\begin{tabular}{c} SMO\\regression \end{tabular} & 
+\begin{tabular}{c} M5\\rules \end{tabular} & 
+\begin{tabular}{c} Gaussian\\processes \end{tabular} \\
+\hline
+1 & 10.123, 17.497 & 0.7613, 0.9854 & 0.8743, 1.1562 & 1.1244, 1.4041 \\ \hline
+2 & 1.8791, 2.0813 & 2.7905, 2.9936 & 2.6611, 3.4022 & 1.4488, 1.6228 \\ \hline
+3 & 0.9827, 1.1724 & 1.1838, 1.3164 & 0.6403, 0.9573 & 1.0569, 1.1941 \\ \hline
+4 & 2.9141, 8.7641 & 2.1547, 5.8524 & 0.8753, 1.3791 & 1.2367, 1.4522 \\ \hline
+ & , & , & , & , \\ \hline
+
+ & , & , & , & , \\ \hline
+\end{tabular}
+\captionof{figure}{Accuracy of the builder}
+\end{table*}
+\fi
