@@ -35,6 +35,7 @@ function game_over_menu:on_started()
   local hero = game:get_hero()
   hero_was_visible = hero:is_visible()
   hero:set_visible(false)
+  game:set_hud_enabled(false)
   music = sol.audio.get_music()
   background_img = sol.surface.create("gameover_menu.png", true)
   local tunic = game:get_ability("tunic")
@@ -171,20 +172,30 @@ function game_over_menu:on_command_pressed(command)
 
     state = "finished"
     sol.audio.play_sound("danger")
-    game:set_hud_enabled(false)
-    game:add_life(7 * 4)  -- Restore 7 hearts.
 
     if cursor_position == 0 then
       -- Save and continue.
       game:save()
-      game:start()
+      state = "resume_game"
+      game:set_hud_enabled(true)
+      game:set_life(game:get_max_life())
+      hero:teleport(map:get_id(), "_default", "immediate")
+      game:stop_game_over()
+      sol.audio.play_music(music)
+      sol.menu.stop(self)
     elseif cursor_position == 1 then
       -- Save and quit.
       game:save()
       sol.main.reset()
     elseif cursor_position == 2 then
       -- Continue without saving.
-      game:start()
+      state = "resume_game"
+      game:set_hud_enabled(true)
+      game:set_life(game:get_max_life())
+      hero:teleport(map:get_id(), "_default", "immediate")
+      game:stop_game_over()
+      sol.audio.play_music(music)
+      sol.menu.stop(self)
     elseif cursor_position == 3 then
       -- Quit without saving.
       sol.main.reset()

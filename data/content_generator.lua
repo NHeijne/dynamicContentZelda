@@ -105,7 +105,8 @@ function content.start_test(given_map, params, end_destination)
 			local outside_sensor = map:get_entity("areasensor_outside_"..areanumber.."_type_"..content.area_details[areanumber].area_type )
 			outside_sensor.on_activated = 
 				function() 
-					puzzle_gen.create_puzzle( "equal_amounts", a.area, areanumber, exit_areas[areanumber], exclusion_areas[areanumber], content.area_details )
+					puzzle_gen.create_puzzle( "pike_room",--"equal_amounts", 
+						a.area, areanumber, exit_areas[areanumber], exclusion_areas[areanumber], content.area_details )
 				end
 		end
 		if content.area_details[areanumber].area_type == "C" then
@@ -232,11 +233,11 @@ function content.create_simple_forest_map(areas, area_details, end_destination)
 			for direction, area in pairs(connection) do
 				if areanumber == "start" and direction == 2 then 
 					map:create_wall{layer=0, x=area.x1, y=area.y1, width=8, height=32, stops_hero=true}
-					map:create_destination{name="start_here",layer=0, x=area.x1+16, y=area.y1+16, direction=0}
+					map:create_destination{name="start_here",layer=0, x=area.x1+16, y=area.y1+16, direction=0, default=true}
 					hero:teleport(map:get_id(), "start_here")
 				end
 				if areanumber == "goal" then
-					local side = area_util.get_side(area, direction, -16, 0)
+					local side = area_util.get_side(area, direction, -16, 16)
 					map:create_teletransporter{layer=0, x=side.x1, y=side.y1, width=side.x2-side.x1, height=side.y2-side.y1,  destination_map=end_destination.map_id, destination=end_destination.destination_name}-- "5", "dungeon_entrance_left"
 				end
 				-- displaying transition areas
@@ -428,7 +429,7 @@ function content.create_simple_dungeon_map(areas, area_details, end_destination)
 		for _, connection in ipairs(connections) do
 			for direction, area in pairs(connection) do
 				if areanumber == "start" and direction == 3 then 
-					map:create_destination{name="start_here",layer=0, x=area.x1+16, y=area.y1+8, direction=1}
+					map:create_destination{name="start_here",layer=0, x=area.x1+16, y=area.y1+8, direction=1, default=true}
 					hero:teleport(map:get_id(), "start_here")
 					placement.place_prop("cave_entrance", area, 0, tileset, lookup.transitions)
 				elseif areanumber == "goal" then 

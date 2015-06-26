@@ -63,6 +63,7 @@ function pl.start_recording( puzzle_type, areanumber )
 		pl.current_puzzle_log[areanumber] = 
 		{
 			started_recording = true,
+			difficulty=0,
 			time_start=os.clock(),
 			time_end=0,
 			retries=0,
@@ -178,7 +179,8 @@ function pl.writeTableToFile (dataTable, file)
 	local f = sol.file.open(file,"a+")
 	for k,v in pairs(dataTable) do
 		f:write(tostring(v))
-		if k ~= #dataTable then f:write(",") end
+		if k ~= #dataTable then f:write(",")
+		else f:write("\n") end
 	end
 	f:flush(); f:close()
 end

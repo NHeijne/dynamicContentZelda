@@ -114,7 +114,8 @@ function vl.writeTableToFile (dataTable, file)
 	local f = sol.file.open(file,"a+")
 	for k,v in pairs(dataTable) do
 		f:write(v)
-		if k ~= #dataTable then f:write(",") end
+		if k ~= #dataTable then f:write(",")
+		else f:write("\n") end
 	end
 	f:flush(); f:close()
 end

@@ -659,32 +659,63 @@ end
 ------------------------------------------------------------------------------------------------------------------------------
 
 
-function maze_gen.generate_path( maze, exits, straight_path, path_width, intersections, exit_width )
-	-- for inside the areas
-	local intersections = intersections or {x=4, y=4}
+function maze_gen.generate_path( maze, exits, path_option, path_width, intersections, exit_width )
+	local intersections = intersections or {x=3, y=3}
 	local path_width = path_width or 0.5
 	local exit_width = exit_width or 1
 	local wall_width, corridor_width = room.wall_width, room.corridor_width
-	-- check along the path what the max distance is to the exits
-	local paths = maze_gen.create_initial_paths( maze, exits )
-	if not straight_path then
-		-- get not visited, pick a spot, create a branch
-		local available_points = {}
-		local stepsize_x, stepsize_y = math.ceil(#maze/math.floor(#maze/(intersections.x+2))), math.ceil(#maze[1]/math.floor(#maze[1]/(intersections.y+2)))
-		local max_x, max_y =  #maze-1, #maze[1]-1
-		for i=2, #maze-1, stepsize_x do
-			for j=2, #maze[1]-1, stepsize_y do
-				local x, y = math.random(i, num_util.clamp(i+stepsize_x, 2, max_x)), math.random(j, num_util.clamp(j+stepsize_y, 2, max_y))
-				table.insert(available_points, {x=x, y=y})
-			end
+	local paths = {}
+	local available_points = {}
+	local stepsize_x, stepsize_y = (#maze)/(intersections.x+1), (#maze[1])/(intersections.y+1)
+	local max_x, max_y =  #maze, #maze[1]
+	log.debug(stepsize_x);log.debug(stepsize_y);log.debug(max_x); log.debug(max_y)
+	local x_counter, y_counter = 0, 0
+	for i=stepsize_x, max_x-1, stepsize_x do
+		x_counter = x_counter+1
+		y_counter = 0
+		for j=stepsize_y, max_y-1, stepsize_y do
+			log.debug("i: "..i..", j: "..j)
+			y_counter = y_counter+1
+			local x, y = math.random(math.floor(i-stepsize_x/4), num_util.clamp(math.ceil(i+stepsize_x/4), 2, max_x)), math.random(math.floor(j-stepsize_y/4), num_util.clamp(math.ceil(j+stepsize_y/4), 2, max_y))
+			table.insert(available_points, {x=x, y=y, intersect_pos={x=x_counter, y=y_counter}})
 		end
-		repeat
-			local next_point = table.remove(available_points, math.random(#available_points))
-			local path1 = maze_gen.create_direct_path( maze_gen.find_closest_node( maze, next_point, paths ), next_point, maze )
+	end
+	if path_option == "grid" then
+		local points_matrix = {}
+		for _,pos in ipairs(available_points) do
+			points_matrix[pos.intersect_pos.x] = points_matrix[pos.intersect_pos.x] or {}
+			points_matrix[pos.intersect_pos.x][pos.intersect_pos.y] = {x=pos.x, y=pos.y}
+		end
+		log.debug(points_matrix)
+		for _,exit in ipairs(exits) do
+			local exit_point = exit[math.ceil(#exit/2)]
+			local path1 = maze_gen.create_direct_path( maze_gen.find_closest_node( maze, exit_point, {available_points} ), exit_point, maze )
 			if path1 then 
 				table.insert(paths, path1) 
 			end
-		until #available_points == 0
+		end
+		local abstract_maze = {}
+		maze_gen.initialize_maze(abstract_maze, {x1=0,y1=0,x2=intersections.x,y2=intersections.y}, {x=0,y=0}, {x=1,y=1})
+		maze_gen.place_walls_around( abstract_maze, maze_gen.get_not_visited( abstract_maze ) )
+		maze_gen.prims_algorithm( abstract_maze )
+		log.debug(abstract_maze)
+		for x,column in ipairs(abstract_maze) do
+			for y,node in ipairs(column) do
+				if not node[0] then table.insert(paths, maze_gen.create_direct_path( points_matrix[x][y], points_matrix[x+1][y], maze )) end
+				if not node[3] then table.insert(paths, maze_gen.create_direct_path( points_matrix[x][y], points_matrix[x][y+1], maze )) end
+			end
+		end
+	elseif path_options == "projections" then
+		paths = maze_gen.create_initial_paths( maze, exits, nil )
+		repeat
+            local next_point = table.remove(available_points, math.random(#available_points))
+            local path1 = maze_gen.create_direct_path( maze_gen.find_closest_node( maze, next_point, paths ), next_point, maze )
+            if path1 then 
+                table.insert(paths, path1) 
+            end
+        until #available_points == 0
+    else
+    	paths = maze_gen.create_initial_paths( maze, exits, nil )
 	end
 	-- got a path to all exits
 	for _,path in ipairs(paths) do
@@ -796,18 +827,23 @@ function maze_gen.standard_recursive_maze( maze, exits )
 end
 
 function maze_gen.prims_algorithm( maze, exits )
-	local starting_pos = table_util.random(exits[1])
-	maze[starting_pos.x][starting_pos.y].visited = true
-	for i=2, #exits, 1 do
-		for _,exit_pos in ipairs(exits[i]) do
-			local unvisited = maze_gen.get_neighbors(maze, exit_pos, true)
-			if #unvisited > 0  then
-				local nb = table_util.random(unvisited)
-				maze[exit_pos.x][exit_pos.y][nb.wall_to]=false
-	            maze[nb.pos.x][nb.pos.y][nb.wall_from]=false
-				break
+	local starting_pos
+	if exits then
+		starting_pos = table_util.random(exits[1])
+		maze[starting_pos.x][starting_pos.y].visited = true
+		for i=2, #exits, 1 do
+			for _,exit_pos in ipairs(exits[i]) do
+				local unvisited = maze_gen.get_neighbors(maze, exit_pos, true)
+				if #unvisited > 0  then
+					local nb = table_util.random(unvisited)
+					maze[exit_pos.x][exit_pos.y][nb.wall_to]=false
+		            maze[nb.pos.x][nb.pos.y][nb.wall_from]=false
+					break
+				end
 			end
 		end
+	else
+		starting_pos = {x=math.random(#maze), y=math.random(#maze[1])}
 	end
 	local unvisited_list=maze_gen.get_neighbors( maze, starting_pos, true )
 	repeat

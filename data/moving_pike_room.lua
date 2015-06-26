@@ -11,10 +11,11 @@ local pr = {}
 
 
 function pr.make( parameters )
-	pr.create_pike_room( parameters.areanumber, parameters.area_details, parameters.area, parameters.exit_areas, parameters.speed, parameters.width, parameters.movement )
+	local p = parameters
+	pr.create_pike_room( p.areanumber, p.area_details, p.area, p.exit_areas, p.speed, p.width, p.movement, p.intersections )
 end
 
-function pr.create_pike_room( areanumber, area_details, area, exit_areas, speed, width, movement )
+function pr.create_pike_room( areanumber, area_details, area, exit_areas, speed, width, movement, intersections )
 	local map = area_details.map
 	if not map:get_entity("pikeroom_sensor_"..areanumber) then 
 		maze_gen.set_map( map )
@@ -28,7 +29,7 @@ function pr.create_pike_room( areanumber, area_details, area, exit_areas, speed,
 			for _,pos in ipairs(outer_ring) do
 				maze[pos.x][pos.y].visited = "outer_ring"
 			end
-			local _, closed, _ = maze_gen.generate_path( maze, exits, false, width-0.5, nil, 0 )
+			local _, closed, _ = maze_gen.generate_path( maze, exits, "grid", width, intersections, 0 )
 			local old_floor = map:get_entity("room_floor_"..areanumber)
 			local floor_x, floor_y, layer = old_floor:get_position()
 			local floor_w, floor_h = old_floor:get_size()
@@ -52,7 +53,7 @@ function pr.create_pike_room( areanumber, area_details, area, exit_areas, speed,
 			end
 		else
 			local pikes = {}
-			local _, _, maze = maze_gen.generate_path( maze, exits, false, width )
+			local _, _, maze = maze_gen.generate_path( maze, exits, "grid", width, intersections )
 			local area_list = {}
 			local unvisited = maze_gen.get_not_visited( maze )
 			for i,pos in ipairs(unvisited) do
@@ -86,15 +87,19 @@ function pr.create_pike_room( areanumber, area_details, area, exit_areas, speed,
 		local room_sensor = placement.place_sensor( area, "pikeroom_sensor_"..areanumber, 0 )
 		room_sensor.on_activated = 
 			function() 
-				local hero_x, hero_y, layer = map:get_hero():get_position()
-				map:get_hero():save_solid_ground(hero_x, hero_y, layer)
-				map:get_entity("stream_area_"..areanumber):set_position(num_util.clamp(hero_x, area.x1+8, area.x2-8), num_util.clamp(hero_y, area.y1+13, area.y2-3), layer)
+				local hero_x, hero_y, layer = hero:get_position()
+				hero:save_solid_ground(hero_x, hero_y, layer)
+				if hero:get_state() == "jumping" and stream:is_enabled() then stream:set_enabled(false) 
+				elseif not stream:is_enabled() then stream:set_enabled() end	
+				stream:set_position(num_util.clamp(hero_x, area.x1+8, area.x2-8), num_util.clamp(hero_y, area.y1+13, area.y2-3), layer)
 				puzzle_logger.start_recording( "pike_room", areanumber )
 			end
 		room_sensor.on_activated_repeat = 
 			function() 
-				local hero_x, hero_y, layer = map:get_hero():get_position()
-				map:get_entity("stream_area_"..areanumber):set_position(num_util.clamp(hero_x, area.x1+8, area.x2-8), num_util.clamp(hero_y, area.y1+13, area.y2-3), layer)
+				if hero:get_state() == "jumping" and stream:is_enabled() then stream:set_enabled(false) 
+				elseif not stream:is_enabled() then stream:set_enabled() end	
+				local hero_x, hero_y, layer = hero:get_position()
+				stream:set_position(num_util.clamp(hero_x, area.x1+8, area.x2-8), num_util.clamp(hero_y, area.y1+13, area.y2-3), layer)
 			end
 		room_sensor.on_left =
 			function()
@@ -119,7 +124,13 @@ end
 
 function pr.move_recurrent( obj, movement_type )
 	local m = sol.movement.create("path")
-	m:set_speed(obj.speed)
+	if obj.times_till_change == 0 then
+		m:set_speed(16)
+		obj.stream:set_speed(16)
+	else
+		m:set_speed(obj.speed)
+		obj.stream:set_speed(obj.speed)
+	end
 	m:set_path{obj.direction, obj.direction}
 	m:set_ignore_obstacles()
 	m.on_finished = 

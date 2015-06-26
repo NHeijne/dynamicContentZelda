@@ -93,6 +93,7 @@ function pg.get_maze_parameters( difficulty )
 	parameters = {darkness=false, fireball_statues=0}
 	if difficulty >=2 then parameters.darkness = true end
 	if difficulty >=3 then parameters.fireball_statues = difficulty-2 end
+	parameters.difficulty = difficulty
 	return parameters
 end
 
@@ -103,11 +104,11 @@ end
 function pg.get_pike_room_parameters( difficulty )
 	local parameters = {}
 	local choices = {	
-						[-2]={{32, 2}},
-						[-1]={{32,1.5}},
-						[0]={{48, 1.5}, {32, 1}, {16, 0.5}},
-						[1]={{56, 1.5}, {48, 1}, {32, 0.5}},
-						[2]={{56, 1}, {48, 0.5}},
+						[-2]={{32, 1, 3}},
+						[-1]={{40, 1, 3},{32, 1, 4}},
+						[0]={{48, 1, 3}, {40, 1, 4}, {32, 1, 5}, {24, 0.5, 4}},
+						[1]={{56, 1, 3}, {48, 1, 4}, {32, 0.5, 3}, {24, 0.5, 2}},
+						[2]={{56, 1, 4}, {48, 1, 5}, {32, 0.5, 6}, {24, 0.5, 7}},
 						movement={{"random",4}, {"circle",3}, {"back/forth",2}}}
 	local current_difficulty = 0
 	local movement
@@ -117,7 +118,9 @@ function pg.get_pike_room_parameters( difficulty )
 	local selected_option = table_util.random(choices[difficulty-movement[2]])
 	parameters.speed = 		selected_option[1]
 	parameters.width = 		selected_option[2]
+	parameters.intersections = {x=selected_option[3], y=selected_option[3]}
 	parameters.movement = 	movement[1]
+	parameters.difficulty = difficulty
 	return parameters
 end
 
