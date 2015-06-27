@@ -56,14 +56,14 @@ function pl.update_total_log( current_puzzle_log )
 	end
 end
 
-function pl.start_recording( puzzle_type, areanumber )
+function pl.start_recording( puzzle_type, areanumber, difficulty )
 	pl.current_areanumber = areanumber
 	local cl = pl.current_puzzle_log[areanumber]
 	if cl == nil then 
 		pl.current_puzzle_log[areanumber] = 
 		{
 			started_recording = true,
-			difficulty=0,
+			difficulty=difficulty,
 			time_start=os.clock(),
 			time_end=0,
 			retries=0,
@@ -124,8 +124,8 @@ end
 
 function pl.made_first_move()
 	local cl = pl.current_puzzle_log[pl.current_areanumber]
-	if cl.vfm_time == 0 then
-		cl.vfm_time = os.clock()
+	if cl.vfm_time == 0 and cl.started_recording then
+		cl.vfm_time = os.clock() - cl.time_start
 	end
 end
 
@@ -143,14 +143,15 @@ function pl.current_log_to_data( current_puzzle_log )
 	local cl = current_puzzle_log
 	local data ={}
 	table.insert(data, game:get_player_name()) 		-- name
-	table.insert(data, cl.time_end - cl.time_start) -- time spent
 	table.insert(data, cl.puzzle_type) 				-- puzzle_type
+	table.insert(data, cl.difficulty) 				-- difficulty 1-5
+	table.insert(data, cl.time_end - cl.time_start) -- time spent
 	table.insert(data, cl.retries) 					-- retries
 	table.insert(data, cl.got_hurt) 				-- got_hurt
 	table.insert(data, cl.deaths) 					-- deaths
 	table.insert(data, cl.quit) 					-- quit
 	table.insert(data, cl.completed) 				-- completed
-	table.insert(data, cl.vfm_time) 				-- vfm_time
+	table.insert(data, cl.total_vfm_time/(cl.retries+1)) -- average vfm_time
 	pl.writeTableToFile (data, "individual_puzzles.csv") 
 end
 

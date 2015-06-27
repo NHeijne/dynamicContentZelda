@@ -1126,18 +1126,19 @@ end
 
 -- Creating the puzzle
 function maze_gen.make( parameters )
-	maze_gen.generate_maze_puzzle( parameters.area, parameters.areanumber, parameters.area_details, 
-								   parameters.exit_areas, parameters.exclusion, parameters.darkness, 
-								   parameters.fireball_statues )
+	local p = parameters
+	maze_gen.generate_maze_puzzle( p.area, p.areanumber, p.area_details, 
+								   p.exit_areas, p.exclusion, p.darkness, 
+								   p.fireball_statues, p.difficulty )
 end
 
-function maze_gen.generate_maze_puzzle( area, areanumber, area_details, exit_areas, exclusion, darkness, fireball_statues )
+function maze_gen.generate_maze_puzzle( area, areanumber, area_details, exit_areas, exclusion, darkness, fireball_statues, difficulty )
 	-- after opening up the exits create a normal maze afterwards
 	local map = area_details.map
 	if not map:get_entity("maze_sensor_"..areanumber) then
 		-- initialize
 		local sensor = placement.place_sensor( area, "maze_sensor_"..areanumber )
-		sensor.on_activated = function () puzzle_logger.start_recording("maze", areanumber) end
+		sensor.on_activated = function () puzzle_logger.start_recording("maze", areanumber, difficulty) end
 		sensor.on_left = function () puzzle_logger.stop_recording()	end
 		maze_gen.set_map( map )
 		local cw, ww = {x=16, y=16}, {x=8, y=8}

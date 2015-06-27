@@ -154,7 +154,7 @@ function sp.get_sorted_list_of_objects( puzzle_table, area ) -- objects are all 
 	return output_table
 end
 
-function sp.place_sokoban_puzzle( map, area_list, puzzle_area, areanumber )
+function sp.place_sokoban_puzzle( map, area_list, puzzle_area, areanumber, difficulty )
 	log.debug("place_sokoban_puzzle")
 	-- place normal blocks as walls, cannot be pushed
 	for _, area in ipairs(area_list.wall) do
@@ -173,7 +173,7 @@ function sp.place_sokoban_puzzle( map, area_list, puzzle_area, areanumber )
 	reset_switch = map:create_switch(reset_switch)
 	sp.puzzles_created[next_index] = area_list
 	local sensor = placement.place_sensor( puzzle_area, "sokoban_sensor_"..areanumber )
-	sensor.on_activated = function () puzzle_logger.start_recording("sokoban", areanumber) end
+	sensor.on_activated = function () puzzle_logger.start_recording("sokoban", areanumber, difficulty) end
 	sensor.on_left = function () puzzle_logger.stop_recording()	end
 	sensor.on_activated_repeat =
 		function()
@@ -208,7 +208,7 @@ function sp.place_sokoban_puzzle( map, area_list, puzzle_area, areanumber )
 				move_block.name = "sokoban_"..index.."_"..move_block.name
 				move_block.x, move_block.y = move_block.x+area.x1, move_block.y+area.y1
 				local block = map:create_block(move_block)
-				block.on_moved = function () end
+				block.on_moved = function () puzzle_logger.made_first_move() end
 			end
 			-- place wall for the blocks at the entrance
 			for _, area in ipairs(area_list.exit) do
@@ -268,7 +268,8 @@ function sp.rotate_table_ccw( tbl )
 end
 
 function sp.make( parameters )
-	sp.create_sokoban_puzzle( parameters.difficulty, parameters.area, parameters.areanumber, parameters.area_details, parameters.exit_areas, parameters.exclusion ) 
+	local p = parameters
+	sp.create_sokoban_puzzle( p.difficulty, p.area, p.areanumber, p.area_details, p.exit_areas, p.exclusion ) 
 end
 
 
@@ -280,7 +281,7 @@ function sp.create_sokoban_puzzle( difficulty, area, areanumber, area_details, e
 		maze_gen.set_room( area, cw, ww, "sokoban_room"..areanumber )
 		local maze, exits = maze_gen.generate_maze( area, exit_areas, exclusion)
 		local area_list, puzzle_area = sp.put_in_sokoban_puzzle( area, difficulty, maze, exits[1], cw, ww )
-		sp.place_sokoban_puzzle( map, area_list, puzzle_area, areanumber )
+		sp.place_sokoban_puzzle( map, area_list, puzzle_area, areanumber, difficulty )
 		if area_list then 
 			exits[1] = sp.connect_to_maze( area_list, maze, exits[1] ) 
 		end

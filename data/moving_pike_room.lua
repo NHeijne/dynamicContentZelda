@@ -12,10 +12,10 @@ local pr = {}
 
 function pr.make( parameters )
 	local p = parameters
-	pr.create_pike_room( p.areanumber, p.area_details, p.area, p.exit_areas, p.speed, p.width, p.movement, p.intersections )
+	pr.create_pike_room( p.areanumber, p.area_details, p.area, p.exit_areas, p.speed, p.width, p.movement, p.intersections, p.difficulty )
 end
 
-function pr.create_pike_room( areanumber, area_details, area, exit_areas, speed, width, movement, intersections )
+function pr.create_pike_room( areanumber, area_details, area, exit_areas, speed, width, movement, intersections, difficulty )
 	local map = area_details.map
 	if not map:get_entity("pikeroom_sensor_"..areanumber) then 
 		maze_gen.set_map( map )
@@ -92,7 +92,7 @@ function pr.create_pike_room( areanumber, area_details, area, exit_areas, speed,
 				if hero:get_state() == "jumping" and stream:is_enabled() then stream:set_enabled(false) 
 				elseif not stream:is_enabled() then stream:set_enabled() end	
 				stream:set_position(num_util.clamp(hero_x, area.x1+8, area.x2-8), num_util.clamp(hero_y, area.y1+13, area.y2-3), layer)
-				puzzle_logger.start_recording( "pike_room", areanumber )
+				puzzle_logger.start_recording( "pike_room", areanumber, difficulty )
 			end
 		room_sensor.on_activated_repeat = 
 			function() 

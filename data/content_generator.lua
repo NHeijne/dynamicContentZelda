@@ -3,14 +3,13 @@ pike_room 			= pike_room or require("moving_pike_room")
 puzzle_gen			= puzzle_gen or require("puzzle_generator")
 placement 			= placement or require("object_placement")
 lookup 				= lookup or require("data_lookup")
-
+log 				= log or require("log")
 
 local mission_grammar 	= require("mission_grammar")
 local space_gen 		= require("space_generator")
 local lookup 			= require("data_lookup")
 local fight_generator 	= require("fight_generator")
 
-local log 				= require("log")
 local table_util 		= require("table_util")
 local area_util 		= require("area_util")
 local num_util 			= require("num_util")
@@ -105,7 +104,8 @@ function content.start_test(given_map, params, end_destination)
 			local outside_sensor = map:get_entity("areasensor_outside_"..areanumber.."_type_"..content.area_details[areanumber].area_type )
 			outside_sensor.on_activated = 
 				function() 
-					puzzle_gen.create_puzzle( "pike_room",--"equal_amounts", 
+					puzzle_gen.create_puzzle( --"pike_room",
+											"equal_amounts", 
 						a.area, areanumber, exit_areas[areanumber], exclusion_areas[areanumber], content.area_details )
 				end
 		end
