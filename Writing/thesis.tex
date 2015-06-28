@@ -40,16 +40,21 @@ To answer this question, it is necessary to know the emotional reaction of a giv
 
 To answer these questions, the proposed method has been applied to an example game based on \emph{The Legend of Zelda}. This environment is used to quantify the accuracy of this approach and demonstrates how it can be applied to players' different skill levels. It also shows how the system can be applied generically over different in-game settings, and provides an approach for predicting the effect of unseen elements.
 
-\section{Related Work}
-
 \section{Method}
+\centering
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{processflowchart}
+\captionof{figure}{System flow}
+\end{figure*}
+
 The method proposed here consists of two subsystems. The first (hereafter the \emph{estimator}) estimates the amount of stress experienced after an encounter has been completed. This estimate is made using only information specific to the player's behaviour during that encounter. The estimator is constructed before runtime, using labeled data, and is applied equally to every player regardless of skill.
 
 The second subsystem (hereafter the \emph{builder}) predicts the difficulty level of an encounter before it is presented to the player. By necessity, it uses only information which is set when the encounter starts. This model is constructed and updated at runtime, using the results of the estimator as a supervisory signal. The model is created individually for each player.
 
 \subsection{Application}
 
-\subsection{Data}
+\subsection{Data} \label{data}
 The emotional intensity experienced by a player is measured on a scale from 1 to 10. Intensities of grade 1 through 5 are enjoyable difficulties. A difficulty of 1 means a complete absence of any difficulty, while 5 marks the maximum difficulty which is still enjoyable to the player. Grades of 6 through 10 represent inappropriate difficulties, 6 being just slightly too high, and 10 impossible to succeed at even with extensive practice.
 
 Players were asked to play through a series of rooms containing variable numbers of enemies. In each of these rooms, three possible outcomes are possible: the player  defeats every enemy in the room, leaves the room prematurely, or loses all hearts and is defeated. In each of these cases the game was paused automatically and the player was asked to rate the perceived challenge of the room on the aforementioned scale. A description of the room was then recorded, along with a summary of the player's behaviour in that room and their report of its difficulty.
@@ -71,7 +76,7 @@ Enemies are decided and placed each time the player enters a room. Normal rooms 
 
 Two exceptions to this model are the tutorial room and the boss room. The tutorial rooms are simple forest locations which contain a single enemy each. The boss room is located at the end of the dungeon and contains a single \emph{papillosaur king}, a large enemy which shoots weaker versions of the \emph{minillosaur egg} enemy. This enemy must be defeated with three bombs, as it cannot be attacked with the sword.
 
-\begin{figure*}
+\begin{figure*}[t]
 \centering
 \begin{subfigure}[b]{0.45\textwidth}
   \includegraphics[width=\textwidth]{tutorialroom}
@@ -91,7 +96,7 @@ Two exceptions to this model are the tutorial room and the boss room. The tutori
 \end{subfigure} \hfill
 \end{figure*}
 
-\subsection{Room construction}
+\subsection{Room construction} \label{roomconstruction}
 To gather the largest amount of data possible from each room, each player should be presented with challenges they can conceivably overcome. To do this, rooms were created based on informal data gathered early in the development of the project. While this method does not produce results representative of the final product, it does produce setups which will result in somewhat appropriate challenges while still varying the data. To create additional variety in the dataset, eight percent of all encounters were set to an extreme difficulty. In all other rooms, players were presented with intended difficulties of 2 through 6.
 
 In order to start determining the right makeup of a combat encounter for a player, first gauge the reaction of that particular player to every possible enemy in the game must be estimated. Fortunately, this need coincides with the need to train the player in a reasonably safe environment. For these reasons, the player must first fight their way through a series of rooms that each contain one enemy, one room for each type. 
@@ -140,28 +145,10 @@ Iteration &
 First & 1.329391354 & 1.673463207 & 72 \\ \hline
 Second & 1.369322858 & 1.705159509 & 108 \\ \hline
 Third & 1.915672157 & 2.314933135 & 39 \\ \hline
-
+Combined & 1.453489773 & 1.81903889 & 219 \\ \hline
 \end{tabular}
 \captionof{table}{Overall accuracy}
 \label{tab:overall}
-\end{table*}
-
-\begin{table*}[t]
-\centering
-\begin{tabular}{l|cccc|}
-\begin{tabular}{c} Test\\subject \end{tabular} &
-\begin{tabular}{c} Mean\\absolute\\error \end{tabular} & 
-\begin{tabular}{c} Root\\mean\\squared\\error \end{tabular} & 
-\begin{tabular}{c} Samples\\in\\forest \end{tabular} & 
-\begin{tabular}{c} Samples\\in\\dungeon \end{tabular} \\
-\hline
-Jan & 1.1235 & 1.5402 & 13 & 14 \\ \hline
-Sjo & 1.4125 & 1.7272 & 10 & 11 \\ \hline
-3 & 0.963 & 1.1089 & 11 & 10 \\ \hline
-4 & 7 & 7 & 7 & 7 \\ \hline
-\end{tabular}
-\captionof{table}{Generalizability to new settings}
-\label{tab:generalizability}
 \end{table*}
 
 The figures in this paper were obtained using Weka \cite{weka}.
@@ -171,7 +158,10 @@ Due to sparsity of data and specificity to players, it is difficult to determine
 Note that for these results, tutorial rooms and boss rooms have been removed from the calculation, since the difficulty of those encounters cannot be predicted during the game.
 Finally, note that this is the average accuracy and includes predictions made with varying sparsity of data.
 
-\subsection{Generalizability}
+\section{Conclusion}
+The results show that a player's stress can be determined after play with an average error of one point on the scale described in section \ref{data}, which equates to a 19.98\% error on the desirable portion of that scale (1 to 5).
+The construction of the builder is more difficult because of the insufficiency of data and the need for a reversible result. Overall however, the tested system provides an average error of roughly 29.07\% of the desirable scale. 
+To mitigate the effect of these problems, more training can be done at the lower difficulties, this way gaining a bigger body of test data at relatively little risk of the player being overwhelmed, as described in section \ref{roomconstruction}.
 
 \section{Future Work}
 As written, the game places enemies in discrete encounters. Planning for emotional intensity will likely be more difficult when enemies are allowed to move into or out of the space the player is currently in. 
