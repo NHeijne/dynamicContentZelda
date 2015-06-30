@@ -41,7 +41,6 @@ To answer this question, it is necessary to know the emotional reaction of a giv
 To answer these questions, the proposed method has been applied to an example game based on \emph{The Legend of Zelda}. This environment is used to quantify the accuracy of this approach and demonstrates how it can be applied to players' different skill levels. It also shows how the system can be applied generically over different in-game settings, and provides an approach for predicting the effect of unseen elements.
 
 \section{Method}
-\centering
 \begin{figure*}[t]
 \centering
 \includegraphics[width=\textwidth]{processflowchart}
@@ -107,28 +106,27 @@ Once every enemy has been encountered once, enough data will be available to mak
 Data was recorded from a total of 16 test subjects. In total, 302 encounters were recorded, each participant completing an average of 18.88 encounters with a standard deviation of 7.191. Five of the test subjects had no experience with action video games, six had some experience but no experience with the \emph{Legend of Zelda} series, and five had previous experience with the game. These groups account for 23.5\%, 43\% and 33\% of the data. Finally, 54\% of all recorded fights were inside the dungeon, and the final boss was seen eleven times in total. The intended difficulty of the encounters presented ranged from 1 to 7.558, with a 3.371 mean and standard deviation of 1.807.
 
 \subsection{Evaluation criteria}
-The two parts of the model will primarily be tested using ten-fold cross-validation on the test set. However, since the builder is trained using data from the estimator, errors may propagate even when the accuracy of each system is high. To give an indication of the overall accuracy of the system, the results of the builder during testing will be compared to the labels. Since these results were collected during application of the system, they are based on premature iterations of the estimator. Three such iterations will be shown, while the final model regrettably must remain untested.
+The estimator will primarily be tested using ten-fold cross-validation on the test set. However, since the builder is trained using data from the estimator, errors may propagate even when the accuracy of each system is high. To give an indication of the accuracy of the builder and the overall accuracy of the system, the results of the builder during testing will be compared to the reported difficulties. Since these results were collected during application of the system, they are based on premature iterations of the estimator. Three such iterations will be shown, while the final regrettably must remain untested.
 
-To demonstrate how the results of the builder can be generalized to be used in multiple settings without a need for retraining, the accuracy of a specifically trained builder will be shown in unfamiliar environments. Specifically for this case, builders will be trained on forest data and tested using the dungeon setting and vice-versa. These, compared to generically trained builders, will show the generalizability.
-
-Finally, it is useful to be able to use previously gathered data to predict new and unseen situations. To show how reliably this can be done, the difficulty of the boss fight will be predicted using only the builder model specific to the player. Although regrettably little data is available on the boss room, this will show generally that the player-specific builder can be extrapolated to incorporate unseen events.
+%To demonstrate how the results of the builder can be generalized to be used in multiple settings without a need for retraining, the accuracy of a specifically trained builder will be shown in unfamiliar environments. Specifically for this case, builders will be trained on forest data and tested using the dungeon setting and vice-versa. These, compared to generically trained builders, will show the generalizability.
 
 % And what about the experience assumption and its accuracy?
 
 \subsection{Accuracy}
 \begin{table*}[t]
 \centering
-\begin{tabular}{l|cccc|}
-Classifier & 
+\begin{tabular}{|l|cccc|}
+\hline Classifier & 
 \begin{tabular}{c} Mean\\absolute\\error \end{tabular} & 
 \begin{tabular}{c} Root\\mean\\squared\\error \end{tabular} & 
 \begin{tabular}{c} Relative\\absolute\\error (\%) \end{tabular} & 
 \begin{tabular}{c} Root\\relative\\squared\\error (\%) \end{tabular} \\
 \hline
-Pace regression & 1.1066 & 1.551 & 71.3851 & 82.9991 \\ \hline
-SMO regression & 1.0634 & 1.6185 & 68.6005 & 86.6108 \\ \hline
-M5 rules & 1.0933 & 1.4334 & 70.5283 & 76.7064 \\ \hline
-Gaussian processes & 0.999 & 1.294 & 64.4455 & 69.2444 \\ \hline
+Pace regression & 1.1066 & 1.551 & 71.3851 & 82.9991 \\
+SMO regression & 1.0634 & 1.6185 & 68.6005 & 86.6108 \\
+M5 rules & 1.0933 & 1.4334 & 70.5283 & 76.7064 \\
+Gaussian processes & 0.999 & 1.294 & 64.4455 & 69.2444 \\ 
+\hline
 \end{tabular}
 \captionof{table}{Accuracy of the estimator}
 \label{tab:estimator}
@@ -136,16 +134,35 @@ Gaussian processes & 0.999 & 1.294 & 64.4455 & 69.2444 \\ \hline
 
 \begin{table*}[t]
 \centering
-\begin{tabular}{l|ccc|}
-Iteration & 
+\begin{tabular}{|l|cccc|}
+\hline Classifier & 
+\begin{tabular}{c} Mean\\absolute\\error \end{tabular} & 
+\begin{tabular}{c} Root\\mean\\squared\\error \end{tabular} & 
+\begin{tabular}{c} Relative\\absolute\\error (\%) \end{tabular} & 
+\begin{tabular}{c} Root\\relative\\squared\\error (\%) \end{tabular} \\
+\hline
+With experience & 0.999 & 1.294 & 64.4455 & 69.2444 \\ 
+Without experience & 1.0119 & 1.3165 & 65.2775 & 70.4494 \\ 
+Increase & 101.29\% & 101.74\% & 101.29\% & 101.74\% \\
+\hline
+\end{tabular}
+\captionof{table}{Evaluation of the experience assumption}
+\label{tab:estimator}
+\end{table*}
+
+\begin{table*}[t]
+\centering
+\begin{tabular}{|l|ccc|}
+\hline Iteration & 
 \begin{tabular}{c} Mean\\absolute\\error \end{tabular} & 
 \begin{tabular}{c} Root\\mean\\squared\\error \end{tabular} &
 \begin{tabular}{c} Instances \end{tabular} \\
 \hline
-First & 1.329391354 & 1.673463207 & 72 \\ \hline
-Second & 1.369322858 & 1.705159509 & 108 \\ \hline
-Third & 1.915672157 & 2.314933135 & 39 \\ \hline
-Combined & 1.453489773 & 1.81903889 & 219 \\ \hline
+First & 1.329391354 & 1.673463207 & 72 \\ 
+Second & 1.369322858 & 1.705159509 & 108 \\
+Third & 1.915672157 & 2.314933135 & 39 \\
+Combined & 1.453489773 & 1.81903889 & 219 \\ 
+\hline
 \end{tabular}
 \captionof{table}{Overall accuracy}
 \label{tab:overall}
@@ -153,7 +170,7 @@ Combined & 1.453489773 & 1.81903889 & 219 \\ \hline
 
 The figures in this paper were obtained using Weka \cite{weka}.
 
-Table \ref{tab:overall} compares the builder's intent with the user's experience. Note that the builder used Linear Regression in the engine. 
+Table \ref{tab:overall} compares the builder's intent with the user's experience. Note that the builder used Linear Regression in the engine.
 Due to sparsity of data and specificity to players, it is difficult to determine the optimal learning algorithm for the builder; however, it is reasonable to assume results could be improved with the use of different learning algorithms. 
 Note that for these results, tutorial rooms and boss rooms have been removed from the calculation, since the difficulty of those encounters cannot be predicted during the game.
 Finally, note that this is the average accuracy and includes predictions made with varying sparsity of data.
@@ -281,31 +298,3 @@ The following is a list of the information recorded after the completion of ever
 \end{multicols}
 
 \end{document}
-
-
-
-
-
-
-% I probably won't complete this table.
-\iffalse
-\begin{table*}[t]
-\centering
-\begin{tabular}{l|cccc|}
-Classifier & 
-\begin{tabular}{c} Linear\\regression \end{tabular} & 
-\begin{tabular}{c} SMO\\regression \end{tabular} & 
-\begin{tabular}{c} M5\\rules \end{tabular} & 
-\begin{tabular}{c} Gaussian\\processes \end{tabular} \\
-\hline
-1 & 10.123, 17.497 & 0.7613, 0.9854 & 0.8743, 1.1562 & 1.1244, 1.4041 \\ \hline
-2 & 1.8791, 2.0813 & 2.7905, 2.9936 & 2.6611, 3.4022 & 1.4488, 1.6228 \\ \hline
-3 & 0.9827, 1.1724 & 1.1838, 1.3164 & 0.6403, 0.9573 & 1.0569, 1.1941 \\ \hline
-4 & 2.9141, 8.7641 & 2.1547, 5.8524 & 0.8753, 1.3791 & 1.2367, 1.4522 \\ \hline
- & , & , & , & , \\ \hline
-
- & , & , & , & , \\ \hline
-\end{tabular}
-\captionof{figure}{Accuracy of the builder}
-\end{table*}
-\fi
