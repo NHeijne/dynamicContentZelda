@@ -14,7 +14,7 @@
 \usepackage{subcaption}
 \restylefloat{table}
 
-\title{Adjusting difficulty based on automatically generated models of player skill}
+\title{Designing for difficulty based on automatically generated models of player skill}
 \author{Arjen Swellengrebel}
 \date{\today}
 
@@ -26,7 +26,7 @@
 \begin{abstract}
 This thesis proposes a method by which game designers may elicit specific levels of emotional intensity in players by learning their reaction to situations in the game.
 This is done using two subsystems, the first of which determines the level of emotional intensity of the player based on their behaviour in the game.
-Secondly, a method for modelling the emotional reaction of a player to game situations is presented.
+Secondly, a method for modeling the emotional reaction of a player to game situations is presented.
 Finally, a practical example based on \emph{The Legend of Zelda} shows the accuracy of the results of this approach.
 \end{abstract}
 
@@ -39,6 +39,11 @@ To answer this question, it is necessary to know the emotional reaction of a giv
 \begin{itemize} \item[\textbf{2.}] How can the emotional state of a player be accurately determined using in-game data? \end{itemize}
 
 To answer these questions, the proposed method has been applied to an example game based on \emph{The Legend of Zelda}. This environment is used to quantify the accuracy of this approach and demonstrates how it can be applied to players' different skill levels. It also shows how the system can be applied generically over different in-game settings, and provides an approach for predicting the effect of unseen elements.
+
+\section{Related Work}
+%PCG in games
+%Player modeling
+Hunicke and Chapman's work in \emph{AI for Dynamic Difficulty Adjustment in Games} \ref{DDAinGames} discusses techniques for adjusting a game to fit a player's needs. There are two important differences between their approach and the one outlined herein. Firstly, Hunicke and Chapman modify a predesigned game based on player input and is unable to create games without a basis to modify. Second, their approach tends to make adjustments which increase or decrease the game's objective difficulty. The model proposed here also attempts to create a game where each game element individually is challenging, not just the game as a whole.
 
 \section{Method}
 \begin{figure*}[t]
@@ -106,7 +111,7 @@ Once every enemy has been encountered once, enough data will be available to mak
 Data was recorded from a total of 16 test subjects. In total, 302 encounters were recorded, each participant completing an average of 18.88 encounters with a standard deviation of 7.191. Five of the test subjects had no experience with action video games, six had some experience but no experience with the \emph{Legend of Zelda} series, and five had previous experience with the game. These groups account for 23.5\%, 43\% and 33\% of the data. Finally, 54\% of all recorded fights were inside the dungeon, and the final boss was seen eleven times in total. The intended difficulty of the encounters presented ranged from 1 to 7.558, with a 3.371 mean and standard deviation of 1.807.
 
 \subsection{Evaluation criteria}
-The estimator will primarily be tested using ten-fold cross-validation on the test set. However, since the builder is trained using data from the estimator, errors may propagate even when the accuracy of each system is high. To give an indication of the accuracy of the builder and the overall accuracy of the system, the results of the builder during testing will be compared to the reported difficulties. Since these results were collected during application of the system, they are based on premature iterations of the estimator. Three such iterations will be shown, while the final regrettably must remain untested.
+The estimator will be tested using ten-fold cross-validation on the test set. However, since the builder is trained using data from the estimator, errors may propagate even when the accuracy of each system is high. To give an indication of the accuracy of the builder and the overall accuracy of the system, the results of the builder during testing will be compared to the reported difficulties. Since these results were collected during application of the system, they are based on premature iterations of the estimator. Three such iterations will be shown, while the final regrettably must remain untested.
 
 %To demonstrate how the results of the builder can be generalized to be used in multiple settings without a need for retraining, the accuracy of a specifically trained builder will be shown in unfamiliar environments. Specifically for this case, builders will be trained on forest data and tested using the dungeon setting and vice-versa. These, compared to generically trained builders, will show the generalizability.
 
@@ -181,13 +186,21 @@ The construction of the builder is more difficult because of the insufficiency o
 To mitigate the effect of these problems, more training can be done at the lower difficulties, this way gaining a bigger body of test data at relatively little risk of the player being overwhelmed, as described in section \ref{roomconstruction}.
 
 \section{Future Work}
-As written, the game places enemies in discrete encounters. Planning for emotional intensity will likely be more difficult when enemies are allowed to move into or out of the space the player is currently in. 
+As written, the game places enemies in discrete encounters. Planning for emotional intensity will likely be more difficult when enemies are allowed to move into or out of the space the player is currently in. More 
 
 \section{Acknowledgements}
 Much of the code for this project was provided by Norbert Heijne. His research concerning this game engine can be found in an upcoming paper.
 
 \bibliographystyle{plain}
 \begin{thebibliography}{9}
+
+\bibitem{DDAinGames}
+R. Hunicke, V. Chapman, 
+\emph{AI for Dynamic Difficulty Adjustment in Games},
+Challenges in Game Artificial Intelligence (AAAI),
+2004.
+
+ Challenges in Game Artificial Intelligence AAAI …, 2004 - aaai.org
 
 \bibitem{playercentered}
 D. Charles, M. McNeill, M. McAlister, M. Black, A. Moore, K. Stringer, J. Kucklich, and A. Kerr, 
