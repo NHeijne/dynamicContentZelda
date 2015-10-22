@@ -32,7 +32,7 @@ mission_grammar.key_barrier_lookup = {
 }
 
 
-mission_grammar.key_types = 	{"K", "EQ"}
+mission_grammar.key_types = 	{"K", "EQ", "R"}
 mission_grammar.barrier_types = {"L", "B", "OB", "NB", "S"}
 mission_grammar.area_types = 	{"C", "P", "F", "PF", "CH", "T", "BT", "E", "BOSS", "TF", "TP"}
 -- based on:
@@ -44,6 +44,7 @@ mission_grammar.area_types = 	{"C", "P", "F", "PF", "CH", "T", "BT", "E", "BOSS"
 -- OB:old barrier (hero should be able to open these based on the available keys list)
 -- NB:new barrier (hero should be able to open this with an equipment piece found later in game)
 -- K:key, unlocks L:lock
+-- R:reward (rupees/story)
 -- T:Task or BT:Branch task, which can turn into F:(mandatory) fight room, P:puzzle, E:empty room, PF: puzzle with enemies
 -- CH:challenge room
 -- S:secret transition, C:treasure chest room
@@ -91,6 +92,8 @@ mission_grammar.grammar = {
 	-- Randomly adding a barrier for an old equipment piece between tasks
 	[9]={ lhs={ nodes={[1]="T", [2]="T", 		}, edges={ [1]={ [2]="undir_fw" } } }, 
 		  rhs={ nodes={[1]="T", [2]="T", [3]="OB:?"}, edges={ [1]={ [2]="undir_fw"}, [1]={ [3]="undir_fw"}, [3]={ [2]="undir_fw"} } } },
+	["B_OB"]={ lhs={ nodes={[1]="BT", [2]="BT", 		}, edges={ [1]={ [2]="undir_fw" } } }, 
+		  rhs={ nodes={[1]="BT", [2]="BT", [3]="OB:?"}, edges={ [1]={ [2]="undir_fw"}, [1]={ [3]="undir_fw"}, [3]={ [2]="undir_fw"} } } },
 	-------------------------------------------------------------------------------------------------
 	-- Replacing nodes
 	[10]={ lhs={ nodes={[1]="T"}, edges={} }, 
@@ -125,9 +128,94 @@ mission_grammar.grammar = {
 -- all new nodes are placed at the end of the table
 mission_grammar.produced_graph = {}
 
-function mission_grammar.initialize_graph( task_length )
+function mission_grammar.create_standard_graph_for_testing( branch_length )
 	local nodes = {[1]="start"}
 	local edges = {}
+	local non_terminals = {}
+	local n, e, nt, starting_number
+
+	local next_eq = table.remove(mission_grammar.planned_items, 1)
+	local next_bar = table_util.random(mission_grammar.key_barrier_lookup.EQ[next_eq])
+
+	starting_number = #nodes+1
+	n, e, nt = mission_grammar.create_new_task_sequence( starting_number, {"F", "P", "F", "C","B:"..next_bar, "P", "F", "P", "goal"})
+	nodes = table_util.union(nodes, n)
+	edges = table_util.union(edges, e)
+	table_util.add_table_to_table(nt, non_terminals)
+	edges[1] = {[starting_number]="undir_fw"}
+	edges[starting_number][1]="undir_bk"
+
+	eq_nr = #nodes+1
+	nodes[eq_nr] = "EQ:"..next_eq
+	edges[5][eq_nr]="undir_fw"
+	edges[eq_nr]= { [5]="undir_bk" }
+
+
+	-- starting on the optional path
+	starting_number = #nodes+1
+	n, e, nt = mission_grammar.create_new_task_sequence( starting_number, {"BT","BT","BT","BT","optionalgoal"} )
+	nodes = table_util.union(nodes, n)
+	edges = table_util.union(edges, e)
+	table_util.add_table_to_table(nt, non_terminals)
+	log.debug("these non-terminals will have branches attached")
+	log.debug(nt)
+
+	-- connecting optional path with main path with next bar in between
+	mission_grammar.insert_symbol_between (4, starting_number, "B:"..next_bar, nodes, edges)
+
+	local branch_symbol_list = {"C", "R:rupees"}
+	for i=1, branch_length, 1 do
+		table.insert(branch_symbol_list, 1, "BT")
+	end
+
+	for _,node_nr in ipairs(nt) do
+		starting_number = #nodes+1
+		n, e, nt = mission_grammar.create_new_task_sequence( starting_number, branch_symbol_list )
+		nodes = table_util.union(nodes, n)
+		edges = table_util.union(edges, e)
+		table_util.add_table_to_table(nt, non_terminals)
+
+		edges[node_nr][starting_number]="undir_fw"
+		edges[starting_number] = edges[starting_number] or {}
+		edges[starting_number][node_nr]="undir_bk"
+	end
+
+	mission_grammar.produced_graph = {nodes=nodes, edges=edges, non_terminals=non_terminals, branching={}}
+end
+
+function mission_grammar.insert_symbol_between (nt1, nt2, symbol, nodes, edges)
+	local new_node_nr = #nodes+1
+	nodes[new_node_nr] = symbol
+	edges[nt1][new_node_nr]="undir_fw"
+	edges[new_node_nr]={[nt1]="undir_bk", [nt2]="undir_fw"}
+	edges[nt2][new_node_nr]="undir_bk"
+end
+
+function mission_grammar.create_new_task_sequence( starting_number, symbol_list)
+	local nodes = {[starting_number]=symbol_list[1]}
+	local edges = {}
+	local non_terminals = {}
+	if table_util.contains({"T", "BT"}, symbol_list[1]) then
+		table.insert(non_terminals, starting_number)
+	end
+	local symbol_counter = 2
+	for i=starting_number+1, #symbol_list+starting_number-1 do
+		nodes[i] = symbol_list[symbol_counter]
+		edges[i-1]= edges[i-1] or {}
+		edges[i-1][i]="undir_fw"
+		edges[i]= edges[i] or {}
+		edges[i][i-1]="undir_bk"
+		if table_util.contains({"T", "BT"}, symbol_list[symbol_counter]) then
+			table.insert(non_terminals, i)
+		end
+		symbol_counter = symbol_counter +1
+	end
+	return nodes, edges, non_terminals
+end
+
+function mission_grammar.initialize_graph( task_length )
+	local nodes = {[1]="start"}
+	local edges = {[1]={}}
 	local non_terminals = {}
 	for i=2, task_length+1 do
 		nodes[i] = "T"
@@ -201,6 +289,24 @@ function mission_grammar.produce_graph( params)
 	return params_clone
 end
 
+function mission_grammar.produce_standard_testing_graph( params)
+	log.debug(params)
+	local params_clone = table_util.copy(params)
+	if params.mission_type=="tutorial" then
+		mission_grammar.initialize_tutorial_graph( params )
+	elseif params.mission_type=="boss" then
+		mission_grammar.initialize_graph( 0 )
+		local graph = mission_grammar.produced_graph
+		graph.nodes[3]= "BOSS"
+		graph.edges= {[1]={[3]="undir_fw"}, [2]={[3]="undir_bk"}, [3]={[1]="undir_bk", [2]="undir_fw"} }
+	else
+		mission_grammar.create_standard_graph_for_testing( params_clone.branch_length )
+		mission_grammar.add_old_barriers( params_clone )
+		mission_grammar.assign_branch_tasks( params_clone )
+	end
+	return params_clone
+end
+
 function mission_grammar.produce_dungeon_graph( params )
 	mission_grammar.add_boss_fight( )
 	mission_grammar.add_planned_equipment_and_barrier( params )
@@ -240,6 +346,28 @@ function mission_grammar.add_boss_fight( )
 	mission_grammar.apply_rule( matches[1], 12 )
 end
 
+function mission_grammar.assign_branch_tasks (params)
+	local fight_perc = params.fights/(params.fights+params.puzzles)
+	local puzzle_perc = params.puzzles/(params.fights+params.puzzles)
+	local fights_generated = 0
+	local puzzles_generated = 0
+	local branch_tasks = mission_grammar.match( "BT:F" )
+	for i=1, #branch_tasks do
+		local selected_option 
+		if fights_generated >= #branch_tasks * fight_perc then
+			selected_option = "BT:P"
+		elseif puzzles_generated >= #branch_tasks * puzzle_perc then
+			selected_option = "BT:F"
+		else
+			selected_option = table_util.random({"BT:F", "BT:P"})
+			if selected_option == "BT:F" then 
+				 fights_generated = fights_generated +1
+			else puzzles_generated = puzzles_generated +1 end
+		end
+		mission_grammar.apply_rule( branch_tasks[i], selected_option )
+	end
+end
+
 function mission_grammar.assign_fights_and_puzzles( params )
 	local fights_left, puzzles_left = params.fights, params.puzzles
 	local puzzle_matches = mission_grammar.match( 11 )
@@ -276,10 +404,17 @@ end
 function mission_grammar.add_old_barriers( params )
 	local bar = mission_grammar.available_barriers
 	local bar_amount = #bar
-	for i=1, math.floor(params.length/2) do
-		local matches = mission_grammar.match( 9 )
-		if next(matches) == nil then break end
-		mission_grammar.apply_rule( matches[math.random(#matches)], 9, {bar[math.random(bar_amount)]} )
+	local matches = mission_grammar.match( 9 )
+	local branch_matches = mission_grammar.match( "B_OB" )
+	for i=1, math.ceil(#matches * params.barrier_perc), 1 do
+		if #matches > 0 then
+			mission_grammar.apply_rule( table.remove(matches, math.random(#matches)), 9, {bar[math.random(bar_amount)]} )
+		else break end;
+	end
+	for i=1, math.ceil(#branch_matches * params.barrier_perc), 1 do
+		if #branch_matches > 0 then
+			mission_grammar.apply_rule( table.remove(branch_matches, math.random(#branch_matches)), "B_OB", {bar[math.random(bar_amount)]} )
+		else break end;
 	end
 end
 
@@ -476,6 +611,9 @@ function mission_grammar.transform_to_space( params )
 		if params.outside then area_details.wall_width = 0
 		else area_details.wall_width = 24 end -- dungeon wall = (wall 24)
 		local graph = mission_grammar.produced_graph
+		if table_util.contains( graph.nodes, "optionalgoal" ) then 
+			area_details.optionalgoal = {area_type="E", nr_of_connections=0, contains_items={}} 
+		end
 		local visited_nodes = {}
 		local area_assignment = {}
 		local areas_assigned = 0
@@ -554,9 +692,10 @@ function mission_grammar.transform_to_space( params )
 							visited_nodes[k]=true
 							-- so we add the specific key type
 							table.insert(current_area.contains_items, connected_node)
-						elseif split_node[1] == "goal" then
+						elseif split_node[1] == "goal" or split_node[1] == "optionalgoal" then
 							 current_area.nr_of_connections=current_area.nr_of_connections+1
-							 table.insert(current_area, 1, {type="twoway", areanumber="goal"})
+							 table.insert(current_area, 1, {type="twoway", areanumber=split_node[1]})
+
 						end
 					end
 				end
@@ -569,16 +708,23 @@ function mission_grammar.transform_to_space( params )
 end
 
 function mission_grammar.add_main_path_info( area_details, areanumber )
-	if areanumber == "goal" then return true end
+	if areanumber == "goal" then 
+		area_details[areanumber].main=true
+		return true 
+	end
 	for con_nr, con in ipairs(area_details[areanumber]) do
 		if con.type == "twoway" then
 			local is_main = mission_grammar.add_main_path_info( area_details, con.areanumber )
 			if is_main then
 				con.main = true
+				area_details[areanumber].main=true
 				return true
+			else
+				con.main = false
 			end
 		end
 	end
+	area_details[areanumber].main=false
 	return false
 end
 

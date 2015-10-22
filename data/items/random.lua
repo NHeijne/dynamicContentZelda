@@ -5,18 +5,19 @@ local item = ...
 
 -- Probability of each item between 0 and 1000.
 local probabilities = {
-  [{ "bomb", 1 }]       = 8,    -- 1 bomb.
-  [{ "bomb", 2 }]       = 5,    -- 3 bombs.
-  [{ "bomb", 3 }]       = 2,    -- 8 bombs.
-  [{ "arrow", 1 }]      = 8,    -- 1 arrow.
-  [{ "arrow", 2 }]      = 5,    -- 5 arrows.
-  [{ "arrow", 3 }]      = 2,    -- 10 arrows.
+  [{ "bomb", 1 }]       = 0,    -- 1 bomb.
+  [{ "bomb", 2 }]       = 10,    -- 3 bombs.
+  [{ "bomb", 3 }]       = 0,    -- 8 bombs.
+  [{ "arrow", 1 }]      = 0,    -- 1 arrow.
+  [{ "arrow", 2 }]      = 10,    -- 5 arrows.
+  [{ "arrow", 3 }]      = 0,    -- 10 arrows.
   [{ "rupee", 1 }]      = 50,   -- 1 rupee.
-  [{ "rupee", 2 }]      = 15,   -- 5 rupees.
-  [{ "rupee", 3 }]      = 5,    -- 20 rupees.
-  [{ "magic_flask", 1}] = 25,   -- Small magic jar.
-  [{ "magic_flask", 2}] = 8,    -- Big magic jar.
+  [{ "rupee", 2 }]      = 0,   -- 5 rupees.
+  [{ "rupee", 3 }]      = 0,    -- 20 rupees.
+  [{ "magic_flask", 1}] = 0,   -- Small magic jar.
+  [{ "magic_flask", 2}] = 0,    -- Big magic jar.
   [{ "heart", 1}]       = 100,  -- Heart.
+  [{ nil, 1}]     	    = 100, -- nothing
   --[{ "fairy", 1}]       = 2,    -- Fairy.
 }
 

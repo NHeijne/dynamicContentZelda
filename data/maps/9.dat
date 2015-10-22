@@ -3,7 +3,7 @@ properties{
   y = 0,
   width = 320,
   height = 240,
-  tileset = "1",
+  tileset = "13",
 }
 
 tile{

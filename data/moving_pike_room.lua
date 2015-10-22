@@ -18,6 +18,7 @@ end
 function pr.create_pike_room( areanumber, area_details, area, exit_areas, speed, width, movement, intersections, difficulty )
 	local map = area_details.map
 	if not map:get_entity("pikeroom_sensor_"..areanumber) then 
+		explore.puzzle_encountered()
 		maze_gen.set_map( map )
 		maze_gen.set_room( area, 16, 0, "pikeroom_"..areanumber )
 		local maze = {}

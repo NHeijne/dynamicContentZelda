@@ -52,7 +52,7 @@ function pg.create_puzzle( selection_type, area, areanumber, exit_areas, exclusi
 	parameters.exit_areas = exit_areas; parameters.exclusion = exclusion
 	parameters.area_details = area_details
 	-- create a puzzle for a given room using the parameters
-	return pg.make_puzzle( puzzle_type, parameters )
+	return pg["make_"..puzzle_type.."_puzzle"]( parameters )
 end
 
 function pg.interpret_log( completed_puzzle_log )
@@ -122,10 +122,6 @@ function pg.get_pike_room_parameters( difficulty )
 	parameters.movement = 	movement[1]
 	parameters.difficulty = difficulty
 	return parameters
-end
-
-function pg.make_puzzle( puzzle_type, parameters )
-	return pg["make_"..puzzle_type.."_puzzle"]( parameters )
 end
 
 function pg.make_sokoban_puzzle( parameters )

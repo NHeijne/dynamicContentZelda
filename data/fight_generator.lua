@@ -24,6 +24,7 @@ local roomContentsData = {{0,0,0,0,1}}
 local roomDifficulties = {{baseStress}}
 		
 local enemyTried = 1 -- To initialize the training data, we need to try every enemy.
+local starttime = 0
 
 function fight_generator.add_effects_to_sensors (map, areas, area_details)
 	sensorSide = "areasensor_inside_"
@@ -38,7 +39,8 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 		
 			sensor.on_activated = 
 				function()
-					
+					explore.fight_encountered( )
+					starttime = os.clock()
 					local game = map:get_game()
 					local hero = map:get_hero()
 					function hero:on_state_changed(state)
@@ -80,7 +82,7 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 					if split_table[5] == "BOSS" then 
 						local hero = map:get_hero()
 						if not game:get_value("bomb_bag__1") then hero:start_treasure("bomb_bag", 1, "bomb_bag__1") end
-						local xPos, yPos = chooseAreaToSpawn(spawnAreas, hero)
+						local xPos, yPos = chooseAreaToSpawn(spawnAreas, hero, true)
 						enemiesInEncounter = {{name="generatedEnemy_thisOne", layer=0, x=xPos, y=yPos, direction=0, breed="papillosaur_king"}}
 						resultingDiff = 6
 					end
@@ -142,6 +144,7 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 					map:close_doors("door_normal_area_"..split_table[3])
 					
 					if not map:has_entities("generatedEnemy") then 
+						explore.fight_finished( os.clock()-starttime )
 						map:open_doors("door_normal_area_"..split_table[3])
 						
 						difficultyOfFights = difficultyOfFights + 1
@@ -363,14 +366,19 @@ function writeTableToFile (dataTable, file)
 	f:flush(); f:close()
 end
 
-function chooseAreaToSpawn(spawnAreas, hero)
+function chooseAreaToSpawn(spawnAreas, hero, center)
 	local chosenArea = table_util.random(spawnAreas)
 	local xPos = math.random(chosenArea.x1+13, chosenArea.x2-13)
 	local yPos = math.random(chosenArea.y1+13, chosenArea.y2-13)
 	while hero:get_distance(xPos, yPos) <= 100 or ( area_util.get_area_size(chosenArea).size <= 16*16 ) do
 		chosenArea = table_util.random(spawnAreas)
-		xPos = math.random(chosenArea.x1+13, chosenArea.x2-13)
-		yPos = math.random(chosenArea.y1+13, chosenArea.y2-13)
+		if center then 
+			xPos = (chosenArea.x1 + chosenArea.x2 / 2)
+			yPos = (chosenArea.y1 + chosenArea.y2 / 2)
+		else
+			xPos = math.random(chosenArea.x1+13, chosenArea.x2-13)
+			yPos = math.random(chosenArea.y1+13, chosenArea.y2-13)
+		end
 	end
 	return xPos, yPos
 end

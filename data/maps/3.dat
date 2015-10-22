@@ -3,15 +3,15 @@ properties{
   y = 0,
   width = 8000,
   height = 8000,
-  tileset = "1",
-  music = "lost_woods",
+  tileset = "3",
+  music = "cave",
 }
 
 destination{
   layer = 0,
   x = 8,
   y = 13,
-  name = "start_position",
+  name = "standard",
   direction = 3,
   default = true,
 }

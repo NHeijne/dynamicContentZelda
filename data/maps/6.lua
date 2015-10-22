@@ -1,5 +1,5 @@
 local map = ...
-local game = map:get_game()
+game = map:get_game()
 village_logger = village_logger or require("village_logger")
 
 -- Hero's house
@@ -264,7 +264,8 @@ Thanks For Playing!
 
 
 function game_over()
-	village_logger.to_file( game )
+	village_logger.copy_log()
+	village_logger.to_file( game, "after" )
 	sol.audio.play_music("fanfare")
 	game:start_dialog("test.variable", credits, function()
 		    game:set_hud_enabled(false)

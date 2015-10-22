@@ -31,7 +31,11 @@ lookup.equipment = {
 	["glove-2"]={requires="glove__1", 		treasure_name="glove",treasure_variant=2,treasure_savegame_variable="glove__2"},
 	["bomb_bag-1"]={requires=nil, 			treasure_name="bomb_bag",treasure_variant=1,treasure_savegame_variable="bomb_bag__1"},
 	["bomb_bag-2"]={requires="bomb_bag__1", treasure_name="bomb_bag",treasure_variant=2,treasure_savegame_variable="bomb_bag__2"},
-	["bomb_bag-3"]={requires="bomb_bag__2", treasure_name="bomb_bag",treasure_variant=3,treasure_savegame_variable="bomb_bag__3"}
+	["bomb_bag-3"]={requires="bomb_bag__2", treasure_name="bomb_bag",treasure_variant=3,treasure_savegame_variable="bomb_bag__3"},
+}
+
+lookup.rewards = {
+	["rupees"]={requires=nil, 				treasure_name="rupee",treasure_variant=5 }
 }
 
 lookup.destructible = {
@@ -138,13 +142,13 @@ lookup.transitions =
 
 lookup.tiles =
 {
-	["maze_wall_hor"]={[1]=1016, [4]=70,  [3]=70},
-	["maze_wall_ver"]={[1]=1016, [4]=71,  [3]=71},
-	["maze_post"]=	  {[1]=1016, [4]=69,  [3]=69},
+	["maze_wall_hor"]={[1]=1016, [13]=1016, [4]=70,  [3]=70},
+	["maze_wall_ver"]={[1]=1016, [13]=1016, [4]=71,  [3]=71},
+	["maze_post"]=	  {[1]=1016, [13]=1016,[4]=69,  [3]=69},
 	["dungeon_floor"]=			{[4]=328, [3]=2},
 	["dungeon_spacer"]=			{[4]=170, [3]=170},
 	["pot_stand"]=				{[4]=101, [3]=364},
-	["debug_corner"]= {[1]=63,   [4]=327, [3]=407}
+	["debug_corner"]= {[1]=63,  [13]=63, [4]=327, [3]=407}
 }
 
 -- wall and floortile 0 = east, 3 = south
@@ -161,15 +165,15 @@ lookup.wall_tiling =
 				  [2]={[3]=45},
 				  [3]={[3]=47},
 				 },
-	["floortile"] ={[0]={[1]=57 ,[3]=182},
-				  [1]={[1]=60 ,[3]=179},
-				  [2]={[1]=58 ,[3]=181},
-				  [3]={[1]=55 ,[3]=180},
+	["floortile"] ={[0]={[1]=57, [13]=57, [3]=182},
+				  [1]={[1]=60 , [13]=60, [3]=179},
+				  [2]={[1]=58 , [13]=58, [3]=181},
+				  [3]={[1]=55 , [13]=55, [3]=180},
 				 },
-	["floorcorner"] ={[0]={[1]= 50,[3]=17},
-				  [1]={[1]=52 ,[3]=15},
-				  [2]={[1]=53 ,[3]=14},
-				  [3]={[1]=51 ,[3]=16},
+	["floorcorner"] ={[0]={[1]= 50, [13]= 50,[3]=17},
+				  [1]={[1]=52 , [13]= 52, [3]=15},
+				  [2]={[1]=53 , [13]= 53, [3]=14},
+				  [3]={[1]=51 , [13]= 51, [3]=16},
 				 },
 }
 

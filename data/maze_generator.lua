@@ -567,7 +567,7 @@ function maze_gen.recursive_rooms( maze, area_details, areanumber, pos )
 		end
 	end
 	-- find new nodes for the next rooms
-	if areanumber ~= "goal" then
+	if areanumber ~= "goal" and areanumber ~= "optionalgoal" then
 		for _,connection in ipairs(area_details[areanumber]) do
 			local neighbors = maze_gen.get_neighbors_from_pos_list( maze, room_positions, true )
 			-- create the room with a given size
@@ -598,7 +598,7 @@ function maze_gen.recursive_rooms( maze, area_details, areanumber, pos )
 end
 
 function maze_gen.create_room_list ( maze, corridor_width, wall_width )
-	result = {["walkable"]={}, ["opening"]={}, ["exit"]={}, ["nodes"]={}, ["other_map"]={}, ["entrance"]={}}
+	local result = {["walkable"]={}, ["opening"]={}, ["exit"]={}, ["nodes"]={}, ["other_map"]={}, ["entrance"]={}, ["unused"]={}}
 	local w = result["walkable"]; local o = result["opening"]; local e = result["exit"]; local n = result["nodes"]; local m = result["other_map"]; local en = result["entrance"]
 	for x=1, #maze do
 		for y=1, #maze[1] do
@@ -610,6 +610,10 @@ function maze_gen.create_room_list ( maze, corridor_width, wall_width )
 				local node = area_util.resize_area(walkable, {-wall_width.x, -wall_width.y, wall_width.x, wall_width.y})
 				local p = maze_gen.maze_wall_to_areas( maze, {x=x, y=y}, corridor_width, wall_width, node)
 				table.insert(w[a_nr], walkable); table.insert(n[a_nr], node);table.insert(e[a_nr], p.exit); table.insert(o[a_nr], p.opening); table.insert(m[a_nr], p.other_map); table.insert(en[a_nr], p.entrance)
+			else 
+				local walkable = maze_gen.pos_to_area({x=x, y=y})
+				local node = area_util.resize_area(walkable, {-wall_width.x, -wall_width.y, wall_width.x, wall_width.y})
+				table.insert(result.unused, node)
 			end
 		end
 	end
@@ -1136,6 +1140,7 @@ function maze_gen.generate_maze_puzzle( area, areanumber, area_details, exit_are
 	-- after opening up the exits create a normal maze afterwards
 	local map = area_details.map
 	if not map:get_entity("maze_sensor_"..areanumber) then
+		explore.puzzle_encountered()
 		-- initialize
 		local sensor = placement.place_sensor( area, "maze_sensor_"..areanumber )
 		sensor.on_activated = function () puzzle_logger.start_recording("maze", areanumber, difficulty) end

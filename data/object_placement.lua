@@ -114,14 +114,29 @@ function op.place_lock( details, direction, area, optional )
 	map:create_door(details)
 end
 
-function op.place_chest( equipment_name, pos, optional )
+function op.place_chest( object_name, pos, optional )
 	local chest_details = { layer=0, x=pos.x1+8, y=pos.y1+13, sprite="entities/chest" }
-	for k,v in pairs(lookup.equipment[equipment_name]) do
-		chest_details[k] = v
+	if lookup.equipment[object_name] ~= nil then
+		for k,v in pairs(lookup.equipment[object_name]) do
+			chest_details[k] = v
+		end
+	elseif lookup.rewards[object_name] ~= nil then
+		for k,v in pairs(lookup.rewards[object_name]) do
+			chest_details[k] = v
+		end
 	end
 	if optional then
 		for k,v in pairs(optional) do
 			chest_details[k] = v
+		end
+	end
+	if chest_details.treasure_name == "rupee" then 
+		for i = 1, 10, 1 do
+			if game:get_value("reward_"..i) == nil then
+				chest_details.treasure_savegame_variable = "reward_"..i
+				game:set_value("reward_"..i, false)
+				break
+			end
 		end
 	end
 	log.debug("creating chest with details:")

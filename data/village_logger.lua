@@ -3,8 +3,16 @@ local table_util = require("table_util")
 local vl = {}
 
 vl.log = {
+	-- personal settings
+	name=game:get_player_name(),
+	openness=game:get_value("Openness"),
+	conscientiousness=game:get_value("Conscientiousness"),
+	extraversion=game:get_value("Extraversion"),
+	agreeableness=game:get_value("Agreeableness"),
+	neuroticism=game:get_value("Neuroticism"),
+
 	start_time = 0,
-	end_time = 0,
+	village_exit_time=0,
 	cure_brewer=false,
 	cure_witch=false,
 	apples=0,
@@ -42,7 +50,7 @@ function vl.copy_log()
 	vl.log_before_dungeons = table_util.copy(vl.log)
 end
 
-function vl.to_file( game )
+function vl.to_file( game, suffix )
 	local npc_order = {	"witch", 
 						"mom", "dad", "brother",
 						"lefttwin", "righttwin", "glassesguy", "oldwoman", "oldguyleft", "oldguyright", 
@@ -52,7 +60,12 @@ function vl.to_file( game )
 	local data_to_write={}	
 	local logbd = vl.log_before_dungeons
 	-- Player name
-	table.insert(data_to_write, game:get_player_name())
+	table.insert(data_to_write, logbd.name)
+	table.insert(data_to_write, logbd.openness)
+	table.insert(data_to_write, logbd.conscientiousness)
+	table.insert(data_to_write, logbd.extraversion)
+	table.insert(data_to_write, logbd.agreeableness)
+	table.insert(data_to_write, logbd.neuroticism)
 	-- # NPCs talked to
 	-- NPCs options explored, options_available
 	-- fraction of options explored of the talked to npcs
@@ -106,8 +119,8 @@ function vl.to_file( game )
 		if logbd.areas_visited[name] then table.insert(data_to_write, 1) end
 	end
 	-- time spent in village
-	table.insert(data_to_write, logbd.end_time-logbd.start_time)
-	vl.writeTableToFile(data_to_write, "village_log_before_dungeon.csv")
+	table.insert(data_to_write, logbd.village_exit_time-logbd.start_time)
+	vl.writeTableToFile(data_to_write, "village_log_"..suffix.."_dungeon.csv")
 end
 
 function vl.writeTableToFile (dataTable, file) 

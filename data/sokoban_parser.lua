@@ -1,6 +1,5 @@
 maze_gen 		= maze_gen or require("maze_generator")
 placement 		= placement or require("object_placement")
-puzzle_logger 	= puzzle_logger or require("puzzle_logger")
 
 local log 				= require("log")
 local table_util 		= require("table_util")
@@ -276,6 +275,7 @@ end
 function sp.create_sokoban_puzzle( difficulty, area, areanumber, area_details, exit_areas, exclusion )
 	local map = area_details.map
 	if not map:get_entity("sokoban_sensor_"..areanumber) then
+		explore.puzzle_encountered()
 		maze_gen.set_map( map )
 		local cw, ww = {x=16, y=16}, {x=0, y=0}
 		maze_gen.set_room( area, cw, ww, "sokoban_room"..areanumber )

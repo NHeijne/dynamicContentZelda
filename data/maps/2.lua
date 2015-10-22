@@ -1,7 +1,9 @@
 local map = ...
+game = map:get_game()
 
 local content = require("content_generator")
 
 function map:on_started(destination)
-	content.start_test(map, {mission_type="tutorial", fights=0, puzzles=5, length=5, area_size=1}, {map_id="0", destination_name=nil})
+	content.set_planned_items_for_this_zone({"glove-2"})
+	content.start_test(map, {}, {map_id="5", destination_name="dungeon_entrance_left"})
 end

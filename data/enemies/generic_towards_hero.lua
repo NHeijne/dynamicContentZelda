@@ -108,7 +108,7 @@ function enemy:check_hero()
   local dx, dy = hero_x-self_x, hero_y-self_y
   local near_hero = layer == hero_layer
     and self:get_distance(hero) < 100
-    and self:line_of_sight(dx, dy)
+    --and self:line_of_sight(dx, dy)
     and self:is_in_same_region(hero)
 
   if near_hero and not going_hero then
@@ -117,7 +117,7 @@ function enemy:check_hero()
     enemy:start_disengaging()
   end
   sol.timer.stop_all(self)
-  sol.timer.start(self, 100, function() self:check_hero() end)
+  sol.timer.start(self, 1000, function() self:check_hero() end)
 end
 
 function enemy:go_random()

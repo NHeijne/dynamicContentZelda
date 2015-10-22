@@ -9410,7 +9410,7 @@ teletransporter{
   y = 280,
   width = 16,
   height = 48,
-  destination_map = "2",
+  destination_map = "0",
 }
 
 wall{
@@ -9956,8 +9956,7 @@ teletransporter{
   y = 560,
   width = 16,
   height = 16,
-  destination_map = "1",
-  destination = "standard",
+  destination_map = "3",
 }
 
 teletransporter{

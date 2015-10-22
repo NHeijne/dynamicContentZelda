@@ -4,6 +4,8 @@ puzzle_gen			= puzzle_gen or require("puzzle_generator")
 placement 			= placement or require("object_placement")
 lookup 				= lookup or require("data_lookup")
 log 				= log or require("log")
+explore 			= explore or require("exploration_log")
+puzzle_logger 		= puzzle_logger or require("puzzle_logger")
 
 local mission_grammar 	= require("mission_grammar")
 local space_gen 		= require("space_generator")
@@ -46,14 +48,15 @@ function content.start_test(given_map, params, end_destination)
 
 	local tileset_id = tonumber(map:get_tileset())
 	local outside = false
-	if tileset_id == 1 or tileset_id == 2 then outside = true end
+	if tileset_id == 1 or tileset_id == 2 or tileset_id == 13 then outside = true end
 	mission_grammar.update_keys_and_barriers(game)
 	params = params or {}
-	local standard_params = {branches=3, branch_length=0, fights=0, puzzles=3, length=3, outside=outside, mission_type="normal", area_size=1} 
+	local standard_params = {branches=4, branch_length=0, fights=6, puzzles=4, length=6, barrier_perc=1, outside=outside, mission_type="normal", area_size=1} 
 	for k,v in pairs(standard_params) do
 		if params[k] == nil then params[k]=v end
 	end
-	mission_grammar.produce_graph(params)
+	mission_grammar.produce_standard_testing_graph(params)
+	--mission_grammar.produce_graph(params)
 	log.debug("produced graph")
 	log.debug(mission_grammar.produced_graph)
 	log.debug("area_details")
@@ -110,10 +113,25 @@ function content.start_test(given_map, params, end_destination)
 				end
 		end
 		if content.area_details[areanumber].area_type == "C" then
-			local equipment = table_util.split(content.area_details[areanumber].contains_items[1], ":")[2] -- quick solution, should be checked for normal and equipment items
-			local large_area = area_util.get_largest_area(a.open_areas)
-			placement.place_chest(equipment, large_area)
+			local split_contains = table_util.split(content.area_details[areanumber].contains_items[1], ":")
+			if split_contains[1] == "EQ" then
+				local equipment = split_contains[2] -- quick solution, should be checked for normal and equipment items
+				local large_area = area_util.get_largest_area(a.open_areas)
+				placement.place_chest(equipment, large_area)
+			else
+				local reward =  split_contains[2]
+				local large_area = area_util.get_largest_area(a.open_areas)
+				placement.place_chest(reward, large_area)
+			end
 		end
+    end
+    for areanumber, a in pairs(content.areas["nodes"]) do
+    	local area = a.area
+    	local room_sensor = map:create_sensor({layer=0, x=area.x1, y=area.y1, width=area.x2-area.x1, height=area.y2-area.y1})
+		room_sensor.on_activated = 
+			function() 
+				explore.entered_area( areanumber ) 
+			end
     end
     local toc = os.clock()
     log.debug("time required for level generation = "..toc-tic.." sec")
@@ -130,6 +148,13 @@ function content.start_test(given_map, params, end_destination)
 	-- entity:stop()
 	log.debug("content.areas")
 	log.debug(content.areas)
+
+	explore.start_recording()
+	map.on_finished = 
+		function()
+			explore.finished_level( )
+			puzzle_logger.log_to_data( )
+		end
 end
 
 function content.set_planned_items_for_this_zone( list )
@@ -191,7 +216,7 @@ function content.create_simple_forest_map(areas, area_details, end_destination)
     local exclusion_areas={}
 
     for areanumber, a in pairs(areas["walkable"]) do
-    	a.throwables = {["bush"]=0, ["white_rock"]=0}
+    	a.throwables = {["bush"]=0, ["white_rock"]=0, ["black_rock"]=0, ["pot"]=0}
     	a.contact_length = {["pitfall"]=0, ["spikes"]=0}
     	placement.place_tile(area_util.resize_area(a.area, {-16, -16, 16, 16}), 7, "room_floor_"..areanumber, 0)
     end
@@ -236,7 +261,7 @@ function content.create_simple_forest_map(areas, area_details, end_destination)
 					map:create_destination{name="start_here",layer=0, x=area.x1+16, y=area.y1+16, direction=0, default=true}
 					hero:teleport(map:get_id(), "start_here")
 				end
-				if areanumber == "goal" then
+				if areanumber == "goal" or areanumber == "optionalgoal" then
 					local side = area_util.get_side(area, direction, -16, 16)
 					map:create_teletransporter{layer=0, x=side.x1, y=side.y1, width=side.x2-side.x1, height=side.y2-side.y1,  destination_map=end_destination.map_id, destination=end_destination.destination_name}-- "5", "dungeon_entrance_left"
 				end
@@ -253,10 +278,13 @@ function content.create_simple_forest_map(areas, area_details, end_destination)
 		end
 	end
 
+	local walkable_areas = {}
 	for areanumber, a in pairs(areas["walkable"]) do
+		local exclusions = {}
 		if table_util.contains({"P", "TP", "BOSS"}, area_details[areanumber].area_type) then
 			ex=ex+1
 			exclusion_areas_trees[ex] = a.area
+			table.insert(exclusions, a.area)
 			a.open_areas = {a.area}
 		else
 			maze_gen.set_room( a.area, 16, 0, nil )
@@ -270,20 +298,19 @@ function content.create_simple_forest_map(areas, area_details, end_destination)
 			end
 			exclusion_areas[areanumber] = closed
 			a.open_areas = open
-
 			for _,o in ipairs(open) do
 				ex=ex+1
 				exclusion_areas_trees[ex] = o
+				table.insert(exclusions, o)
 			end
-		
+			
 		end
-
 		if bounding_area == nil then bounding_area = a.area
 		else bounding_area = area_util.merge_areas(bounding_area, a.area) end
-		
+
     end
     bounding_area = area_util.resize_area(bounding_area, {-152, -128, 256, 256}) 
-	local treelines = content.plant_trees(bounding_area, exclusion_areas_trees)
+	local treelines = content.plant_trees(bounding_area, exclusion_areas_trees, areas.unused)
 
 	local closed_leftovers = {}
 	for areanumber, list in ipairs(exclusion_areas) do
@@ -432,7 +459,7 @@ function content.create_simple_dungeon_map(areas, area_details, end_destination)
 					map:create_destination{name="start_here",layer=0, x=area.x1+16, y=area.y1+8, direction=1, default=true}
 					hero:teleport(map:get_id(), "start_here")
 					placement.place_prop("cave_entrance", area, 0, tileset, lookup.transitions)
-				elseif areanumber == "goal" then 
+				elseif areanumber == "goal" or areanumber == "optionalgoal" then 
 					map:create_teletransporter{layer=0, x=area.x1+8, y=area.y1, width=16, height=32, destination_map=end_destination.map_id, destination=end_destination.destination_name} -- "5", "dungeon_exit"
 					if direction == 3 then
 						placement.place_prop("cave_entrance", area, 0, tileset, lookup.transitions)
@@ -546,7 +573,7 @@ function content.create_simple_barriers( area_details, opening, direction, arean
 		local barriers =area_details[areanumber][connection].barriers
 		-- log.debug()
 		if barriers == nil then	return false end
-		local added_throwables = {["bush"]=0, ["white_rock"]=0}
+		local added_throwables = {["bush"]=0, ["white_rock"]=0, ["black_rock"]=0, ["pot"]=0}
 		for _,barrier in pairs(barriers) do
 			local split = table_util.split(barrier, ":")
 			local barrier_type
@@ -595,7 +622,7 @@ end
 
 
 
-function content.plant_trees(area, exclude_these)
+function content.plant_trees(area, exclude_these, unused_areas)
 	-- create tree lines which will follow a certain pattern uniformly across the map
 
 	local tree_size = {x=64, y=80}
@@ -619,6 +646,26 @@ function content.plant_trees(area, exclude_these)
 		local chopped_treeline = {new_treeline}
 		-- checking for overlap with transitions
 		-- log.debug("content.create_forest_map transitions treeline "..i)
+		for _, area in ipairs(unused_areas) do
+			local counter=1
+			repeat
+				-- log.debug(counter)
+				local tl = chopped_treeline[counter]
+				if tl and area_util.areas_intersect(tl, area) then 
+
+					-- log.debug("content.create_forest_map found intersection treeline "..i)
+					local new_areas = area_util.shrink_until_no_conflict(area, tl, "horizontal")
+					chopped_treeline[counter] = false
+					table_util.add_table_to_table(new_areas, chopped_treeline)
+				else 
+					counter = counter +1
+				end
+			until counter > #chopped_treeline
+		end
+		table_util.remove_false(chopped_treeline)
+		for i, ctl in ipairs(chopped_treeline) do
+			chopped_treeline[i] = area_util.resize_area(ctl, {-128, 0, 128, 0})
+		end
 		for _, area in ipairs(exclude_these) do
 			local counter=1
 			repeat

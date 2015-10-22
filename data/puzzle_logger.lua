@@ -1,6 +1,14 @@
 local pl = {}
 
 pl.log = {
+	-- personal settings
+	name=game:get_player_name(),
+	openness=game:get_value("Openness"),
+	conscientiousness=game:get_value("Conscientiousness"),
+	extraversion=game:get_value("Extraversion"),
+	agreeableness=game:get_value("Agreeableness"),
+	neuroticism=game:get_value("Neuroticism"),
+
 	-- data gathered on all puzzles
 	total_time=0,
 	
@@ -8,17 +16,23 @@ pl.log = {
 	sokoban_retries=0,
 	sokoban_quits=0,
 	sokoban_puzzles=0,
+	sokoban_completed=0,
+	sokoban_average_difficulty=0,
 	sokoban_vfm=0,
 
 	pike_room_total_time=0,
 	pike_room_got_hurt=0,
 	pike_room_deaths=0,
 	pike_room_puzzles=0,
+	pike_room_completed=0,
+	pike_room_average_difficulty=0,
 
 	maze_total_time=0,
 	maze_got_hurt=0,
 	maze_deaths=0,
 	maze_puzzles=0,
+	maze_completed=0,
+	maze_average_difficulty=0,
 }
 
 
@@ -33,6 +47,7 @@ function pl.complete_puzzle()
 		pl.update_total_log( cl )
 		puzzle_gen.interpret_log( cl )
 		pl.current_log_to_data( cl )
+		explore.puzzle_finished ( cl.time_end-cl.time_start ) 
 	end
 end
 
@@ -62,6 +77,7 @@ function pl.start_recording( puzzle_type, areanumber, difficulty )
 	if cl == nil then 
 		pl.current_puzzle_log[areanumber] = 
 		{
+			name=game:get_player_name(),
 			started_recording = true,
 			difficulty=difficulty,
 			time_start=os.clock(),

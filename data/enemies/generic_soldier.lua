@@ -91,7 +91,7 @@ function enemy:check_hero()
   local dx, dy = hero_x-self_x, hero_y-self_y
   local near_hero = layer == hero_layer
     and self:get_distance(hero) < 100
-    and self:line_of_sight(dx, dy)
+   -- and self:line_of_sight(dx, dy)
     and self:is_in_same_region(hero)
 
   if near_hero and not going_hero then
