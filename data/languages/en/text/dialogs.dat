@@ -85,6 +85,7 @@ defeat tough
 enemies.
 ]]
 }
+
 --------------------
 
 -- Boomerang
@@ -2465,6 +2466,23 @@ dialog{
   text = [[
 You found a Fairy,
 she's wonderful!
+]]
+}
+--------------------
+
+-- Lorsqu'on trouve une Fée en ayant au moins un Flacon (même dialogue que dans ALTTP)
+dialog{
+  id = "description_fairy",
+  icon = 81,
+  skip = "current",
+  text = [[
+It's a Fairy! It'll
+heal your wounds
+and it'll come to 
+your rescue when you
+fall.
+Keep it in a bottle
+for later use.
 ]]
 }
 --------------------

@@ -21,6 +21,7 @@ function enemy:on_created()
   self:set_origin(88, 64)
   self:set_invincible()
   self:set_attack_consequence("explosion", 1)
+  self:set_layer_independent_collisions(true)
   self:set_attack_consequence("sword", "protected")
   self:set_obstacle_behavior("flying")
 end
@@ -29,6 +30,10 @@ function enemy:on_restarted()
 
   sol.timer.start(self, 2000, function() self:egg_phase_soon() end)
   self:go()
+end
+
+function enemy:on_custom_attack_received(attack, sprite)
+  if attack == "explosion" then self:hurt(1) end
 end
 
 function enemy:on_hurt(attack)
@@ -46,7 +51,7 @@ end
 
 function enemy:go()
   local m
-  if self:get_life() > 1 then
+  if self:get_life() > 6 then
     m = sol.movement.create("random_path")
   else
     -- The enemy is now desperate and angry against our hero.
@@ -97,9 +102,11 @@ function enemy:throw_egg()
 
   -- See what to do next.
   nb_eggs_to_create = nb_eggs_to_create - 1
+  local time_per_egg = (boss_starting_life - self:get_life() + 1 / boss_starting_life + 1) * 800
   if nb_eggs_to_create > 0 then
     -- Throw another egg in 0.5 second.
-    sol.timer.start(self, 500, function() self:throw_egg() end)
+
+    sol.timer.start(self, time_per_egg, function() self:throw_egg() end)
   else
     -- Finish the egg phase.
     local sprite = self:get_sprite()

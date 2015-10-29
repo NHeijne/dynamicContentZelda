@@ -20,7 +20,7 @@ function enemy:on_created()
   self:set_origin(4, 4)
   self:set_invincible()
   self:set_obstacle_behavior("flying")
-  self:set_optimization_distance(0)
+  self:set_optimization_distance(300)
   self:set_layer_independent_collisions(true)
   self:set_minimum_shield_needed(1)
 

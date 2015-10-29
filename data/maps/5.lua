@@ -62,7 +62,7 @@ an come by again.
 --IF talked guy_at_market: 
 
 local merchant_talk=[[
-I see you you've been
+I see you've been
 talking to that guy 
 over there, he's been 
 accusing me of 
@@ -435,17 +435,17 @@ as possible!
 end
 
 function bush_area:on_activated()
-	village_logger.areas_visited.bush_area=true
+	village_logger.log.areas_visited.bush_area=true
 end
 
 function brewer_area:on_activated()
-	village_logger.areas_visited.brewer_area=true
+	village_logger.log.areas_visited.brewer_area=true
 end
 
 function plaza:on_activated()
-	village_logger.areas_visited.plaza=true
+	village_logger.log.areas_visited.plaza=true
 end
 
 function woods_exit:on_activated()
-	village_logger.areas_visited.woods_exit=true
+	village_logger.log.areas_visited.woods_exit=true
 end

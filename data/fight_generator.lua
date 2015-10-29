@@ -82,8 +82,8 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 					if split_table[5] == "BOSS" then 
 						local hero = map:get_hero()
 						if not game:get_value("bomb_bag__1") then hero:start_treasure("bomb_bag", 1, "bomb_bag__1") end
-						local xPos, yPos = chooseAreaToSpawn(spawnAreas, hero, true)
-						enemiesInEncounter = {{name="generatedEnemy_thisOne", layer=0, x=xPos, y=yPos, direction=0, breed="papillosaur_king"}}
+						local area = areas["walkable"][tonumber(split_table[3])].area
+						enemiesInEncounter = {{name="generatedEnemy_thisOne", layer=0, x=(area.x1+area.x2)/2, y=(area.y1+area.y2)/2, direction=0, breed="papillosaur_king"}}
 						resultingDiff = 6
 					end
 					
@@ -106,6 +106,7 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 						
 						if split_table[5] == "BOSS" then
 							function theEnemyIJustMade:on_dead()
+								explore.fight_finished( os.clock()-starttime )
 								local f = sol.file.open("userExperience.txt","a+") 
 								f:write(theEnemyIJustMade:get_breed() .. "-waskilled\n")
 								f:flush(); f:close()
@@ -127,6 +128,7 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 								f:flush(); f:close()
 								
 								if not map:has_entities("generatedEnemy") then
+									explore.fight_finished( os.clock()-starttime )
 									map:open_doors("door_normal_area_".. split_table[3])
 									
 									difficultyOfFights = difficultyOfFights + 1

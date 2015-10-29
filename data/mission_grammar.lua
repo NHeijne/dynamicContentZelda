@@ -153,7 +153,7 @@ function mission_grammar.create_standard_graph_for_testing( branch_length )
 
 	-- starting on the optional path
 	starting_number = #nodes+1
-	n, e, nt = mission_grammar.create_new_task_sequence( starting_number, {"BT","BT","BT","BT","optionalgoal"} )
+	n, e, nt = mission_grammar.create_new_task_sequence( starting_number, {"BT","BT","BT","BT", "E"} )
 	nodes = table_util.union(nodes, n)
 	edges = table_util.union(edges, e)
 	table_util.add_table_to_table(nt, non_terminals)

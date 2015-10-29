@@ -8,21 +8,13 @@ el.log = {}
 el.new_log = {
 	-- personal settings
 	name=game:get_player_name(),
-	openness=game:get_value("Openness"),
-	conscientiousness=game:get_value("Conscientiousness"),
-	extraversion=game:get_value("Extraversion"),
-	agreeableness=game:get_value("Agreeableness"),
-	neuroticism=game:get_value("Neuroticism"),
 
 	-- generation settings
-	length=6,
-	branches=4,
 	branch_length=0,
 	fights=0,
 	puzzles=0,
-	outside=0, 
+	outside=true, 
 	mission_type=0,
-	area_size=0,
 	fights_to_puzzle_rooms_ratio=0,
 
 	-- live data
@@ -31,7 +23,7 @@ el.new_log = {
 	unique_rooms_visited=0,
 	perc_unique_rooms_visited=0,
 
-	rewards_available=4,
+	rewards_available=0,
 	rewards_retrieved=0,
 	perc_rewards_retrieved=0,
 
@@ -54,19 +46,11 @@ el.new_log = {
 
 el.log_order = {
 	"name", -- DONE 
-	"openness", -- DONE 
-	"conscientiousness", -- DONE 
-	"extraversion", -- DONE 
-	"agreeableness", -- DONE 
-	"neuroticism", -- DONE 
-	"length", -- DONE 
-	"branches", -- DONE 
 	"branch_length", -- DONE 
 	"fights", -- DONE 
 	"puzzles", -- DONE 
 	"outside",  -- DONE 
 	"mission_type", -- DONE 
-	"area_size", -- DONE 
 	"fights_to_puzzle_rooms_ratio", -- DONE 
 	"total_rooms", --DONE
 	"rooms_visited", -- DONE 
@@ -99,23 +83,26 @@ local log_helper = {
 	main_path=true
 }
 
-local area_details
-
-function el.generation_input( parameters )
-	local l = el.log
-	for k,v in pairs(parameters) do	l[k]=v end
-	l.fights_to_puzzle_rooms_ratio = l.fights / l.puzzles
-end
+el.area_details = nil
 
 function el.copy_new_log()
 	el.log = table_util.copy(el.new_log)
 end
 
-function el.start_recording( area_details )
-	area_details = area_details
+function el.start_recording( area_details, parameters )
+	el.area_details = area_details
 	el.copy_new_log()
 
-	log_helper.time_start_of_level = os.clock()
+	el.log.branch_length = parameters.branch_length
+	el.log.outside = parameters.outside
+	el.log.mission_type = parameters.mission_type
+	el.log.total_rooms = #area_details + 2
+	for i,details in ipairs(area_details) do
+		if table_util.contains({"F", "TF"}, details.area_type) then el.incr( "fights" ) 
+		elseif table_util.contains({"P", "TP"}, details.area_type) then el.incr( "puzzles" ) 
+		elseif details.area_type == "C" and table_util.contains(details.contains_items, "R:rupees") then el.incr( "rewards_available" ) end
+	end
+	el.log.fights_to_puzzle_rooms_ratio = el.log.fights / el.log.puzzles
 end
 
 function el.puzzle_encountered( ) el.incr( "total_puzzles_encountered" ) end
@@ -140,21 +127,29 @@ function el.entered_area( areanumber ) -- branches or main
 		el.incr( "unique_rooms_visited" )
 	end
 	log_helper.areanumbers_visited[areanumber] = true
+	if log_helper.time_start ~= 0 then
+		log_helper.time_end = os.clock()
+		if log_helper.main_path == true then
+			el.incr( "total_time_spent_main", log_helper.time_end-log_helper.time_start )
+		elseif log_helper.main_path == false then
+			el.incr( "total_time_spent_optional", log_helper.time_end-log_helper.time_start )
+		end
+	end
+	log_helper.time_start = os.clock()
+	if log_helper.time_start_of_level == 0 then log_helper.time_start_of_level = log_helper.time_start end
+	log_helper.main_path=el.area_details[areanumber].main
+end
+
+function el.finished_level( )
 	log_helper.time_end = os.clock()
 	if log_helper.main_path == true then
 		el.incr( "total_time_spent_main", log_helper.time_end-log_helper.time_start )
 	elseif log_helper.main_path == false then
 		el.incr( "total_time_spent_optional", log_helper.time_end-log_helper.time_start )
 	end
-	log_helper.time_start = os.clock()
-	log_helper.main_path=area_details[areanumber].main
-end
-
-function el.finished_level( )
 	-- calculate the percentages
 	local l = el.log
-	l.total_time_spent=os.clock()-log_helper.time_start_of_level
-	l.perc_branches_visited=l.branches_visited/l.branches
+	l.total_time_spent=log_helper.time_end-log_helper.time_start_of_level
 	l.perc_unique_rooms_visited=l.unique_rooms_visited/l.total_rooms
 	l.perc_total_time_spent_main=l.total_time_spent_main/l.total_time_spent
 	l.perc_total_time_spent_optional=l.total_time_spent_optional/l.total_time_spent
@@ -170,8 +165,9 @@ function el.finished_level( )
 			game:set_value("reward_"..i, nil)
 		end
 	end
-
-	l.perc_rewards_retrieved=l.rewards_retrieved/l.rewards_available
+	if l.rewards_available > 0 then
+		l.perc_rewards_retrieved=l.rewards_retrieved/l.rewards_available
+	end
 
 	el.log_to_data()
 end

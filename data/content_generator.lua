@@ -149,7 +149,7 @@ function content.start_test(given_map, params, end_destination)
 	log.debug("content.areas")
 	log.debug(content.areas)
 
-	explore.start_recording()
+	explore.start_recording( content.area_details, params )
 	map.on_finished = 
 		function()
 			explore.finished_level( )
@@ -730,7 +730,7 @@ function content.plant_trees(area, exclude_these, unused_areas)
 	end
 	-- visualize
 	for _, tl in ipairs(treeline_area_list) do
-		placement.place_tile(area_util.resize_area(tl, {-16, -16, 16, 0}), 7, "forest", 0)
+		placement.place_tile(area_util.resize_area(tl, {0, -16, 0, 0}), 7, "forest", 0)
 	end
 	for _, tl in ipairs(treeline_area_list) do
 		-- content.show_corners(tl)

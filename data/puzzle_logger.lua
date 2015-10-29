@@ -3,11 +3,6 @@ local pl = {}
 pl.log = {
 	-- personal settings
 	name=game:get_player_name(),
-	openness=game:get_value("Openness"),
-	conscientiousness=game:get_value("Conscientiousness"),
-	extraversion=game:get_value("Extraversion"),
-	agreeableness=game:get_value("Agreeableness"),
-	neuroticism=game:get_value("Neuroticism"),
 
 	-- data gathered on all puzzles
 	total_time=0,
@@ -61,7 +56,7 @@ function pl.update_total_log( current_puzzle_log )
 	if puzzle_type == "sokoban" then
 		if cl.quit then	tl.sokoban_quits = tl.sokoban_quits +1 end
 		tl.sokoban_retries = tl.sokoban_retries + cl.retries
-		tl.sokoban_vfm = tl.sokoban_vfm + (cl.vfm_time - cl.time_start)
+		tl.sokoban_vfm = tl.sokoban_vfm + cl.total_vfm_time + cl.vfm_time
 	elseif puzzle_type == "pike_room" then
 		tl[cl.puzzle_type.."_deaths"] = tl[cl.puzzle_type.."_deaths"] + cl.deaths
 		tl.pike_room_got_hurt = tl.pike_room_got_hurt + cl.got_hurt

@@ -2,6 +2,19 @@ local game = ...
 
 -- Define the existing dungeons and their floors for the minimap menu.
 game.dungeons = {
+  [0] = {
+    floor_width = 8000,
+    floor_height = 8000,
+    lowest_floor = 0,
+    highest_floor = 0,
+    maps = {},
+    boss = {
+      floor = 0,
+      x = 480,
+      y = 480,
+      savegame_variable = "b0",
+      },
+  },
   [1] = {
     floor_width = 1040,
     floor_height = 696,
@@ -119,9 +132,9 @@ game.dungeons = {
 -- Returns the index of the current dungeon if any, or nil.
 function game:get_dungeon_index()
 
-  local world = self:get_map():get_world()
-  local index = tonumber(world:match("^dungeon_([0-9]+)$"))
-  return index
+  --local world = self:get_map():get_world()
+  --local index = tonumber(world:match("^dungeon_([0-9]+)$"))
+  return 0
 end
 
 -- Returns the current dungeon if any, or nil.

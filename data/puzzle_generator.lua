@@ -57,7 +57,7 @@ end
 
 function pg.interpret_log( completed_puzzle_log )
 	local cl = completed_puzzle_log
-	if cl.deaths > 0 or cl.quit or ( cl.got_hurt > 4 and cl.time_end-cl.time_start > pg.time_requirements[cl.puzzle_type] )  then
+	if cl.deaths > 0 or cl.quit or ( cl.got_hurt > 4 and cl.time_end-cl.time_start > pg.time_requirements[cl.puzzle_type]*cl.difficulty )  then
 		pg.decrease_min_max_difficulty( cl.puzzle_type )
 	else
 		pg.increase_min_max_difficulty( cl.puzzle_type )

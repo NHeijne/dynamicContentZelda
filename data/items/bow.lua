@@ -35,8 +35,8 @@ function item:on_amount_changed(amount)
 end
 
 function item:on_obtaining(variant, savegame_variable)
-
   local quiver = self:get_game():get_item("quiver")
+
   if not quiver:has_variant() then
     -- Give the first quiver automatically with the bow.
     quiver:set_variant(1)
