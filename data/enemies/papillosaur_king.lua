@@ -4,7 +4,7 @@ local enemy = ...
 
 local nb_eggs_to_create = 0
 local nb_eggs_created = 0
-local boss_starting_life = 6
+local boss_starting_life = 12
 local boss_movement_starting_speed = 50  -- Starting speed in pixels per second, it will gain 5 per life point lost.
 local boss_movement_speed = boss_movement_starting_speed
 
@@ -28,7 +28,7 @@ end
 
 function enemy:on_restarted()
 
-  sol.timer.start(self, 2000, function() self:egg_phase_soon() end)
+  sol.timer.start(self, 100, function() self:egg_phase_soon() end)
   self:go()
 end
 
@@ -39,7 +39,7 @@ end
 function enemy:on_hurt(attack)
 
   local life = self:get_life()
-  if life <= 0 then
+  if life <= 1 then
     -- I am dying: remove the minillosaur eggs.
     local sons_prefix = self:get_name() .. "_minillosaur"
     self:get_map():remove_entities(sons_prefix)
@@ -67,7 +67,7 @@ function enemy:egg_phase_soon()
   local nb_sons = self:get_map():get_entities_count(sons_prefix)
   if nb_sons >= 5 then
     -- Delay the egg phase if there are already too much sons.
-    sol.timer.start(self, 5000, function() self:egg_phase_soon() end)
+    sol.timer.start(self, 500, function() self:egg_phase_soon() end)
   else
     self:stop_movement()
     sol.timer.start(self, 500, function() self:egg_phase() end)
@@ -82,7 +82,7 @@ function enemy:egg_phase()
   sol.timer.start(self, 1500, function() self:throw_egg() end)
 
   -- The more the boss is hurt, the more it will throw eggs...
-  nb_eggs_to_create = boss_starting_life - self:get_life() + 1
+  nb_eggs_to_create = math.floor((boss_starting_life - self:get_life())/2) + 3
 end
 
 function enemy:throw_egg()
@@ -102,7 +102,9 @@ function enemy:throw_egg()
 
   -- See what to do next.
   nb_eggs_to_create = nb_eggs_to_create - 1
-  local time_per_egg = (boss_starting_life - self:get_life() + 1 / boss_starting_life + 1) * 800
+  local current = math.floor((boss_starting_life - self:get_life())/2) + 3
+  local max = math.floor((boss_starting_life)/2) + 3
+  local time_per_egg = (current/max) * 500
   if nb_eggs_to_create > 0 then
     -- Throw another egg in 0.5 second.
 

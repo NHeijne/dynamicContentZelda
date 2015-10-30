@@ -1,8 +1,8 @@
 properties{
   x = 0,
   y = 0,
-  width = 8000,
-  height = 8000,
+  width = 12000,
+  height = 12000,
   tileset = "13",
   music = "la_mountains",
 }

@@ -26,12 +26,6 @@ function content.start_test(given_map, params, end_destination)
 	log.debug_log_reset()
 	hero:freeze()
 	if not game:get_value("sword__1") then hero:start_treasure("sword", 1, "sword__1") end
-	
-	function hero:on_state_changed(state)
-		local f = sol.file.open("userExperience.txt","a+"); f:write(state .. "-hero\n"); f:flush(); f:close()
-		-- returning false gives it back to the engine to handle
-		return false
-	end
 		
 	log.debug("test")
 	local tic = os.clock()
@@ -305,12 +299,13 @@ function content.create_simple_forest_map(areas, area_details, end_destination)
 			end
 			
 		end
-		if bounding_area == nil then bounding_area = a.area
-		else bounding_area = area_util.merge_areas(bounding_area, a.area) end
 
+		if bounding_area == nil then bounding_area = a.area
+		else bounding_area = area_util.merge_areas(bounding_area, a.area)
+		end
     end
     bounding_area = area_util.resize_area(bounding_area, {-152, -128, 256, 256}) 
-	local treelines = content.plant_trees(bounding_area, exclusion_areas_trees, areas.unused)
+	local treelines = content.plant_trees(bounding_area, areas["walkable"], exclusion_areas_trees)
 
 	local closed_leftovers = {}
 	for areanumber, list in ipairs(exclusion_areas) do
@@ -622,11 +617,29 @@ end
 
 
 
-function content.plant_trees(area, exclude_these, unused_areas)
+function content.plant_trees(area, areas_to_plant, exclude_these)
 	-- create tree lines which will follow a certain pattern uniformly across the map
 
 	local tree_size = {x=64, y=80}
 	local x, y, width, height = area.x1, area.y1, area.x2-area.x1, area.y2-area.y1
+	local unused_areas = {table_util.copy(area)}
+	for _, a in ipairs(areas_to_plant) do
+		local counter=1
+		repeat
+			-- log.debug(counter)
+			local area_part = unused_areas[counter]
+			if area_part and area_util.areas_intersect(area_part, a.area) then 
+
+				-- log.debug("content.create_forest_map found intersection treeline "..i)
+				local new_areas = area_util.shrink_until_no_conflict(a.area, area_part, "vertical")
+				unused_areas[counter] = false
+				table_util.add_table_to_table(new_areas, unused_areas)
+			else 
+				counter = counter +1
+			end
+		until counter > #unused_areas
+	end
+ 	table_util.remove_false(unused_areas)
 	-- create each horizontal layer of trees
 	local treelines = math.floor((height-32) -- 32 is the height that overlaps with the previous row
 										/ 48) -- the height of the tree that is not overlapping at the bottom row

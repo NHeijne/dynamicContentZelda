@@ -30,6 +30,7 @@ local properties = {}
 local going_hero = false
 local time_since_disengagement = 0
 local time_at_disengagement = 0
+local hero 
 
 function enemy:get_going_hero()
 	return going_hero
@@ -69,7 +70,7 @@ function enemy:set_properties(prop)
 end
 
 function enemy:on_created()
-
+  hero = self:get_map():get_entity("hero")
   self:set_life(properties.life)
   self:set_damage(properties.damage)
   self:create_sprite(properties.sprite)
@@ -101,22 +102,20 @@ function enemy:on_restarted()
 end
 
 function enemy:check_hero()
-
-  local hero = self:get_map():get_entity("hero")
-  local self_x, self_y, layer = self:get_position()
-  local hero_x, hero_y, hero_layer = hero:get_position()
-  local dx, dy = hero_x-self_x, hero_y-self_y
-  local near_hero = layer == hero_layer
-    and self:get_distance(hero) < 100
+  --local self_x, self_y, layer = self:get_position()
+  --local hero_x, hero_y, hero_layer = hero:get_position()
+  --local dx, dy = hero_x-self_x, hero_y-self_y
+  local near_hero = 
+    --layer == hero_layer and 
+    self:get_distance(hero) < 100
     --and self:line_of_sight(dx, dy)
-    and self:is_in_same_region(hero)
+    --and self:is_in_same_region(hero)
 
   if near_hero and not going_hero then
     enemy:engage()
   elseif not near_hero and going_hero then
     enemy:start_disengaging()
   end
-  sol.timer.stop_all(self)
   sol.timer.start(self, 1000, function() self:check_hero() end)
 end
 

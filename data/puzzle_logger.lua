@@ -100,7 +100,7 @@ function pl.start_recording( puzzle_type, areanumber, difficulty )
 	function hero:on_state_changed(state)
 		if state == "hurt" then 
 			cl.got_hurt = cl.got_hurt +1
-			if game:get_life() <= 2 and not cl.died then
+			if game:get_life() <= 2 and game:get_life() > 0 and not cl.died then
 				pl.stop_recording()
 				cl.died = true
 				cl.deaths = cl.deaths +1

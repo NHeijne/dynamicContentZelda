@@ -24,14 +24,12 @@ local state
 -- "finished": An action was validated in the menu.
 
 function game:on_game_over_started()
-
   -- Attach the game-over menu to the map so that the map's fade-out
   -- effect applies to it when restarting the game.
   sol.menu.start(game:get_map(), game_over_menu)
 end
 
 function game_over_menu:on_started()
-
   local hero = game:get_hero()
   hero_was_visible = hero:is_visible()
   hero:set_visible(false)
