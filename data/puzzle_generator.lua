@@ -9,7 +9,7 @@ local area_util 	= require("area_util")
 local num_util 		= require("num_util")
 
 local pg ={}
-
+pg.static_difficulty = false
 pg.pike_room_min_difficulty = 1
 pg.pike_room_max_difficulty = 1
 pg.sokoban_min_difficulty = 1
@@ -20,6 +20,20 @@ pg.maze_max_difficulty = 1
 pg.puzzles_instantiated = {["maze"]=0, ["sokoban"]=0, ["pike_room"]=0}
 pg.time_requirements = {["maze"]=30, ["sokoban"]=90, ["pike_room"]=20}
 pg.areanumbers_filled = {}
+
+function pg.get_static_difficulty(map_id, puzzle_type)
+	local difficulty
+	if map_id == 0 then difficulty=1
+	elseif map_id == 1 then difficulty= 2
+	elseif map_id == 2 then	difficulty= 3
+	elseif map_id == 3 then difficulty= 4 end
+
+	if puzzle_type == "maze" then difficulty = difficulty+1
+	elseif puzzle_type == "pike_room" then difficulty = difficulty+1 
+	elseif puzzle_type == "sokoban" and difficulty >= 3 then difficulty = difficulty-1 end
+	
+	return difficulty
+end
 
 function pg.create_puzzle( selection_type, area, areanumber, exit_areas, exclusion, area_details )
 	local map_id = tonumber(map:get_id())
@@ -44,8 +58,13 @@ function pg.create_puzzle( selection_type, area, areanumber, exit_areas, exclusi
 	else puzzle_type = table_util.random({"maze", "pike_room", "sokoban"}) end
 
 	-- determine difficulty to be used
-	local difficulty = pg[puzzle_type.."_min_difficulty"]
-	if game:get_life() > 16 then difficulty = pg[puzzle_type.."_max_difficulty"] end
+	local difficulty=0
+	if pg.static_difficulty then
+		difficulty = pg.get_static_difficulty(map_id, puzzle_type)
+	else
+		difficulty = pg[puzzle_type.."_min_difficulty"]
+		if game:get_life() > 16 then difficulty = pg[puzzle_type.."_max_difficulty"] end
+	end
 	-- determine parameters to be used
 	local parameters = pg.get_parameters( puzzle_type, difficulty )
 	parameters.area = area; 			parameters.areanumber = areanumber    

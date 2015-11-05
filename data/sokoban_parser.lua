@@ -177,7 +177,9 @@ function sp.place_sokoban_puzzle( map, area_list, puzzle_area, areanumber, diffi
 	sensor.on_activated_repeat =
 		function()
 			if sol.input.is_key_pressed("q") then
-				if puzzle_logger.pressed_quit() then sp.remove_sokoban( next_index, map ) end
+				log.debug("pressed_quit")
+				local index = next_index
+				if puzzle_logger.pressed_quit() then sp.remove_sokoban( index, map ) end
 			end
 		end
 	reset_switch.on_activated = 
@@ -238,8 +240,10 @@ function sp.remove_sokoban( index, map )
 	for sokoban_object in map:get_entities("sokoban_"..index) do
 		sokoban_object:remove()
 	end
-	local reset_switch = map:get_entity("reset_switch_"..index)
-	reset_switch:remove()
+	if map:has_entity("reset_switch_"..index) then
+		local reset_switch = map:get_entity("reset_switch_"..index)
+		reset_switch:remove()
+	end
 end
 
 
@@ -289,7 +293,7 @@ function sp.create_sokoban_puzzle( difficulty, area, areanumber, area_details, e
 		maze_gen.create_initial_paths( maze, exits, convergence_pos )
 		local prop_area_list = maze_gen.maze_to_square_areas( maze, false )
 		local open_area_list = maze_gen.maze_to_square_areas( maze, true )
-		sp.place_props( prop_area_list, area_details.outside )
+		sp.place_props( prop_area_list, area_details.outside, puzzle_area )
 	end
 end
 
@@ -356,11 +360,20 @@ function sp.connect_to_maze( area_list, maze, maze_entrance )
 	return sb_exit_pos_list
 end
 
-function sp.place_props( area_list, outside )
+function sp.place_props( area_list, outside, puzzle_area )
 	if outside then
-		local filler = {{"green_tree"}, {"small_green_tree"}, {"tiny_yellow_tree"}}
+		puzzle_center_x = (puzzle_area.x2+puzzle_area.x1)/2
+		puzzle_center_y = (puzzle_area.y2+puzzle_area.y1)/2
+		local filler_yellow_tree = {{"green_tree"}, {"small_green_tree"}, {"tiny_yellow_tree"}}
+		local filler_large = {{"green_tree"}, {"flower1", "flower2", "halfgrass", "fullgrass"}}
 		for _,area in ipairs(area_list) do
-			placement.spread_props(area, 0, filler, 1)
+			center_x = (area.x2+area.x1)/2
+			center_y = (area.y2+area.y1)/2
+			if math.abs(center_x-puzzle_center_x)+math.abs(center_y-puzzle_center_y) < 150 then
+				placement.spread_props(area, 0, filler_yellow_tree, 1)
+			else
+				placement.spread_props(area, 16, filler_large, 1)
+			end
 		end
 	else
 		for _,area in ipairs(area_list) do

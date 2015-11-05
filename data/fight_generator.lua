@@ -26,6 +26,7 @@ local roomDifficulties = {{baseStress}}
 local enemyTried = 1 -- To initialize the training data, we need to try every enemy.
 local starttime = 0
 
+fight_generator.static_difficulty = false
 local f = nil
 
 function fight_generator.died()
@@ -40,6 +41,39 @@ function fight_generator.died()
 	 map:open_doors("door_normal_area_")
 	 hero.on_state_changed = nil
 	analyseGameplaySoFar(map)
+end
+
+function fight_generator.make_static_fight(map, spawnAreas)
+	local breedOptions={"minillosaur_egg_fixed","mandible","blue_hardhat_beetle","green_knight_soldier"}	
+	local hero = map:get_hero()
+	local map_id = tonumber(map:get_id())
+	local breedSelections = {}
+	local enemiesInFight = {}
+	local difficulty = 0
+	if map_id == 0 then
+		local options = { {1, 1, 1, 1}, {4, 4}, {2, 2, 2} }
+		breedSelections = table_util.random(options)
+		difficulty = 2
+	elseif map_id == 1 then
+		local options = {{1, 1, 1, 1, 1, 1}, {4, 4, 4}, {2, 2, 2, 2, 2}}
+		breedSelections = table_util.random(options)
+		difficulty = 3
+	elseif map_id == 2 then
+		local options = {{1, 1, 1, 1, 1, 1, 1, 1}, {2, 2, 2, 2, 2, 2}, {4, 4, 4, 4}}
+		breedSelections = table_util.random(options)
+		difficulty = 4
+	elseif map_id == 3 then
+		local options = {{3, 3, 3, 3, 3}, {1, 1, 1, 1, 1, 1, 1, 1, 3, 3}, {2, 2, 2, 2, 2, 2, 3, 3}, {4, 4, 4, 4, 3, 3} }
+		breedSelections = table_util.random(options)
+		difficulty = 5
+	end
+	for i, chosenBreed in ipairs(breedSelections) do
+		local xPos, yPos = chooseAreaToSpawn(spawnAreas, hero)
+		-- monster = {name, layer, x,y, direction, breed,rank,savegame_variable, treasure_name,treasure_variant,treasure_savegame_variable}
+		table.insert(enemiesInFight,{name="generatedEnemy_thisOne", layer=0, x=xPos, y=yPos, direction=0, breed=breedOptions[chosenBreed]})
+	end
+	
+	return enemiesInFight, difficulty
 end
 
 function fight_generator.add_effects_to_sensors (map, areas, area_details)
@@ -89,10 +123,14 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 					
 					for enemy in map:get_entities("generatedEnemy") do enemy:remove() end
 					local spawnAreas = areas["walkable"][tonumber(split_table[3])].open_areas
-					
+					local enemiesInEncounter, resultingDiff
 					local diff = difficultyOfFights
 					 f:write(diff .. "-difficulty\n")
-					local enemiesInEncounter, resultingDiff = fight_generator.make(spawnAreas, diff, map, game:get_life()) 
+					if fight_generator.static_difficulty then 
+						enemiesInEncounter, resultingDiff = fight_generator.make_static_fight(map, spawnAreas)
+					else
+						enemiesInEncounter, resultingDiff = fight_generator.make(spawnAreas, diff, map, game:get_life()) 
+					end
 					if split_table[5] == "BOSS" then 
 						local hero = map:get_hero()
 						if not game:get_value("bomb_bag__1") then hero:start_treasure("bomb_bag", 1, "bomb_bag__1") end
@@ -433,12 +471,6 @@ function fight_generator.make(areas, maxDiff, map, currentLife)
 
 	local difficulty = baseDifficulty + startLifeDifficulty * currentLife
 	local enemiesInFight = {}
-	
-	-- For testing purposes only, to diversify the data.
-	local randomBadRoom = math.random()
-	if randomBadRoom > 0.96 then maxDiff = 6 end
-	if randomBadRoom < 0.04 then maxDiff = 1 end
-	-- Remove these three lines when testing is done.
 	
 	while difficulty < maxDiff do
 		local xPos, yPos = chooseAreaToSpawn(spawnAreas, hero)

@@ -229,6 +229,21 @@ whenever you want to
 recover your Hearts!
 ]]
 }
+
+-- Fée dans Flacon / Fairy in Bottle
+dialog{
+  id = "_treasure.fairy.1",
+  icon = 81,
+  skip = "all",
+  text = [[
+This Fairy will help
+you in time of need.
+You can also use it
+whenever you want to
+recover your Hearts!
+]]
+}
+
 --------------------
 
 -- Flacon Magique vide / Empty bottle

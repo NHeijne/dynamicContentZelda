@@ -4,7 +4,7 @@ properties{
   width = 12000,
   height = 12000,
   tileset = "13",
-  music = "la_mountains",
+  music = "dark_world",
 }
 
 destination{

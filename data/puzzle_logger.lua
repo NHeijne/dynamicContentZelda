@@ -1,9 +1,10 @@
 local pl = {}
+local table_util = require("table_util")
 
-pl.log = {
+pl.log_template = {
 	-- personal settings
 	name=game:get_player_name(),
-
+	map_id=0;
 	-- data gathered on all puzzles
 	total_time=0,
 	
@@ -30,9 +31,16 @@ pl.log = {
 	maze_average_difficulty=0,
 }
 
-
 pl.current_areanumber = 0
 pl.current_puzzle_log = {}
+pl.log = {}
+
+function pl.init_logs()
+	pl.current_puzzle_log = {}
+	pl.log = table_util.copy(pl.log_template)
+	pl.log.map_id = map:get_id()
+end
+
 
 function pl.complete_puzzle()
 	local cl = pl.current_puzzle_log[pl.current_areanumber]
@@ -154,6 +162,7 @@ function pl.current_log_to_data( current_puzzle_log )
 	local cl = current_puzzle_log
 	local data ={}
 	table.insert(data, game:get_player_name()) 		-- name
+	table.insert(data, map:get_id()) 		-- map_id
 	table.insert(data, cl.puzzle_type) 				-- puzzle_type
 	table.insert(data, cl.difficulty) 				-- difficulty 1-5
 	table.insert(data, cl.time_end - cl.time_start) -- time spent
@@ -170,6 +179,7 @@ function pl.log_to_data( )
 	local l = pl.log
 	local data ={}
 	table.insert(data, game:get_player_name()) 	-- name
+ 	table.insert(data, map:get_id())
 	table.insert(data, l.total_time) 			-- total_time
 	table.insert(data, l.sokoban_total_time) 	-- sokoban_total_time
 	table.insert(data, l.sokoban_retries) 		-- sokoban_retries

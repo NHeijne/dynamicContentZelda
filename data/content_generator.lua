@@ -20,6 +20,11 @@ local light_manager 	= require("maps/lib/light_manager")
 local content = {}
 
 function content.start_test(given_map, params, end_destination)
+	local static_difficulty = true
+
+	fight_generator.static_difficulty = static_difficulty
+	puzzle_gen.static_difficulty = static_difficulty
+	
 	map = given_map
 	game = map:get_game()
 	hero = map:get_hero()
@@ -144,6 +149,7 @@ function content.start_test(given_map, params, end_destination)
 	log.debug(content.areas)
 
 	explore.start_recording( content.area_details, params )
+	puzzle_logger.init_logs()
 	map.on_finished = 
 		function()
 			explore.finished_level( )
@@ -304,6 +310,7 @@ function content.create_simple_forest_map(areas, area_details, end_destination)
 		else bounding_area = area_util.merge_areas(bounding_area, a.area)
 		end
     end
+    
     bounding_area = area_util.resize_area(bounding_area, {-152, -128, 256, 256}) 
 	local treelines = content.plant_trees(bounding_area, areas["walkable"], exclusion_areas_trees)
 
@@ -332,8 +339,10 @@ function content.create_simple_forest_map(areas, area_details, end_destination)
 		end
 	end
 	local choices = {{{"green_tree"}, {"old_prison"}, {"stone_hedge"}},
-					 {{"green_tree"}, {"small_green_tree"}, {"tiny_yellow_tree"}},
-					 {{"green_tree"}, {"big_statue"}, {"blue_block"}}}
+					 {{"green_tree"}, {"small_green_tree"}, --{"tiny_yellow_tree"}
+					 },
+					 {{"green_tree"}, {"big_statue"}, --{"blue_block"}
+					 }}
 
 	for areanumber, list in ipairs(closed_leftovers) do 
 		local choice_for_that_area = table_util.random(choices)
@@ -623,15 +632,16 @@ function content.plant_trees(area, areas_to_plant, exclude_these)
 	local tree_size = {x=64, y=80}
 	local x, y, width, height = area.x1, area.y1, area.x2-area.x1, area.y2-area.y1
 	local unused_areas = {table_util.copy(area)}
-	for _, a in ipairs(areas_to_plant) do
+	for _, a in pairs(areas_to_plant) do
+		local area_to_plant = area_util.resize_area(a.area, {-152, -128, 64, 128})
 		local counter=1
 		repeat
 			-- log.debug(counter)
 			local area_part = unused_areas[counter]
-			if area_part and area_util.areas_intersect(area_part, a.area) then 
+			if area_part and area_util.areas_intersect(area_part, area_to_plant) then 
 
 				-- log.debug("content.create_forest_map found intersection treeline "..i)
-				local new_areas = area_util.shrink_until_no_conflict(a.area, area_part, "vertical")
+				local new_areas = area_util.shrink_until_no_conflict(area_to_plant, area_part, "vertical")
 				unused_areas[counter] = false
 				table_util.add_table_to_table(new_areas, unused_areas)
 			else 

@@ -10,6 +10,7 @@ el.new_log = {
 	name=game:get_player_name(),
 
 	-- generation settings
+	map_id=0,
 	branch_length=0,
 	fights=0,
 	puzzles=0,
@@ -46,6 +47,7 @@ el.new_log = {
 
 el.log_order = {
 	"name", -- DONE 
+	"map_id", -- DONE
 	"branch_length", -- DONE 
 	"fights", -- DONE 
 	"puzzles", -- DONE 
@@ -92,7 +94,7 @@ end
 function el.start_recording( area_details, parameters )
 	el.area_details = area_details
 	el.copy_new_log()
-
+	el.log.map_id = map:get_id()
 	el.log.branch_length = parameters.branch_length
 	el.log.outside = parameters.outside
 	el.log.mission_type = parameters.mission_type

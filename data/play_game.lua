@@ -111,16 +111,17 @@ end
 
 local f = sol.file.open("userExperience.txt","w+"); f:write("A NEW GAME IS STARTING NOW\n"); f:flush(); f:close()
 sol.timer.start(200, function ()
-	if leftPressed or rightPressed or upPressed or downPressed then
-		local f = sol.file.open("userExperience.txt","a+"); f:write("moving around\n"); f:flush(); f:close()
+	local f = sol.file.open("userExperience.txt","a+")
+  if leftPressed or rightPressed or upPressed or downPressed then
+	  f:write("moving around\n"); f:flush()
 	else
-		local f = sol.file.open("userExperience.txt","a+"); f:write("standing still\n"); f:flush(); f:close()
+		f:write("standing still\n"); f:flush()
 	end
 	local totalGoingEnemies = 0
-	for enemy in game:get_map():get_entities("generatedEnemy") do
-		totalGoingEnemies = totalGoingEnemies + (enemy:get_going_hero() and 1 or 0)
-	end
-	local f = sol.file.open("userExperience.txt","a+"); f:write(totalGoingEnemies .. "-goingHero\n"); f:flush(); f:close()
+	-- for enemy in game:get_map():get_entities("generatedEnemy") do
+	-- 	totalGoingEnemies = totalGoingEnemies + (enemy:get_going_hero() and 1 or 0)
+	-- end
+	f:write(totalGoingEnemies .. "-goingHero\n"); f:flush(); f:close()
 	return true
 end)
 -- Run the game.
