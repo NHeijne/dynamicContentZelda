@@ -334,6 +334,8 @@ function logTheRoom (room)
 	local playerBehaviourData = {}
 	local bias = 1
 	
+	fightRoomData[#fightRoomData+1] = game:get_player_name()
+	fightRoomData[#fightRoomData+1] = tonumber(map:get_id())
 	-- egg,mandible,hardhat,knight,papillosaur,startLife,hasGlove,hasGlove2,hasBomb,pitfalls,spikes,grass,whiteRock,inside,surface
 	fightRoomData[#fightRoomData+1] = room.monsterTypes.minillosaur_egg_fixed or 0
 	fightRoomData[#fightRoomData+1] = room.monsterTypes.mandible or 0

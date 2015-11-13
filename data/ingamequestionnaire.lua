@@ -6,6 +6,9 @@ q.questions_start=[[
 Please answer some
 questions about the
 previous area...
+Note that your answers 
+do not affect gameplay
+whatsoever...
 ]]
 
 q.questions_repeat=[[
@@ -17,12 +20,25 @@ No thanks.
 Yes please.
 ]]
 
+q.merchant_start=[[
+Hello traveler...
+Don't forget to search
+for treasure if you
+want some of these 
+fine pieces of 
+equipment...
+]]
+
+
 q.questionnaire = {}
 q.map_number = 0
 q.map = nil
 
-function q.init(given_npc_name, map)
-  q.npc_name = given_npc_name
+
+
+
+function q.init(map)
+  q.npc_name = "bouncer"
   q.map = map
   local hero = map:get_hero()
   local npc = map:get_entity(q.npc_name)
@@ -40,6 +56,11 @@ function q.init(given_npc_name, map)
         end
       end)
     end
+  end
+
+  local merchant = map:get_entity("salesman")
+  function merchant:on_interaction()
+    game:start_dialog("test.variable", q.merchant_start)
   end
 
   function map:on_finished()
@@ -129,7 +150,7 @@ end
 
 function q.questionnaire:init_phase()
 
-  self.title_text:set_text("selection_menu.phase.options")
+  self.title_text:set_text("In the last level I liked...")
   self.modifying_profile = false
   self.profile_cursor_position = 1
 
@@ -137,12 +158,12 @@ function q.questionnaire:init_phase()
   self.profile = {
     {
       name = "exploration",
-      values = {"1", "2", "3", "4", "5"},
-      initial_value = "1",
+      values = {"Strongly disagree", "Disagree", "Neutral", "Agree", "Strongly agree"},
+      initial_value = "Strongly disagree",
       current_index = nil,
       label_text = sol.text_surface.create{
         font = sol.language.get_menu_font(),
-        text = "Exploration"
+        text = "...the amount of exploration available"
       },
       value_text = sol.text_surface.create{
         font = sol.language.get_menu_font(),
@@ -151,12 +172,12 @@ function q.questionnaire:init_phase()
     },
     {
       name = "puzzles",
-      values = {"1", "2", "3", "4", "5"},
-      initial_value = "1",
+      values = {"Strongly disagree", "Disagree", "Neutral", "Agree", "Strongly agree"},
+      initial_value = "Strongly disagree",
       current_index = nil,
       label_text = sol.text_surface.create{
         font = sol.language.get_menu_font(),
-        text = "Puzzles"
+        text = "...the challenge that the puzzles gave me"
       },
       value_text = sol.text_surface.create{
         font = sol.language.get_menu_font(),
@@ -171,7 +192,7 @@ function q.questionnaire:init_phase()
       current_index = nil,
       label_text = sol.text_surface.create{
         font = sol.language.get_menu_font(),
-        text = "Puzzle preference"
+        text = "...this type of puzzle the best"
       },
       value_text = sol.text_surface.create{
         font = sol.language.get_menu_font(),
@@ -181,12 +202,12 @@ function q.questionnaire:init_phase()
     },
     {
       name = "fights",
-      values = {"1", "2", "3", "4", "5"},
-      initial_value = "1",
+      values = {"Strongly disagree", "Disagree", "Neutral", "Agree", "Strongly agree"},
+      initial_value = "Strongly disagree",
       current_index = nil,
       label_text = sol.text_surface.create{
         font = sol.language.get_menu_font(),
-        text = "Fights"
+        text = "...the challenge that the fights gave me"
       },
       value_text = sol.text_surface.create{
         font = sol.language.get_menu_font(),
@@ -196,12 +217,12 @@ function q.questionnaire:init_phase()
     },
     {
       name = "overalexperience",
-      values = {"1", "2", "3", "4", "5"},
-      initial_value = "1",
+      values = {"Strongly disagree", "Disagree", "Neutral", "Agree", "Strongly agree"},
+      initial_value = "Strongly disagree",
       current_index = nil,
       label_text = sol.text_surface.create{
         font = sol.language.get_menu_font(),
-        text = "Overal experience"
+        text = "...the composition and the general feel"
       },
       value_text = sol.text_surface.create{
         font = sol.language.get_menu_font(),
@@ -265,7 +286,6 @@ function q.questionnaire:on_key_pressed(key)
   self.right_arrow_sprite:set_frame(0)
   option.label_text:set_color{255, 255, 255}
   option.value_text:set_color{255, 255, 0}
-  self.title_text:set_text_key("selection_menu.phase.options.changing")
   self.modifying_profile = true
       else
   sol.audio.play_sound("danger")
@@ -273,7 +293,6 @@ function q.questionnaire:on_key_pressed(key)
   option.value_text:set_color{255, 255, 255}
   self.left_arrow_sprite:set_frame(0)
   self.right_arrow_sprite:set_frame(0)
-  self.title_text:set_text("Fun-rating of previous area")
   self.modifying_profile = false
       end
     end
@@ -401,9 +420,9 @@ function q.questionnaire:draw_phase()
 
   -- All profile.
   for i, option in ipairs(self.profile) do
-    local y = 70 + i * 16
+    local y = 57 + i * 19
     option.label_text:draw(self.surface, 64, y)
-    option.value_text:draw(self.surface, 266, y)
+    option.value_text:draw(self.surface, 266, y+9)
   end
 
   -- Bottom buttons.
@@ -416,7 +435,7 @@ function q.questionnaire:draw_phase()
     self.cursor_sprite:draw(self.surface, 58, 159)
   else
     -- The cursor is on an option line.
-    local y = 64 + self.profile_cursor_position * 16
+    local y = 51 + self.profile_cursor_position * 19
     if self.modifying_profile then
       local option = self.profile[self.profile_cursor_position]
       local width, _ = option.value_text:get_size()
@@ -452,7 +471,7 @@ function q.questionnaire:set_value(option, index)
     option.current_index = index
     local value = option.values[index]
     option.value_text:set_text(value)
-    game:set_value(option.name, value)
+    game:set_value(option.name, index)
   end
 end
 

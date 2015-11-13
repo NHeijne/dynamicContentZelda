@@ -364,13 +364,13 @@ function sp.place_props( area_list, outside, puzzle_area )
 	if outside then
 		puzzle_center_x = (puzzle_area.x2+puzzle_area.x1)/2
 		puzzle_center_y = (puzzle_area.y2+puzzle_area.y1)/2
-		local filler_yellow_tree = {{"green_tree"}, {"small_green_tree"}, {"tiny_yellow_tree"}}
+		local filler_ruins = {{"old_prison"}, {"stone_hedge"}, {"blue_block"}}
 		local filler_large = {{"green_tree"}, {"flower1", "flower2", "halfgrass", "fullgrass"}}
 		for _,area in ipairs(area_list) do
 			center_x = (area.x2+area.x1)/2
 			center_y = (area.y2+area.y1)/2
 			if math.abs(center_x-puzzle_center_x)+math.abs(center_y-puzzle_center_y) < 150 then
-				placement.spread_props(area, 0, filler_yellow_tree, 1)
+				placement.spread_props(area, 0, filler_ruins, 1)
 			else
 				placement.spread_props(area, 16, filler_large, 1)
 			end

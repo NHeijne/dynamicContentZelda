@@ -5,11 +5,6 @@ local vl = {}
 vl.log = {
 	-- personal settings
 	name=game:get_player_name(),
-	openness=game:get_value("Openness"),
-	conscientiousness=game:get_value("Conscientiousness"),
-	extraversion=game:get_value("Extraversion"),
-	agreeableness=game:get_value("Agreeableness"),
-	neuroticism=game:get_value("Neuroticism"),
 
 	start_time = 0,
 	village_exit_time=0,
@@ -61,11 +56,6 @@ function vl.to_file( game, suffix )
 	local logbd = vl.log_before_dungeons
 	-- Player name
 	table.insert(data_to_write, logbd.name)
-	table.insert(data_to_write, logbd.openness)
-	table.insert(data_to_write, logbd.conscientiousness)
-	table.insert(data_to_write, logbd.extraversion)
-	table.insert(data_to_write, logbd.agreeableness)
-	table.insert(data_to_write, logbd.neuroticism)
 	-- # NPCs talked to
 	-- NPCs options explored, options_available
 	-- fraction of options explored of the talked to npcs

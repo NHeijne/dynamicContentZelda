@@ -47,7 +47,7 @@ function content.start_test(given_map, params, end_destination)
 
 	local tileset_id = tonumber(map:get_tileset())
 	local outside = false
-	if tileset_id == 1 or tileset_id == 2 or tileset_id == 13 then outside = true end
+	if tileset_id == 1 or tileset_id == 13 then outside = true end
 	mission_grammar.update_keys_and_barriers(game)
 	params = params or {}
 	local standard_params = {branches=4, branch_length=0, fights=6, puzzles=4, length=6, barrier_perc=1, outside=outside, mission_type="normal", area_size=1} 
@@ -344,12 +344,28 @@ function content.create_simple_forest_map(areas, area_details, end_destination)
 					 {{"green_tree"}, {"big_statue"}, --{"blue_block"}
 					 }}
 
+	local destructible = "bush"
+	--if tileset == 13 then destructible = "white_rock" end
+
+	local types_of_filler = {["pitfall"]=20, ["filler"]=60, ["destructible"]=20}
+	if tileset == 13 then types_of_filler = {["water"]=40, ["filler"]=40, ["destructible"]=20} end
+	
 	for areanumber, list in ipairs(closed_leftovers) do 
 		local choice_for_that_area = table_util.random(choices)
-		for _, l in ipairs(list) do
-			local leftovers = placement.spread_props(l, 0, choice_for_that_area, 1)
+		for _, c in ipairs(list) do
+			local filler_type = table_util.choose_random_key(types_of_filler)				
+			if filler_type == "water" then
+				placement.place_tile(c, 275, "water", 0)
+			elseif filler_type == "pitfall" then
+				placement.place_tile(c, 825, "pitfall", 0)
+			elseif filler_type == "filler" then
+				placement.spread_props(c, 0, choice_for_that_area, 1)
+			elseif filler_type == "destructible" then
+				placement.tile_destructible( lookup.destructible[destructible], c, "destructible", {} )
+			end
 		end
 	end 
+			
 
 	for areanumber,connections in pairs(areas["exit"]) do
 		for _, connection in ipairs(connections) do
@@ -752,9 +768,9 @@ function content.plant_trees(area, areas_to_plant, exclude_these)
 		previous_treeline = current_treeline
 	end
 	-- visualize
-	for _, tl in ipairs(treeline_area_list) do
-		placement.place_tile(area_util.resize_area(tl, {0, -16, 0, 0}), 7, "forest", 0)
-	end
+	-- for _, tl in ipairs(treeline_area_list) do
+	-- 	placement.place_tile(area_util.resize_area(tl, {-8, -16, 8, 0}), 7, "forest", 0)
+	-- end
 	for _, tl in ipairs(treeline_area_list) do
 		-- content.show_corners(tl)
 		--left side
@@ -774,6 +790,9 @@ function content.plant_trees(area, areas_to_plant, exclude_these)
 			placement.place_tile({x1=x, y1=tl.y1+5*8, x2=x+32, y2=tl.y1+6*8}, 523, "forest", 0) -- bottom trunk
 			x = x+48
 		until x > tl.x2
+	end
+	for index, tl in ipairs(treeline_area_list) do
+		treeline_area_list[index]= area_util.resize_area(tl, {-8, -16, 8, 0})
 	end
 	return treeline_area_list
 end
