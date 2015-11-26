@@ -14,7 +14,9 @@ areas all contain ruins
 off the main path...
 You would certainly be
 able to find something
-of value!
+of value or something
+that will enhance your
+life force!
 Here is something to
 help you on your way.
 ]]
@@ -38,7 +40,7 @@ function map:on_started(destination)
 	q.init(map)
 	q.map_number = 0
 	game:start_dialog("test.variable", explanation_start, function() 
-		hero:start_treasure("mystic_mirror", 1, "mystic_mirror", function() 
+		hero:start_treasure("return_scroll", 1, "return_scroll", function() 
 			game:start_dialog("test.variable", explanation_continued)
 		end)
 	end)

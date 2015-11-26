@@ -10317,17 +10317,6 @@ destructible{
 
 destructible{
   layer = 0,
-  x = 184,
-  y = 669,
-  treasure_name = "random",
-  sprite = "entities/bush",
-  destruction_sound = "bush",
-  weight = -1,
-  can_be_cut = true,
-}
-
-destructible{
-  layer = 0,
   x = 200,
   y = 685,
   treasure_name = "random",
@@ -10526,6 +10515,17 @@ jumper{
   height = 8,
   direction = 6,
   jump_length = 56,
+}
+
+destructible{
+  layer = 0,
+  x = 184,
+  y = 669,
+  treasure_name = "random",
+  sprite = "entities/bush",
+  destruction_sound = "bush",
+  weight = -1,
+  can_be_cut = true,
 }
 
 tile{

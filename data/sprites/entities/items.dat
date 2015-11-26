@@ -1,11 +1,4 @@
 animation{
-  name = "random",
-  src_image = "entities/items.png",
-  directions = {
-    { x = 0, y = 0, frame_width = 1, frame_height = 1, origin_x = 0, origin_y = 0 },
-  },
-}
-animation{
   name = "apple",
   src_image = "entities/items.png",
   directions = {
@@ -320,6 +313,13 @@ animation{
   },
 }
 animation{
+  name = "magic_aoe",
+  src_image = "entities/items.png",
+  directions = {
+    { x = 128, y = 0, frame_width = 16, frame_height = 16, origin_x = 8, origin_y = 13 },
+  },
+}
+animation{
   name = "magic_bar",
   src_image = "entities/items.png",
   directions = {
@@ -394,10 +394,24 @@ animation{
   },
 }
 animation{
+  name = "random",
+  src_image = "entities/items.png",
+  directions = {
+    { x = 0, y = 0, frame_width = 1, frame_height = 1, origin_x = 0, origin_y = 0 },
+  },
+}
+animation{
   name = "red_potion",
   src_image = "entities/items.png",
   directions = {
     { x = 112, y = 80, frame_width = 16, frame_height = 16, origin_x = 8, origin_y = 13 },
+  },
+}
+animation{
+  name = "return_scroll",
+  src_image = "entities/items.png",
+  directions = {
+    { x = 272, y = 48, frame_width = 16, frame_height = 16, origin_x = 8, origin_y = 13 },
   },
 }
 animation{

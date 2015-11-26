@@ -762,21 +762,23 @@ end
 
 function savegame_menu:set_options_cursor_position(position)
 
-  if self.options_cursor_position <= #self.options then
-    -- An option line was previously selected.
-    local option = self.options[self.options_cursor_position]
-    option.label_text:set_color{255, 255, 255}
-  end
+  if self.options ~= nil then 
+    if self.options_cursor_position <= #self.options then
+      -- An option line was previously selected.
+      local option = self.options[self.options_cursor_position]
+      option.label_text:set_color{255, 255, 255}
+    end
 
-  self.options_cursor_position = position
-  if position > #self.options then
-    self:set_cursor_position(4)
-  end
+    self.options_cursor_position = position
+    if position > #self.options then
+      self:set_cursor_position(4)
+    end
 
-  if position <= #self.options then
-    -- An option line is now selected.
-    local option = self.options[self.options_cursor_position]
-    option.label_text:set_color{255, 255, 0}
+    if position <= #self.options then
+      -- An option line is now selected.
+      local option = self.options[self.options_cursor_position]
+      option.label_text:set_color{255, 255, 0}
+    end
   end
 end
 
@@ -878,7 +880,7 @@ function savegame_menu:key_pressed_phase_choose_name(key)
   end
 
   if finished then
-    self:init_phase_profile()
+    self:init_phase_select_file()
   end
 
   return handled
@@ -1012,7 +1014,6 @@ function savegame_menu:set_initial_values(savegame)
   savegame:set_ability("tunic", 1)
   savegame:get_item("rupee_bag"):set_variant(1)
   savegame:get_item("quiver"):set_variant(1)
-  savegame:get_item("mystic_mirror"):set_variant(1)
 end
 
 -------------------------------------------

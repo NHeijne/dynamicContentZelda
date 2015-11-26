@@ -21,9 +21,11 @@ local probabilities = {
   --[{ "fairy", 1}]       = 2,    -- Fairy.
 }
 
+local item_list = {{ "rupee", 1 }, { "rupee", 2 }, { "bomb", 2 }, { "arrow", 2 }, { "heart", 1}, { "magic_flask", 1} }
+
 function item:on_pickable_created(pickable)
 
-  local treasure_name, treasure_variant = self:choose_random_item()
+  local treasure_name, treasure_variant = self:choose_item_from_list()
   if treasure_name ~= nil then
     local map = pickable:get_map()
     local x, y, layer = pickable:get_position()
@@ -52,5 +54,16 @@ function item:choose_random_item()
   end
 
   return nil
+end
+
+function item:choose_item_from_list()
+  if #item_list == 0 then 
+  	item_list = {{ "rupee", 1 }, { "rupee", 2 }, 
+				{ "bomb", 2 }, { "arrow", 2 }, 
+				{ "heart", 1}, { "magic_flask", 1} }
+  end
+  local item_info = table.remove( item_list, math.random(#item_list) )
+  
+  return item_info[1], item_info[2]
 end
 

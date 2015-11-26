@@ -421,6 +421,8 @@ item{ id = "flower", description = "Cure Flower" }
 item{ id = "diluted_red_potion", description = "Diluted Red Potion" }
 item{ id = "cure", description = "Cure" }
 item{ id = "apple_single", description = "Apple (x1)" }
+item{ id = "magic_aoe", description = "Incandescence" }
+item{ id = "return_scroll", description = "Return Scroll" }
 
 enemy{ id = "bee_guard", description = "Bee Guard" }
 enemy{ id = "bubble", description = "Bubble" }

@@ -31,6 +31,8 @@ text{ key = "quest_status.caption.shield_1", value = "Shield" }
 text{ key = "quest_status.caption.shield_2", value = "Fire Shield" }
 text{ key = "quest_status.caption.shield_3", value = "Mirror Shield" }
 text{ key = "inventory.caption.item.feather.1", value = "Feather" }
+text{ key = "inventory.caption.item.magic_aoe.1", value = "Incandescent$Mirror" }
+text{ key = "inventory.caption.item.return_scroll.1", value = "Return Scroll" }
 text{ key = "inventory.caption.item.bombs_counter.1", value = "Bombs" }
 text{ key = "inventory.caption.item.bow.1", value = "Bow" }
 text{ key = "inventory.caption.item.bow.2", value = "Bow & Arrows" }

@@ -48,6 +48,7 @@ jump over obstacles.
 ]]
 }
 --------------------
+--------------------
 
 -- Bombes / Bombs
 dialog{
@@ -533,6 +534,49 @@ your way or when
 you want to go 
 back to the main
 path... Use it.
+]]
+}
+
+-- Scroll
+dialog{
+  id = "_item_description.return_scroll.1",
+  icon = 25,
+  skip = "all",
+  text = [[
+The scroll has 
+strange powers
+...
+Using this scroll
+will return you to
+
+the beginning of 
+the road well 
+traveled...
+When you've lost
+your way or when
+you want to go 
+back to the main
+path... Use it.
+]]
+}
+
+-- Magic aoe mirror
+dialog{
+  id = "_item_description.magic_aoe.1",
+  icon = 14,
+  skip = "all",
+  text = [[
+The mirror seems
+to shine without
+the need for light.
+If you channel your
+magic into it you
+would be able to
+create a shine as
+bright as the sun!
+...
+Stunning all 
+enemies around you!
 ]]
 }
 --------------------
@@ -1280,6 +1324,53 @@ You got the
 Mystic Mirror!$0
 
 Using this mirror
+will return you to
+
+the beginning of 
+the road well 
+traveled...
+When you've lost
+your way or when
+you want to go 
+back to the main
+path... Use it.
+]]
+}
+
+-- Magic aoe mirror
+dialog{
+  id = "_treasure.magic_aoe.1",
+  icon = 14,
+  skip = "all",
+  text = [[
+You got the 
+Incandescent
+Mirror!$0
+The mirror seems
+to shine without
+the need for light.
+If you channel your
+magic into it you
+would be able to
+create a shine as
+bright as the sun!
+...
+Stunning all 
+enemies around you!
+]]
+}
+
+--------------------
+
+-- Scroll
+dialog{
+  id = "_treasure.return_scroll.1",
+  icon = 25,
+  text = [[
+You got the
+Return Scroll!$0
+
+Using this scroll
 will return you to
 
 the beginning of 
