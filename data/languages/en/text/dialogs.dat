@@ -522,6 +522,17 @@ dialog{
 The Mystic Mirror
 has strange
 powers...
+Using this mirror
+will return you to
+
+the beginning of 
+the road well 
+traveled...
+When you've lost
+your way or when
+you want to go 
+back to the main
+path... Use it.
 ]]
 }
 --------------------
@@ -1265,12 +1276,20 @@ dialog{
   id = "_treasure.mystic_mirror.1",
   icon = 14,
   text = [[
-You found the
+You got the
 Mystic Mirror!$0
 
-Its strange powers
-will surely be of
-help in your quest.
+Using this mirror
+will return you to
+
+the beginning of 
+the road well 
+traveled...
+When you've lost
+your way or when
+you want to go 
+back to the main
+path... Use it.
 ]]
 }
 --------------------
