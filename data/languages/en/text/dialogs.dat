@@ -579,6 +579,20 @@ Stunning all
 enemies around you!
 ]]
 }
+
+-- Magic aoe mirror
+dialog{
+  id = "_shop_description.magic_aoe.1",
+  icon = 14,
+  skip = "all",
+  text = [[
+A Magic Mirror that
+lights up the room
+
+and blinds your
+enemies!
+]]
+}
 --------------------
 
 -- Canne de Somaria / Cane of Somaria

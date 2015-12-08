@@ -26,6 +26,7 @@ el.new_log = {
 
 	rewards_available=0,
 	rewards_retrieved=0,
+	heart_retrieved= false,
 	perc_rewards_retrieved=0,
 
 	total_time_spent=0,
@@ -60,6 +61,7 @@ el.log_order = {
 	"perc_unique_rooms_visited", -- DONE 
 	"rewards_available", -- DONE
 	"rewards_retrieved", -- DONE
+	"heart_retrieved",
 	"perc_rewards_retrieved", -- DONE
 	"total_time_spent", -- DONE 
 	"total_time_spent_optional", -- DONE 
@@ -102,7 +104,8 @@ function el.start_recording( area_details, parameters )
 	for i,details in ipairs(area_details) do
 		if table_util.contains({"F", "TF"}, details.area_type) then el.incr( "fights" ) 
 		elseif table_util.contains({"P", "TP"}, details.area_type) then el.incr( "puzzles" ) 
-		elseif details.area_type == "C" and table_util.contains(details.contains_items, "R:rupees") then el.incr( "rewards_available" ) end
+		elseif details.area_type == "C" and table_util.contains(details.contains_items, "R:rupees") then el.incr( "rewards_available" )
+		elseif details.area_type == "C" and table_util.contains(details.contains_items, "R:heart_container") then el.incr( "rewards_available" ) end
 	end
 	el.log.fights_to_puzzle_rooms_ratio = el.log.fights / el.log.puzzles
 end
@@ -160,12 +163,15 @@ function el.finished_level( )
 	l.total_time_spent_other=l.total_time_spent-(l.total_time_spent_fighting+l.total_time_spent_puzzling)
 
 	for i=1,10 do
-		local savegame_var = game:get_value("reward_"..i)
+		local savegame_var = game:get_value("reward_"..l.map_id.."_"..i)
 		if savegame_var == nil then break end
 		if savegame_var == true then 
 			l.rewards_retrieved = l.rewards_retrieved + 1 
-			game:set_value("reward_"..i, nil)
 		end
+	end
+	if game:get_value("heart_"..l.map_id) == true then
+		l.heart_retrieved = true
+		l.rewards_retrieved = l.rewards_retrieved + 1 
 	end
 	if l.rewards_available > 0 then
 		l.perc_rewards_retrieved=l.rewards_retrieved/l.rewards_available

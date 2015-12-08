@@ -34,13 +34,15 @@ q.questionnaire = {}
 q.map_number = 0
 q.map = nil
 
-
-
+local hero
+local game
+local map
 
 function q.init(map)
   q.npc_name = "bouncer"
   q.map = map
-  local hero = map:get_hero()
+  hero = map:get_hero()
+  game = map:get_game()
   local npc = map:get_entity(q.npc_name)
   function npc:on_interaction()
     if not q.questionnaire_done then

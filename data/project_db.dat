@@ -12,6 +12,8 @@ map{ id = "12", description = "Shop_Light" }
 map{ id = "13", description = "Shop_Dark" }
 map{ id = "14", description = "Shop_Cave" }
 map{ id = "11", description = "Shop_tutorial" }
+map{ id = "15", description = "TEST" }
+map{ id = "16", description = "TEST2" }
 
 tileset{ id = "1", description = "Light World" }
 tileset{ id = "13", description = "Dark World" }

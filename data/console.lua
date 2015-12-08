@@ -23,6 +23,26 @@ function tp(...)
   hero:teleport(...)
 end
 
+function readtest(linenumber)
+  if linenumber < 1 then console:set_output_text("Above 0 please..."); return end
+  local f = sol.file.open("tests")
+  local n=0
+  local line 
+  repeat 
+    line = f:read("*line")
+    n = n + 1
+  until n == linenumber
+  f:flush();f:close()
+  if not line then return end
+  local t = {}
+  for i = 1, #line do
+      t[i] = line:sub(i, i)
+  end
+  console.history[console.history_position] = t
+  console:build_input_text()
+  console:execute_code()
+end
+
 function console:on_started()
   self.enabled = true
   self:build_input_text()
@@ -144,14 +164,19 @@ function console:execute_code()
     success, message = pcall(code)
   end
 
+  local out = sol.file.open("console_output", "a+")
+
   if success then
     if self:get_output_text() == "" then
       self:set_output_text("Done")
+      out:write(">".. self:get_input_text() .." ->\n".."Done\n\n")
     end
   else
     message = message:gsub(".*:1: ", "")
     self:set_output_text(message)
+    out:write(">".. self:get_input_text() .." ->\n"..message.."\n\n")
   end
+  out:flush();out:close()
 end
 
 function console.environment_index(environment, key)

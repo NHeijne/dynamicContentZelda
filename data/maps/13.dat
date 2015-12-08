@@ -728,33 +728,55 @@ npc{
 shop_treasure{
   layer = 0,
   x = 112,
-  y = 72,
-  name = "bow",
+  y = 88,
+  name = "bow_2",
   treasure_name = "bow",
   treasure_savegame_variable = "bow",
-  price = 400,
+  price = 300,
   dialog = "_item_description.bow.2",
 }
 
 shop_treasure{
   layer = 0,
   x = 152,
-  y = 72,
-  name = "boomerang",
+  y = 88,
+  name = "boomerang_2",
   treasure_name = "boomerang",
   treasure_savegame_variable = "boomerang",
-  price = 400,
+  price = 300,
   dialog = "_item_description.boomerang.1",
 }
 
 shop_treasure{
   layer = 0,
   x = 192,
-  y = 72,
-  name = "apples",
+  y = 32,
+  name = "apples_2",
   treasure_name = "fairy",
   price = 50,
   dialog = "description_fairy",
+}
+
+shop_treasure{
+  layer = 0,
+  x = 112,
+  y = 32,
+  name = "bottle_3",
+  treasure_name = "bottle_2",
+  treasure_savegame_variable = "bottle2",
+  price = 300,
+  dialog = "_item_description.bottle_2.1",
+}
+
+shop_treasure{
+  layer = 0,
+  x = 192,
+  y = 88,
+  name = "magic_mirror_3",
+  treasure_name = "magic_aoe",
+  treasure_savegame_variable = "magic_aoe",
+  price = 300,
+  dialog = "_shop_description.magic_aoe.1",
 }
 
 tile{

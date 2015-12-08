@@ -1,0 +1,1 @@
+content.start_test(map, {static_difficulty=true, puzzle_type="pike_room", difficulty=3, branches=0, branch_length=0, fights=0, puzzles=6, length=6, barrier_perc=0, mission_type="testing"}, {map_id="16", destination_name=nil})

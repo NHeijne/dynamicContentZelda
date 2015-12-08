@@ -39,9 +39,12 @@ you again!
 function map:on_started(destination)
 	q.init(map)
 	q.map_number = 0
-	game:start_dialog("test.variable", explanation_start, function() 
-		hero:start_treasure("return_scroll", 1, "return_scroll", function() 
-			game:start_dialog("test.variable", explanation_continued)
+	local game = map:get_game()
+	if not game:get_value("return_scroll") then
+		game:start_dialog("test.variable", explanation_start, function() 
+			hero:start_treasure("return_scroll", 1, "return_scroll", function() 
+				game:start_dialog("test.variable", explanation_continued)
+			end)
 		end)
-	end)
+	end
 end

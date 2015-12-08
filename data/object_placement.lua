@@ -127,16 +127,27 @@ function op.place_chest( object_name, pos, optional )
 	end
 	if optional then
 		for k,v in pairs(optional) do
-			chest_details[k] = v
+			if k ~= "rewards_placed" then
+				chest_details[k] = v
+			end
 		end
 	end
 	if chest_details.treasure_name == "rupee" then 
-		for i = 1, 10, 1 do
-			if game:get_value("reward_"..i) == nil then
-				chest_details.treasure_savegame_variable = "reward_"..i
-				game:set_value("reward_"..i, false)
-				break
-			end
+		local save_variable = "reward_"..map:get_id().."_"..(optional.rewards_placed+1)
+		if game:get_value(save_variable) == nil then
+			chest_details.treasure_savegame_variable = save_variable
+			game:set_value(save_variable, false)
+		elseif game:get_value(save_variable) ~= nil then
+			chest_details.treasure_savegame_variable = save_variable
+		end
+	end
+	if  chest_details.treasure_name == "heart_container" then
+		local save_variable = "heart_"..map:get_id()
+		if game:get_value(save_variable) == nil then
+			chest_details.treasure_savegame_variable = save_variable
+			game:set_value(save_variable, false)
+		elseif game:get_value(save_variable) ~= nil then
+			chest_details.treasure_savegame_variable = save_variable
 		end
 	end
 	log.debug("creating chest with details:")

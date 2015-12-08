@@ -20,9 +20,10 @@ local light_manager 	= require("maps/lib/light_manager")
 local content = {}
 
 function content.start_test(given_map, params, end_destination)
-	local static_difficulty = true
+	local static_difficulty = params.static_difficulty or true
 
 	fight_generator.static_difficulty = static_difficulty
+	if params.difficulty then fight_generator.difficulty = params.difficulty end
 	puzzle_gen.static_difficulty = static_difficulty
 	
 	map = given_map
@@ -32,6 +33,15 @@ function content.start_test(given_map, params, end_destination)
 	hero:freeze()
 	if not game:get_value("sword__1") then hero:start_treasure("sword", 1, "sword__1") end
 		
+	map.draw_these_effects = map.draw_these_effects or {}
+
+	map.on_draw = 
+		function (map, dst_surface)
+			for _,func in pairs(map.draw_these_effects) do
+				func(map, dst_surface)
+			end
+		end
+
 	log.debug("test")
 	local tic = os.clock()
 	log.debug(tic)
@@ -97,6 +107,8 @@ function content.start_test(given_map, params, end_destination)
 	log.debug("filling in area types")
 	log.debug("exclusion_areas")
 	log.debug(exclusion_areas)
+	local rewards_placed = 0
+
 	maze_gen.set_map(map)
 	for areanumber, a in pairs(content.areas["walkable"]) do
 		log.debug("filling in area "..areanumber)
@@ -107,8 +119,8 @@ function content.start_test(given_map, params, end_destination)
 			outside_sensor.on_activated = 
 				function() 
 					puzzle_gen.create_puzzle( --"pike_room",
-											"equal_amounts", 
-						a.area, areanumber, exit_areas[areanumber], exclusion_areas[areanumber], content.area_details )
+											params.puzzle_type or "equal_amounts", 
+						a.area, areanumber, exit_areas[areanumber], exclusion_areas[areanumber], content.area_details, params )
 				end
 		end
 		if content.area_details[areanumber].area_type == "C" then
@@ -120,7 +132,8 @@ function content.start_test(given_map, params, end_destination)
 			else
 				local reward =  split_contains[2]
 				local large_area = area_util.get_largest_area(a.open_areas)
-				placement.place_chest(reward, large_area)
+				placement.place_chest(reward, large_area, {["rewards_placed"]=rewards_placed})
+				if reward == "rupees" then rewards_placed = rewards_placed +1 end
 			end
 		end
     end

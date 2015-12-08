@@ -153,10 +153,10 @@ function mission_grammar.create_standard_graph_for_testing( branch_length )
 
 	-- starting on the optional path
 	starting_number = #nodes+1
-	n, e, nt = mission_grammar.create_new_task_sequence( starting_number, {"BT","BT","BT","BT", "E"} )
+	n, e, nt_BTS = mission_grammar.create_new_task_sequence( starting_number, {"BT","BT","BT","BT"} ) 
 	nodes = table_util.union(nodes, n)
 	edges = table_util.union(edges, e)
-	table_util.add_table_to_table(nt, non_terminals)
+	table_util.add_table_to_table(nt_BTS, non_terminals)
 	log.debug("these non-terminals will have branches attached")
 	log.debug(nt)
 
@@ -168,7 +168,8 @@ function mission_grammar.create_standard_graph_for_testing( branch_length )
 		table.insert(branch_symbol_list, 1, "BT")
 	end
 
-	for _,node_nr in ipairs(nt) do
+	for index,node_nr in ipairs(nt_BTS) do
+		if index == #nt_BTS then branch_symbol_list[#branch_symbol_list] = "R:heart_container" end
 		starting_number = #nodes+1
 		n, e, nt = mission_grammar.create_new_task_sequence( starting_number, branch_symbol_list )
 		nodes = table_util.union(nodes, n)
@@ -276,16 +277,8 @@ end
 function mission_grammar.produce_graph( params)
 	log.debug(params)
 	local params_clone = table_util.copy(params)
-	if params.mission_type=="tutorial" then
-		mission_grammar.initialize_tutorial_graph( params )
-	else
-		mission_grammar.initialize_graph( params_clone.length )
-		if params.outside then
-			mission_grammar.produce_outside_graph( params_clone )
-		else
-			mission_grammar.produce_dungeon_graph( params_clone )
-		end
-	end
+	mission_grammar.initialize_graph( params_clone.length )
+	mission_grammar.assign_fights_and_puzzles( params )
 	return params_clone
 end
 
@@ -299,27 +292,14 @@ function mission_grammar.produce_standard_testing_graph( params)
 		local graph = mission_grammar.produced_graph
 		graph.nodes[3]= "BOSS"
 		graph.edges= {[1]={[3]="undir_fw"}, [2]={[3]="undir_bk"}, [3]={[1]="undir_bk", [2]="undir_fw"} }
-	else
+	elseif params.mission_type=="normal" then
 		mission_grammar.create_standard_graph_for_testing( params_clone.branch_length )
 		mission_grammar.add_old_barriers( params_clone )
 		mission_grammar.assign_branch_tasks( params_clone )
+	else 
+		mission_grammar.produce_graph( params)
 	end
 	return params_clone
-end
-
-function mission_grammar.produce_dungeon_graph( params )
-	mission_grammar.add_boss_fight( )
-	mission_grammar.add_planned_equipment_and_barrier( params )
-	mission_grammar.add_branches( params )
-	mission_grammar.add_old_barriers( params )
-	mission_grammar.assign_fights_and_puzzles( params )
-end
-
-function mission_grammar.produce_outside_graph( params )
-	mission_grammar.add_planned_equipment_and_barrier( params )
-	mission_grammar.add_branches( params )
-	mission_grammar.add_old_barriers( params )
-	mission_grammar.assign_fights_and_puzzles( params )
 end
 
 function mission_grammar.add_planned_equipment_and_barrier( params )

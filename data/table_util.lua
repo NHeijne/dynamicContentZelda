@@ -249,6 +249,7 @@ function table_util.reverse_table(t)
 end
 
 function table_util.random(tbl)
+   if not tbl then return end
    return tbl[math.random(#tbl)] 
 end
 

@@ -27,6 +27,7 @@ local enemyTried = 1 -- To initialize the training data, we need to try every en
 local starttime = 0
 
 fight_generator.static_difficulty = false
+fight_generator.difficulty = 0
 local f = nil
 
 function fight_generator.died()
@@ -50,19 +51,19 @@ function fight_generator.make_static_fight(map, spawnAreas)
 	local breedSelections = {}
 	local enemiesInFight = {}
 	local difficulty = 0
-	if map_id == 0 then
+	if map_id == 0 or fight_generator.difficulty == 2 then
 		local options = { {1, 1, 1, 1}, {4, 4}, {2, 2, 2} }
 		breedSelections = table_util.random(options)
 		difficulty = 2
-	elseif map_id == 1 then
+	elseif map_id == 1 or fight_generator.difficulty == 3 then
 		local options = {{1, 1, 1, 1, 1, 1}, {4, 4, 4}, {2, 2, 2, 2, 2}}
 		breedSelections = table_util.random(options)
 		difficulty = 3
-	elseif map_id == 2 then
+	elseif map_id == 2 or fight_generator.difficulty == 4 then
 		local options = {{1, 1, 1, 1, 1, 1, 1, 1}, {2, 2, 2, 2, 2, 2}, {4, 4, 4, 4}}
 		breedSelections = table_util.random(options)
 		difficulty = 4
-	elseif map_id == 3 then
+	elseif map_id == 3 or fight_generator.difficulty == 5 then
 		local options = {{3, 3, 3, 3, 3}, {1, 1, 1, 1, 1, 1, 1, 1, 3, 3}, {2, 2, 2, 2, 2, 2, 3, 3}, {4, 4, 4, 4, 3, 3} }
 		breedSelections = table_util.random(options)
 		difficulty = 5

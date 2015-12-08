@@ -34,12 +34,13 @@ function item:on_amount_changed(amount)
   end
 end
 
-function item:on_obtaining(variant, savegame_variable)
-  local quiver = self:get_game():get_item("quiver")
-
-  if not quiver:has_variant() then
-    -- Give the first quiver automatically with the bow.
-    quiver:set_variant(1)
-  end
+function item:on_obtained(variant, savegame_variable)
+  local arrow = self:get_game():get_item("arrow")
+  -- Unlock pickable arrows.
+  arrow:set_obtainable(true)
+  -- if not quiver:has_variant() then
+  --   -- Give the first quiver automatically with the bow.
+  --   quiver:set_variant(1)
+  -- end
 end
 

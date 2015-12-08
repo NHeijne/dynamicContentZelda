@@ -774,7 +774,7 @@ shop_treasure{
   treasure_name = "magic_aoe",
   treasure_savegame_variable = "magic_aoe",
   price = 300,
-  dialog = "_item_description.magic_aoe.1",
+  dialog = "_shop_description.magic_aoe.1",
 }
 
 tile{

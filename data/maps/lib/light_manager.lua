@@ -28,8 +28,9 @@ local dark_surfaces = {
 local black = {0, 0, 0}
 
 function light_manager.enable_light_features(map)
-
+  map.draw_these_effects = map.draw_these_effects or {}
   map.light = 1
+  map.temporary_light = false
   map.get_light = function(map)
     return map.light
   end
@@ -38,15 +39,20 @@ function light_manager.enable_light_features(map)
     map.light = light
   end
 
-  map.on_draw = function(map, dst_surface)
+  map.draw_these_effects.light = function(map, dst_surface)
 
+    local screen_width, screen_height = dst_surface:get_size()
+    
     if map.light ~= 0 then
       -- Normal light: nothing special to do.
+      return
+    elseif map.temporary_light then
+      --dst_surface:fill_color({0,0,0,100}, 0, 0, screen_width, screen_height)
       return
     end
 
     -- Dark room.
-    local screen_width, screen_height = dst_surface:get_size()
+    
     local hero = map:get_entity("hero")
     local hero_x, hero_y = hero:get_center_position()
     local camera_x, camera_y = map:get_camera_position()

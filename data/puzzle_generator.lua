@@ -35,7 +35,7 @@ function pg.get_static_difficulty(map_id, puzzle_type)
 	return difficulty
 end
 
-function pg.create_puzzle( selection_type, area, areanumber, exit_areas, exclusion, area_details )
+function pg.create_puzzle( selection_type, area, areanumber, exit_areas, exclusion, area_details, params )
 	local map_id = tonumber(map:get_id())
 	pg.areanumbers_filled[map_id] = pg.areanumbers_filled[map_id] or {}
 	if not pg.areanumbers_filled[map_id][areanumber] then pg.areanumbers_filled[map_id][areanumber] = true 
@@ -60,7 +60,7 @@ function pg.create_puzzle( selection_type, area, areanumber, exit_areas, exclusi
 	-- determine difficulty to be used
 	local difficulty=0
 	if pg.static_difficulty then
-		difficulty = pg.get_static_difficulty(map_id, puzzle_type)
+		difficulty = params.difficulty or pg.get_static_difficulty(map_id, puzzle_type)
 	else
 		difficulty = pg[puzzle_type.."_min_difficulty"]
 		if game:get_life() > 16 then difficulty = pg[puzzle_type.."_max_difficulty"] end

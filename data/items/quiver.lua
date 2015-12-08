@@ -24,9 +24,6 @@ function item:on_variant_changed(variant)
 
     -- Set the max value of the bow counter.
     bow:set_max_amount(max_amount)
-
-    -- Unlock pickable arrows.
-    arrow:set_obtainable(true)
   end
 end
 

@@ -22,6 +22,7 @@ function enemy:on_created()
   self:set_optimization_distance(300)
   self:set_layer_independent_collisions(true)
   self:set_minimum_shield_needed(1)
+  self:set_pushed_back_when_hurt(false)
 
   -- Two smaller fireballs just for the displaying.
   sprite2 = sol.sprite.create("enemies/red_projectile")

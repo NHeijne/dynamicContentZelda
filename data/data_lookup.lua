@@ -35,7 +35,8 @@ lookup.equipment = {
 }
 
 lookup.rewards = {
-	["rupees"]={requires=nil, 				treasure_name="rupee",treasure_variant=5 }
+	["rupees"]={requires=nil, 				treasure_name="rupee",treasure_variant=5 },
+	["heart_container"]={requires=nil, treasure_name="heart_container", treasure_variant=1}
 }
 
 lookup.destructible = {
