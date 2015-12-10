@@ -26,8 +26,8 @@ sp.prop_types = {
 	["move_block"]={name="movable_block_1", layer=0, x=8, y=13, sprite="entities/gray_block", pushable=true, pullable=false, maximum_moves=2},
 	["block_switch"]={name="block_switch_1", layer=0, x=0, y=0, subtype="walkable", sprite="entities/gray_switch", sound="switch", needs_block=true, inactivate_when_leaving=true},
 	["reset_switch"]={name="reset_switch", layer=0, x=0, y=0, subtype="walkable", sprite="entities/switch", sound="switch", needs_block=false, inactivate_when_leaving=true},
-	["reset_wall"]={name="reset_wall", layer=0, x=0, y=0, width=16, height=16, stops_blocks=true}
-
+	["reset_wall"]={name="reset_wall", layer=0, x=0, y=0, width=16, height=16, stops_blocks=true},
+	["reset_teleport"]={name="reset_teleport", layer=0, x=0, y=0, subtype="walkable", sprite="entities/switch", destination_map="", destination=""},
 }
 
 sp.puzzles_created = {}
@@ -141,8 +141,8 @@ end
 
 function sp.get_sorted_list_of_objects( puzzle_table, area ) -- objects are all 16 x 16
 	log.debug("get_sorted_list_of_objects")
-	local conversion_table = { ["@"]={"entrance"}, ["#"]={"wall"}, ["*"]={"block", "goal"}, ["$"]={"block"}, ["."]={"goal"}, ["_"]={"floor"}, ["E"]={"exit"} }
-	local output_table = { ["wall"]={}, ["floor"]={}, ["block"]={}, ["goal"]={}, ["entrance"]={}, ["exit"]={} }
+	local conversion_table = { ["@"]={"entrance"}, ["#"]={"wall"}, ["*"]={"block", "goal"}, ["$"]={"block"}, ["."]={"goal"}, ["_"]={"floor"}, ["E"]={"exit"}, ["R"]={"reset"} }
+	local output_table = { ["wall"]={}, ["floor"]={}, ["block"]={}, ["goal"]={}, ["entrance"]={}, ["exit"]={}, ["reset"]={} }
 	for i,row in ipairs(puzzle_table) do
 		for j,node in ipairs(row) do
 			for _,output_type in ipairs(conversion_table[node]) do
@@ -170,6 +170,12 @@ function sp.place_sokoban_puzzle( map, area_list, puzzle_area, areanumber, diffi
 	reset_switch.name = "reset_switch_"..next_index
 	reset_switch.x, reset_switch.y = reset_switch.x+area_list.entrance[1].x1, reset_switch.y+area_list.entrance[1].y1
 	reset_switch = map:create_switch(reset_switch)
+	map:create_destination{name="reset_destination_"..next_index,layer=0, x=area_list.entrance[1].x1+8, y=area_list.entrance[1].y1+13, direction=0, default=false}
+	for _, tp in ipairs(area_list.reset) do
+		map:create_teletransporter{name="reset_teleport_"..next_index, layer=0, x=tp.x1, y=tp.y1, width=16, height=16, sprite="entities/teletransporter", sound="warp", destination_map=map:get_id(), destination="reset_destination_"..next_index}
+		block_stopper.x, block_stopper.y = tp.x1, tp.y1
+		map:create_wall(block_stopper)
+	end
 	sp.puzzles_created[next_index] = area_list
 	local sensor = placement.place_sensor( puzzle_area, "sokoban_sensor_"..areanumber )
 	sensor.on_activated = function () puzzle_logger.start_recording("sokoban", areanumber, difficulty) end

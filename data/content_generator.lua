@@ -119,7 +119,7 @@ function content.start_test(given_map, params, end_destination)
 			outside_sensor.on_activated = 
 				function() 
 					puzzle_gen.create_puzzle( --"pike_room",
-											params.puzzle_type or "equal_amounts", 
+											params.puzzle_type or "maze",--"equal_amounts", 
 						a.area, areanumber, exit_areas[areanumber], exclusion_areas[areanumber], content.area_details, params )
 				end
 		end
@@ -323,7 +323,7 @@ function content.create_simple_forest_map(areas, area_details, end_destination)
 		else bounding_area = area_util.merge_areas(bounding_area, a.area)
 		end
     end
-    
+
     bounding_area = area_util.resize_area(bounding_area, {-152, -128, 256, 256}) 
 	local treelines = content.plant_trees(bounding_area, areas["walkable"], exclusion_areas_trees)
 
@@ -377,8 +377,7 @@ function content.create_simple_forest_map(areas, area_details, end_destination)
 				placement.tile_destructible( lookup.destructible[destructible], c, "destructible", {} )
 			end
 		end
-	end 
-			
+	end 		
 
 	for areanumber,connections in pairs(areas["exit"]) do
 		for _, connection in ipairs(connections) do

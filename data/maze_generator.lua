@@ -1187,14 +1187,15 @@ function maze_gen.generate_maze_puzzle( area, areanumber, area_details, exit_are
 			end
 		end
 		-- place darkness sensor if darkness
-		if darkness then maze_gen.make_dark_room(area) end
+		if darkness then maze_gen.make_dark_room(area, area_details, areanumber) end
 	end
 end
 
-function maze_gen.make_dark_room(area, layer)
-	local area = area_util.resize_area( table_util.copy(area), {-32, -32, 32, 32} )
-	placement.show_corners(area)
-	local room_sensor = map:create_sensor({layer=layer or 0, x=area.x1, y=area.y1, width=area.x2-area.x1, height=area.y2-area.y1})
+function maze_gen.make_dark_room(area, area_details, areanumber)
+	local outside_sensor = map:get_entity("areasensor_outside_"..areanumber.."_type_"..area_details[areanumber].area_type)
+	local width, height = outside_sensor:get_size()
+	local x, y, layer = outside_sensor:get_position()
+	local room_sensor = map:create_sensor({layer=layer, x=x, y=y, width=width+16, height=height+24})
 	room_sensor.on_activated = 
 		function() 
 			local map=map; map:set_light(0) 

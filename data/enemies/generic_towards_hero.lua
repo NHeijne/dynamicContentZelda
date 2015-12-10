@@ -79,6 +79,7 @@ function enemy:on_created()
   self:set_push_hero_on_sword(properties.push_hero_on_sword)
   self:set_size(16, 16)
   self:set_origin(8, 13)
+  self:set_attack_consequence("arrow", 3)
 end
 
 function enemy:on_movement_changed(movement)

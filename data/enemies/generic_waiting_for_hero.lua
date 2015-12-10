@@ -86,6 +86,7 @@ function enemy:on_created()
   self:set_invincible()
   self:set_size(16, 16)
   self:set_origin(8, 12)
+  self:set_attack_consequence("arrow", 3)
   if not properties.obstacle_behavior == nil then
     self:set_obstacle_behavior(properties.obstacle_behavior)
   end
@@ -99,6 +100,7 @@ function enemy:on_created()
       enemy:set_origin(8, 13)
       enemy:snap_to_grid()
       enemy:set_default_attack_consequences()
+      enemy:set_attack_consequence("arrow", 3)
       awaken = true
       enemy:go_hero()
     end

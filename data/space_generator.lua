@@ -1023,14 +1023,21 @@ end
 function space_gen.create_simple_area_sensors( area_details, areas )
 	log.debug("creating area sensors")
 	for areanumber, a in pairs(areas["walkable"]) do
+		local new_area = area_util.resize_area(a.area, {-16, -16, 16, 16})
+		placement.show_corners(new_area)
 		local details = {name="areasensor_inside_"..areanumber.."_type_"..area_details[areanumber].area_type, 
-			layer=0, x=a.area.x1-8, y=a.area.y1-8, width=a.area.x2-a.area.x1+16, height=a.area.y2-a.area.y1+24}
+			layer=0, x=new_area.x1, y=new_area.y1, width=new_area.x2-new_area.x1, height=new_area.y2-new_area.y1}
 		-- log.debug(details)
 		map:create_sensor(details)
 	end
 	for areanumber, a in pairs(areas["nodes"]) do
+		local width, height = a.area.x2-a.area.x1, a.area.y2-a.area.y1
+		if area_details.outside then 
+			width = width +8
+			height = height +16
+		end
 		local details = {name="areasensor_outside_"..areanumber.."_type_"..area_details[areanumber].area_type, 
-			layer=0, x=a.area.x1, y=a.area.y1, width=a.area.x2-a.area.x1, height=a.area.y2-a.area.y1}
+			layer=0, x=a.area.x1, y=a.area.y1, width=width, height=height}
 		-- log.debug(details)
 		map:create_sensor(details)
 	end

@@ -30,7 +30,11 @@ function pg.get_static_difficulty(map_id, puzzle_type)
 
 	if puzzle_type == "maze" then difficulty = difficulty+1
 	elseif puzzle_type == "pike_room" then difficulty = difficulty+1 
-	elseif puzzle_type == "sokoban" and difficulty >= 3 then difficulty = difficulty-1 end
+	elseif puzzle_type == "sokoban" then 
+		difficulty = difficulty-1
+		if difficulty == 0 then difficulty = 1 end
+		if difficulty > 3 then difficulty = 3 end
+	end
 	
 	return difficulty
 end

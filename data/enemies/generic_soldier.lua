@@ -71,6 +71,7 @@ function enemy:on_created()
 
   self:set_invincible_sprite(sword_sprite)
   self:set_attack_consequence_sprite(sword_sprite, "sword", "custom")
+  self:set_attack_consequence("arrow", 3)
 end
 
 function enemy:on_restarted()

@@ -184,10 +184,10 @@ function op.place_prop(name, area, layer, tileset_id, use_this_lookup, custom_na
 	end
 end
 
-function op.show_corners(area, tileset, layer)
-	local layer = layer or 0
-	if tileset == nil then tileset = tonumber(map:get_tileset()) end
-	local tile_id = lookup.tiles["debug_corner"][tileset]
+function op.show_corners(area, tile_id)
+	local layer = 0
+	local tileset = tonumber(map:get_tileset())
+	local tile_id = tile_id or lookup.tiles["debug_corner"][tileset]
 	op.place_tile({x1=area.x1, y1=area.y1, x2=area.x1+8, y2=area.y1+8}, tile_id, "corner", layer)--topleft
 	op.place_tile({x1=area.x2-8, y1=area.y1, x2=area.x2, y2=area.y1+8}, tile_id, "corner", layer)--topright
 	op.place_tile({x1=area.x2-8, y1=area.y2-8, x2=area.x2, y2=area.y2}, tile_id, "corner", layer)--bottomright
