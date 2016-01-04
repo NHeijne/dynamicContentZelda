@@ -58,7 +58,7 @@ end
 
 function item:choose_item_from_list()
   if #item_list == 0 then 
-  	item_list = {{ "rupee", 1 }, { "bomb", 1 }, { "arrow", 1 },{ "arrow", 1 }, { "heart", 1}, { "magic_flask", 1}, { "rupee", 1 },{ "rupee", 1 },{ "rupee", 1 }, }
+  	item_list = {{ "rupee", 1 },{ "heart", 1}, { "rupee", 1 },{ "rupee", 1 },{ "rupee", 1 }, { "magic_flask", 1},{nil, 1},{nil, 1},{nil, 1},{nil, 1}}
   end
   local item_info = table.remove( item_list, math.random(#item_list) )
   

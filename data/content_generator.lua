@@ -119,7 +119,7 @@ function content.start_test(given_map, params, end_destination)
 			outside_sensor.on_activated = 
 				function() 
 					puzzle_gen.create_puzzle( --"pike_room",
-											params.puzzle_type or "maze",--"equal_amounts", 
+											params.puzzle_type or "equal_amounts", 
 						a.area, areanumber, exit_areas[areanumber], exclusion_areas[areanumber], content.area_details, params )
 				end
 		end
