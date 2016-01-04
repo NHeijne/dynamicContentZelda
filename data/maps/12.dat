@@ -739,11 +739,10 @@ shop_treasure{
   layer = 0,
   x = 152,
   y = 88,
-  name = "boomerang_3",
-  treasure_name = "boomerang",
-  treasure_savegame_variable = "boomerang",
-  price = 300,
-  dialog = "_item_description.boomerang.1",
+  name = "apples",
+  treasure_name = "apple",
+  price = 15,
+  dialog = "lyriann_shop.apples",
 }
 
 shop_treasure{

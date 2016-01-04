@@ -345,17 +345,6 @@ shop_treasure{
 
 shop_treasure{
   layer = 1,
-  x = 144,
-  y = 104,
-  name = "boomerang_4",
-  treasure_name = "boomerang",
-  treasure_savegame_variable = "boomerang",
-  price = 300,
-  dialog = "_item_description.boomerang.1",
-}
-
-shop_treasure{
-  layer = 1,
   x = 184,
   y = 48,
   name = "apples_4",
@@ -384,6 +373,16 @@ shop_treasure{
   treasure_savegame_variable = "magic_aoe",
   price = 300,
   dialog = "_shop_description.magic_aoe.1",
+}
+
+shop_treasure{
+  layer = 1,
+  x = 144,
+  y = 104,
+  name = "apples_3",
+  treasure_name = "apple",
+  price = 15,
+  dialog = "lyriann_shop.apples",
 }
 
 tile{
