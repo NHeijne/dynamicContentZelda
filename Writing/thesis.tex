@@ -24,21 +24,24 @@
 
 \begin{multicols*}{2}
 \begin{abstract}
-This thesis proposes a method by which game designers may elicit specific levels of emotional intensity in players by learning their reaction to situations in the game.
+This thesis proposes a method by which game designers may provide players with challenges tailored specifically to their skill set by learning their skill in reacting to specific challenges in the game.
 This is done using two subsystems. The first of these determines the level of emotional intensity of the player based on their behaviour in the game.
 Secondly, a method for modeling the emotional reaction of a player to game situations is presented.
 Finally, a practical example based on \emph{The Legend of Zelda} shows the accuracy of the results of this approach.
 \end{abstract}
 
 \section{Introduction}
-To enhance the accessibility of a video game, and thereby increase its potential audience, it is desirable to present each player with an experience personalized to them \cite{playercentered}. Perhaps most notably, Valve's \emph{Left 4 Dead} uses a system called the "AI director" which changes the pacing of its combat sequences based on the performance of the players \cite{left4dead}. However, the AI director is limited to removing threats when player tension becomes too high.
+To provide a challenge to every player without overwhelming any, and thereby increase a video game's potential audience, it is desirable to present each player with a personalized experience \cite{playercentered}. One famous example of this is Valve's \emph{Left 4 Dead} which uses a system called the "AI director" which changes the pacing of its combat sequences based on the performance of the players \cite{left4dead}. However, the AI director is limited to removing threats when player tension becomes too high.
 
-The purpose of this thesis is to show how it is possible to modify much of the game's content to achieve a specific player experience. Rather than finding the optimal difficulty, the goal will be to find the effect each game element has on the experience.
+The purpose of this thesis is to show how it is possible to modify much of the game's content to achieve a specific player experience. Rather than finding the optimal difficulty, the goal will be to find the effect each game element has on the experience. 
 \begin{itemize} \item[\textbf{1.}] How can the effect of game elements on the emotional intensity of its players be found? \end{itemize}
-To answer this question, it is necessary to know the emotional reaction of a given player to a combination of game elements. Therefore, a secondary goal will be to estimate that reaction without pausing the game to ask the player.
-\begin{itemize} \item[\textbf{2.}] How can the emotional state of a player be accurately determined using in-game data? \end{itemize}
+Though this question focuses on the method by which this may be accomplished, the method presented here is not necessarily a perfect way of adapting elements of a game's design to players. It is merely intended to demonstrate that this is a worthy pursuit, and can enable a wide range of players to enjoy a game at their own level. To effectively demonstrate this point however, the research will focus on the technique and let the results prove the concept.
 
-To answer these questions, the proposed method has been applied to an example game based on \emph{The Legend of Zelda}. This environment is used to quantify the accuracy of this approach and demonstrates how it can be applied to players' different skill levels. It also shows how the system can be applied generically over different in-game settings, and provides an approach for predicting the effect of unseen elements.
+To answer the first question, it is necessary to know the emotional reaction of a given player to a combination of game elements. Therefore, a secondary goal will be to estimate that reaction without pausing the game to ask the player.
+\begin{itemize} \item[\textbf{2.}] How can the emotional state of a player be accurately determined using in-game data? \end{itemize}
+While the innovation lies in the first research question, a technique for gaining this data will be necessary so the game can progress smoothly with the system in place. The data will be used as supervision for the training that will be done in answering the first question. The procedure for this will be explained in detail below.
+
+To answer these questions, the proposed method has been applied to an example game, an accurate reproduction of Nintendo's \emph{The Legend of Zelda: A Link to the Past}. This environment is used to quantify the accuracy of this approach and demonstrates how it can be applied to players' different skill levels. It also shows how the system can be applied generically over different in-game settings, and provides an approach for predicting the effect of unseen elements.
 
 \section{Related Work}
 %PCG in games
@@ -53,7 +56,7 @@ In De Araujo and Feij\'o's \emph{Evaluating dynamic difficulty adaptivity in sho
 \begin{figure*}[t]
 \centering
 \includegraphics[width=0.60\textwidth]{processflowchart}
-\captionof{figure}{System flow}
+\captionof{figure}{The interaction of the systems as they were used during the experiment. Rectangular boxes denote discrete pieces of data being passed between the systems; the other elements are models which parse and generate data (even the player can be viewed as such). Note that the method by which the builder and the player generate data is constantly updated while the estimator is static.}
 \end{figure*}
 
 The method proposed here consists of two subsystems. The first (hereafter the \emph{estimator}) estimates the amount of stress experienced after an encounter has been completed. This estimate is made using only information specific to the player's behaviour during that encounter. The estimator is constructed before runtime, using labeled data, and is applied equally to every player regardless of skill.
@@ -118,15 +121,19 @@ In order to start determining the right makeup of a combat encounter for a playe
 
 Once every enemy has been encountered once, enough data will be available to make a first estimate of the appropriate difficulty. Subsequent rooms will be constructed to slowly increase the difficulty for this player to a desirable level, starting at the lowest level. Starting at a lower difficulty decreases the risk of frustrating rooms constructed with faulty data, which is a concern at this point because of sparsity. Each of the progressively more difficult rooms will increase the amount of data and thus decrease the margin of error on the formula. This way errors are most likely to occur in rooms with a low difficulty, which reduces the chance of an overshoot creating an impossible challenge for the player.
 
-\section{Results} \label{results} % Talk about experiments separately?
-Data was recorded from a total of 16 test subjects. In total, 302 encounters were recorded, each participant completing an average of 18.88 encounters with a standard deviation of 7.191. Five of the test subjects had no experience with action video games, six had some experience but no experience with the \emph{Legend of Zelda} series, and five had previous experience with the game. These groups account for approximately 23.5\%, 43\% and 33\% of the data. Finally, 54\% of all recorded fights were inside the dungeon, and the final boss was seen eleven times in total. The intended difficulty of the encounters presented ranged from 1 to 7.558, with a 3.371 mean and standard deviation of 1.807.
+\section{Experiments}
+Experiments consisted of players playing through the example game as it was intended to function. The estimator was built on available data, mostly previous experiments. For that reason, the estimator was updated several times during the experiments. It must be assumed that it may not have been optimally trained even at the final experiment, which complicates measurements of its accuracy. However, before beginning to collect the data which produced the results published here, the engine was frozen and it remained unchanged throughout the experiments.
+
+Before play began, each test subject received an explanation of how to grade their perceived difficulties, but no information on the game itself other than that it was based on The Legend of Zelda. The game's rules and controls were explained by in-game messages.
+
+Data was recorded by a total of 16 test subjects. In total, 302 encounters were recorded, each participant completing an average of 18.88 encounters with a standard deviation of 7.191. Five of the test subjects had no experience with action video games, six had some experience but no experience with the \emph{Legend of Zelda} series, and five had previous experience with the game. These groups account for approximately 23.5\%, 43\% and 33\% of the data. Finally, 54\% of all recorded fights were inside the dungeon, and the final boss was seen eleven times in total. The intended difficulty of the encounters presented ranged from 1 to 7.558, with a 3.371 mean and standard deviation of 1.807.
 
 \subsection{Evaluation criteria}
 The estimator will be tested using ten-fold cross-validation on the test set. However, since the builder is trained using data from the estimator, errors may propagate even when the accuracy of each system is high. To give an indication of the accuracy of the builder and the overall accuracy of the system, the results of the builder during testing will be compared to the reported difficulties. Since these results were collected during application of the system, they are based on premature iterations of the estimator. Three such iterations will be shown, while the final regrettably must remain untested.
 
-% And what about the experience assumption and its accuracy?
+To verify that the system can indeed be used to create an appropriate challenge for people of varying skill levels, the overall accuracy of the system for people of those skill levels will be tested separately. The difference in accuracy will show how well the system adapts to varying players. Note that while the incompleteness of the estimator will likely introduce some variance into these results, the difference in accuracy should show fairly accurately the real generalizability of the method.
 
-\subsection{Accuracy} \label{accuracy}
+\section{Results} \label{results}
 \begin{table*}[t]
 \centering
 \begin{tabular}{|l|cccc|}
@@ -190,18 +197,24 @@ Note that for these results, tutorial rooms and boss rooms have been removed fro
 Finally, note that this is the average accuracy and includes predictions made with varying sparsity of data.
 
 \section{Conclusion}
-The results show that a player's stress can be determined after play with an average error of 0.999, just under one point on the scale described in section \ref{data}, which equates to a 19.98\% error on the desirable portion of that scale (1 to 5).
+\begin{itemize} \item[\textbf{1.}] How can the effect of game elements on the emotional intensity of its players be found? \end{itemize}
+The results show that a player's stress can be determined after play with an average error of 0.999, just under one point on the scale described in section \ref{data}, which equates to a 19.98\% error on the desirable portion of that scale (1 to 5). This prediction can be made by Gaussian Processes based on data gathered and annotated during playtesting, here named the estimator.
 
-The construction of the builder is more difficult because of the insufficiency of data and the need for a reversible result (that is, a result that can be used as a blueprint with which to build the level, not just a formula for estimating difficulty). Overall however, the tested system provides an average error of roughly 29.07\% of the desirable scale.
+\begin{itemize} \item[\textbf{2.}] How can the emotional state of a player be accurately determined using in-game data? \end{itemize}
+This goal is more difficult to achieve because of the sparsity of data and the need for a reversible result (that is, a result that can be used as a blueprint with which to build the level, not just a formula for estimating difficulty). Overall however, the builder provides an average error of almost 29.07\% of the desirable scale, or 1.45 points. This result was achieved using Linear Regression on data of the players' actions.
 
-To mitigate the effect of these problems, more training can be done at the lower difficulties, this way gaining a bigger body of test data at relatively little risk of the player being overwhelmed, as described in section \ref{roomconstruction}. With robust training, it should be quite possible to create a game which adapts its challenges to specific users' preferences.
+To improve the accuracy of these results, more training can be done at the lower difficulties, this way gaining a bigger body of test data at relatively little risk of the player being overwhelmed, as described in section \ref{roomconstruction}. 
+
+To summarize, with robust training it is quite possible to create a game which adapts not just its difficulty to a player's skill but also its challenges to a player's preferences.
 
 \section{Future Work}
 As written, the game places enemies in discrete encounters. Planning for emotional intensity will likely be more difficult when enemies are able to move into or out of the space the player is currently in. The previously presented models may be useful as a basis for such a system, but this remains to be tested.
 
-While processing the results discussed in section \ref{accuracy}, an attempt was made to judge the difficulty of the boss fight in advance using data from the builder model. Results proved inconclusive, possibly due to sparsity of data or the specificity of the learned models. More research is necessary to determine if and how the models can be extended to predict and build unseen situations.
+While processing the results discussed in section \ref{results}, an attempt was made to judge the difficulty of the boss fight in advance using data from the builder model. Results proved inconclusive, possibly due to sparsity of data or the specificity of the learned models. More research is necessary to determine if and how the models can be extended to predict and build unseen situations.
 
 Furthermore, the methods proposed here are not specific to the game or the challenges used in this research. In theory, the estimator should not need to be retrained if adding a fifth type of enemy to the game (although it should be apparent that the system will need to be retrained if the game itself is substantially changed). However, this extensibility has not been verified.
+
+%linear values can cause rooms to clog up.
 
 \section{Acknowledgements}
 Much of the code for this project was provided by Norbert Heijne. His research using the Mystery of Solarus game engine can be found in an upcoming paper. I would also like to express my thanks to him and Sander Bakkes for their support and friendship throughout this project.
