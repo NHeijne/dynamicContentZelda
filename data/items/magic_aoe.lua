@@ -24,10 +24,11 @@ function item:on_using()
 			    map.magic_aoe_surface:draw_region(x, y, screen_width, screen_height, dst_surface)
 			end
 		end
-	local magic_needed = 30
+	local magic_needed = 24
 	local game = self:get_game()
 	local map = self:get_map()
 	if game:get_magic() >= magic_needed then
+		local f = sol.file.open("userExperience.txt","a+"); f:write("mirror-used\n"); f:flush(); f:close()
 		sol.audio.play_sound("magic_bar")
 		game:remove_magic(magic_needed)
 		hero:freeze()

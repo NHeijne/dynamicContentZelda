@@ -22,16 +22,19 @@ local content = {}
 function content.start_test(given_map, params, end_destination)
 	local static_difficulty = params.static_difficulty or true
 
-	fight_generator.static_difficulty = static_difficulty
-	if params.difficulty then fight_generator.difficulty = params.difficulty end
-	puzzle_gen.static_difficulty = static_difficulty
+	fight_generator.static_difficulty = params.static_difficulty
+	fight_generator.fight_difficulty = params.fight_difficulty
+	puzzle_gen.static_difficulty = params.static_difficulty
+	puzzle_gen.puzzle_difficulty = params.puzzle_difficulty
 	
 	map = given_map
 	game = map:get_game()
 	hero = map:get_hero()
+
+	log.verbose = false
 	log.debug_log_reset()
 	hero:freeze()
-	if not game:get_value("sword__1") then hero:start_treasure("sword", 1, "sword__1") end
+	--if not game:get_value("sword__1") then hero:start_treasure("sword", 1, "sword__1") end
 		
 	map.draw_these_effects = map.draw_these_effects or {}
 
@@ -133,10 +136,13 @@ function content.start_test(given_map, params, end_destination)
 				local reward =  split_contains[2]
 				local large_area = area_util.get_largest_area(a.open_areas)
 				placement.place_chest(reward, large_area, {["rewards_placed"]=rewards_placed})
-				if reward == "rupees" then rewards_placed = rewards_placed +1 end
+				rewards_placed = rewards_placed +1
 			end
 		end
     end
+
+    explore.log.rewards_available = rewards_placed
+
     for areanumber, a in pairs(content.areas["nodes"]) do
     	local area = a.area
     	local room_sensor = map:create_sensor({layer=0, x=area.x1, y=area.y1, width=area.x2-area.x1, height=area.y2-area.y1})
@@ -241,7 +247,10 @@ function content.create_simple_forest_map(areas, area_details, end_destination)
 			for direction, area in pairs(connection) do
 				ex=ex+1
 				exclusion_areas_trees[ex] = area
-				table.insert(exit_areas[areanumber], area_util.get_side(area, (direction+2)%4))
+				local adjusted_direction = (direction+2)%4
+				local adjusted_exit_area = area_util.get_side(area, adjusted_direction)
+				adjusted_exit_area.direction = direction
+				table.insert(exit_areas[areanumber], adjusted_exit_area)
 				--placement.spread_props(area, 24, {{"flower1","flower2", "fullgrass"}}, 1) 
 				placement.place_tile(area, 7, "transition", 0)
 				local added_throwables = content.create_simple_barriers( area_details, area_util.from_center(area, 32, 32), direction, areanumber, area.to_area )
@@ -259,7 +268,10 @@ function content.create_simple_forest_map(areas, area_details, end_destination)
 				ex=ex+1
 				exclusion_areas_trees[ex] = area
 				placement.place_tile(area, 7, "transition", 0)
-				table.insert(exit_areas[areanumber], 1, area_util.get_side(area, (direction+2)%4))
+				local adjusted_direction = (direction+2)%4
+				local adjusted_exit_area = area_util.get_side(area, adjusted_direction)
+				adjusted_exit_area.direction = direction
+				table.insert(exit_areas[areanumber], 1, adjusted_exit_area)
 			end
 		end
 	end
@@ -286,7 +298,10 @@ function content.create_simple_forest_map(areas, area_details, end_destination)
 				end
 				ex=ex+1
 				exclusion_areas_trees[ex] = area
-				table.insert(exit_areas[areanumber], area_util.get_side(area, (direction+2)%4))
+				local adjusted_direction = (direction+2)%4
+				local adjusted_exit_area = area_util.get_side(area, adjusted_direction)
+				adjusted_exit_area.direction = direction
+				table.insert(exit_areas[areanumber], adjusted_exit_area)
 			end
 		end
 	end
@@ -453,8 +468,10 @@ function content.create_simple_dungeon_map(areas, area_details, end_destination)
 						content.display_main_path( area_details.outside, new_area, direction )
 					end 
 				end
-
-				table.insert(exit_areas[areanumber], area_util.get_side(area, (direction+2)%4))
+				local adjusted_direction = (direction+2)%4
+				local adjusted_exit_area = area_util.get_side(area, adjusted_direction)
+				adjusted_exit_area.direction = direction
+				table.insert(exit_areas[areanumber], adjusted_exit_area)
 				
 				local added_throwables = content.create_simple_barriers( area_details, area_util.get_side(area, (direction+2)%4, 32, 0), direction, areanumber, area.to_area )
 				if added_throwables then 
@@ -471,7 +488,10 @@ function content.create_simple_dungeon_map(areas, area_details, end_destination)
 				if direction == 3 or direction == 0 then
 					placement.place_prop("edge_doors_"..direction, area, 0, tileset, lookup.transitions)
 				end
-				table.insert(exit_areas[areanumber], 1, area_util.get_side(area, (direction+2)%4))
+				local adjusted_direction = (direction+2)%4
+				local adjusted_exit_area = area_util.get_side(area, adjusted_direction)
+				adjusted_exit_area.direction = direction
+				table.insert(exit_areas[areanumber], 1, adjusted_exit_area)
 				content.create_simple_door( area, areanumber, direction )
 			end
 		end
@@ -501,7 +521,10 @@ function content.create_simple_dungeon_map(areas, area_details, end_destination)
 						map:create_stairs{layer=0, x=adjusted_area.x1+8, y=adjusted_area.y1+8, direction=1, subtype=0}
 					end
 				end
-				table.insert(exit_areas[areanumber], area_util.get_side(area, (direction+2)%4))
+				local adjusted_direction = (direction+2)%4
+				local adjusted_exit_area = area_util.get_side(area, adjusted_direction)
+				adjusted_exit_area.direction = direction
+				table.insert(exit_areas[areanumber], adjusted_exit_area)
 			end
 		end
 	end
@@ -792,8 +815,9 @@ function content.plant_trees(area, areas_to_plant, exclude_these)
 		placement.place_tile({x1=tl.x1-8, y1=tl.y1+2*8, x2=tl.x1, y2=tl.y1+4*8}, 503, "forest", 0) -- left trunk
 		placement.place_tile({x1=tl.x2, y1=tl.y1+2*8, x2=tl.x2+8, y2=tl.y1+4*8}, 504, "forest", 0) -- right trunk
 		-- fill the middle
+		placement.place_tile({x1=tl.x1, y1=tl.y1-1*8, x2=tl.x2, y2=tl.y1+4*8}, 502, "forest", 0) -- wall
 		placement.place_tile({x1=tl.x1, y1=tl.y1+3*8, x2=tl.x2, y2=tl.y1+5*8}, 505, "forest", 0) -- middle trunk
-		placement.place_tile({x1=tl.x1, y1=tl.y1-2*8, x2=tl.x2, y2=tl.y1+3*8}, 502, "forest", 0) -- wall
+		
 		placement.place_tile({x1=tl.x1, y1=tl.y1-2*8, x2=tl.x2, y2=tl.y1+3*8}, 511, "forest", 2) -- middle canopy
 		placement.place_tile({x1=tl.x1, y1=tl.y1-4*8, x2=tl.x2, y2=tl.y1-2*8}, 512, "forest", 2) -- top canopy
 		-- tricky part, the bottom trunk
@@ -826,8 +850,8 @@ function content.display_main_path( outside, area, direction )
 			sign_from = map:create_npc{layer=0, x=area.x2+8, y=area.y2-19, direction=3, subtype=0, sprite="entities/normal_sign"}
 			sign_to = map:create_npc{layer=0, x=area.x1-8, y=area.y1+29, direction=3, subtype=0, sprite="entities/normal_sign"}
 		end
-		function sign_to:on_interaction() game:start_dialog("test.variable", lookup.sign_to) end
-		function sign_from:on_interaction() game:start_dialog("test.variable", lookup.sign_from) end
+		function sign_to:on_interaction() game:start_dialog("test.variable", lookup["sign_to_"..direction]) end
+		function sign_from:on_interaction() game:start_dialog("test.variable", lookup["sign_from_"..((direction+2)%4)]) end
 	else
 		-- place signs beside the exit saying either, towards exit, towards entrance
 		local sign_to, sign_from
@@ -844,8 +868,8 @@ function content.display_main_path( outside, area, direction )
 			sign_from = map:create_npc{layer=0, x=area.x2+8, y=area.y2-3, direction=3, subtype=0, sprite="entities/hint_stone"}
 			sign_to = map:create_npc{layer=0, x=area.x1-8, y=area.y1+13, direction=1, subtype=0, sprite="entities/hint_stone"}
 		end
-		function sign_to:on_interaction() game:start_dialog("test.variable", lookup.hint_stone_to) end
-		function sign_from:on_interaction() game:start_dialog("test.variable", lookup.hint_stone_from) end
+		function sign_to:on_interaction() game:start_dialog("test.variable", lookup["hint_stone_to_"..direction]) end
+		function sign_from:on_interaction() game:start_dialog("test.variable", lookup["hint_stone_from_"..((direction+2)%4)] ) end
 	end
 
 end

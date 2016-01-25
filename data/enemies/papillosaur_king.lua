@@ -4,7 +4,7 @@ local enemy = ...
 
 local nb_eggs_to_create = 0
 local nb_eggs_created = 0
-local boss_starting_life = 12
+local boss_starting_life = 6
 local boss_movement_starting_speed = 50  -- Starting speed in pixels per second, it will gain 5 per life point lost.
 local boss_movement_speed = boss_movement_starting_speed
 
@@ -45,7 +45,7 @@ function enemy:on_hurt(attack)
     self:get_map():remove_entities(sons_prefix)
   else
     boss_movement_speed = boss_movement_starting_speed
-      + (boss_starting_life - life) * 5
+      + (boss_starting_life - life) * 10
   end
 end
 
@@ -102,8 +102,8 @@ function enemy:throw_egg()
 
   -- See what to do next.
   nb_eggs_to_create = nb_eggs_to_create - 1
-  local current = math.floor((boss_starting_life - self:get_life())/2) + 3
-  local max = math.floor((boss_starting_life)/2) + 3
+  local current = math.floor(boss_starting_life - self:get_life()) + 3
+  local max = math.floor((boss_starting_life)) + 3
   local time_per_egg = (current/max) * 500
   if nb_eggs_to_create > 0 then
     -- Throw another egg in 0.5 second.

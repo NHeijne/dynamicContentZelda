@@ -13,6 +13,7 @@ function item:on_using()
   if self:get_amount() == 0 then
     sol.audio.play_sound("wrong")
   else
+    local f = sol.file.open("userExperience.txt","a+"); f:write("apple-used\n"); f:flush(); f:close()
     self:remove_amount(1)
     self:get_game():add_life(4)
   end

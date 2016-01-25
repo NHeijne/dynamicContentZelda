@@ -19,7 +19,6 @@ function enemy:on_created()
   self:set_size(8, 8)
   self:set_origin(4, 4)
   self:set_obstacle_behavior("flying")
-  self:set_optimization_distance(300)
   self:set_layer_independent_collisions(true)
   self:set_minimum_shield_needed(1)
   self:set_pushed_back_when_hurt(false)
@@ -41,19 +40,11 @@ function enemy:go()
   m:set_smooth(false)
   m:set_ignore_obstacles(true)
   m:set_max_distance(200)
+  m.on_finished = function() self:remove() end
   m:start(self)
 end
 
-function enemy:on_movement_finished(movement)
-  self:remove()
-end
-
-function enemy:on_obstacle_reached()
-  self:remove()
-end
-
 function enemy:on_pre_draw()
-  if not self:is_in_same_region(hero) then self:remove() end
   if m ~= nil then
 	  local angle = m:get_angle()
 	  local x, y = self:get_position()

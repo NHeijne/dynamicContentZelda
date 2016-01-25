@@ -29,21 +29,25 @@ local black = {0, 0, 0}
 
 function light_manager.enable_light_features(map)
   map.draw_these_effects = map.draw_these_effects or {}
-  map.light = 1
+  map.darkness = false
+  map.lightcounter = 0.25
+  map.last_clock = -1
   map.temporary_light = false
-  map.get_light = function(map)
-    return map.light
-  end
-
-  map.set_light = function(map, light)
-    map.light = light
+  map.create_darkness = function()
+    map.darkness = true
+    map.lightcounter = 0.25
   end
 
   map.draw_these_effects.light = function(map, dst_surface)
+    if map.last_clock == -1 then map.last_clock = os.clock() end
+    map.lightcounter = map.lightcounter-(os.clock()-map.last_clock)
+    map.last_clock = os.clock()
 
     local screen_width, screen_height = dst_surface:get_size()
-    
-    if map.light ~= 0 then
+    if not map.darkness or map.lightcounter < 0 then
+      map.last_clock = -1
+      map.lightcounter = 0.25
+      map.darkness = false
       -- Normal light: nothing special to do.
       return
     elseif map.temporary_light then

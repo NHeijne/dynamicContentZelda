@@ -65,6 +65,8 @@ local dad_talk_q1_ans1 = [[
 Get my sword and shield 
 from the shed, here is
 the key!
+And here, some rupees to 
+pay the witch with...
 ]]
 --<hand over wooden key>
 --<answer 2> 
@@ -172,7 +174,8 @@ function dad:on_interaction( ... )
 		game:start_dialog("test.question", dad_talk_q1, function(answer) 
 			if answer == 1 then
 				village_logger.log.NPC.dad.options_explored[1] = true
-				game:start_dialog("test.variable", dad_talk_q1_ans1, function() 
+				game:start_dialog("test.variable", dad_talk_q1_ans1, function()
+					game:add_money(50) 
 					hero:start_treasure("wooden_key", 1, "shed_key", function()
 		            	game:start_dialog("test.variable", dad_talk_after, function()
 		            		step_away_from_door(mom)
@@ -183,6 +186,7 @@ function dad:on_interaction( ... )
 				village_logger.log.NPC.dad.options_explored[2] = true
 				game:start_dialog("test.variable", dad_talk_q1_ans2, function() 
 					game:start_dialog("test.variable", dad_talk_q1_ans1, function() 
+						game:add_money(50)
 						hero:start_treasure("wooden_key", 1, "shed_key", function()
 			            	game:start_dialog("test.variable", dad_talk_after, function ( )
 			            		step_away_from_door(mom)
@@ -260,6 +264,8 @@ Programming:
 Norbert Heijne
 Arjen Swellengrebel$0$0
 Thanks For Playing!
+Don't forget to send us
+the log files! :)
 ]]
 
 

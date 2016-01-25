@@ -12,6 +12,7 @@ function item:on_using()
   if self:get_amount() == 0 then
     sol.audio.play_sound("wrong")
   else
+    local f = sol.file.open("userExperience.txt","a+"); f:write("bow-used\n"); f:flush(); f:close()
     -- we remove the arrow from the equipment after a small delay because the hero
     -- does not shoot immediately
     sol.timer.start(300, function()

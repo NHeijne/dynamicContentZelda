@@ -431,4 +431,11 @@ function area_util.correct(area)
 	return {x1=math.min(area.x1, area.x2), x2=math.max(area.x1, area.x2), y1=math.min(area.y1, area.y2), y2=math.max(area.y1, area.y2)}
 end
 
+function area_util.distance(area1, area2)
+	local center1 = {x=(area1.x1+area1.x2)/2, y=(area1.y1+area1.y2)/2}
+	local center2 = {x=(area2.x1+area2.x2)/2, y=(area2.y1+area2.y2)/2}
+	local zeroed = {x=center1.x-center2.x, y=center1.y-center2.y}
+	return math.sqrt(zeroed.x^2+zeroed.y^2)
+end
+
 return area_util

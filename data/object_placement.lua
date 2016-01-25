@@ -78,6 +78,7 @@ function op.place_door( details, direction, area, optional )
 end
 
 function op.tile_destructible( details, area, barrier_type, optional )
+	optional = optional or {}
 	local layer = optional.layer or 0
 	local details = details
 	details.layer = details.layer+layer
@@ -96,6 +97,22 @@ function op.tile_destructible( details, area, barrier_type, optional )
 				-- log.debug(details)
 				map:create_destructible(details)
 			end
+		end
+	end
+end
+
+function op.tile_enemies( details, area, optional )
+	optional = optional or {}
+	local layer = optional.layer or 0
+	local details = details
+	details.layer = details.layer+layer
+	for k,v in pairs(optional) do
+		details[k] = v
+	end
+	for x=area.x1, area.x2-details.offset.x-1, details.required_size.x do
+		for y=area.y1, area.y2-details.offset.y-1, details.required_size.y do
+			details.x, details.y = x+details.offset.x, y+details.offset.y
+			map:create_enemy(details)
 		end
 	end
 end
@@ -134,19 +151,19 @@ function op.place_chest( object_name, pos, optional )
 	end
 	if chest_details.treasure_name == "rupee" then 
 		local save_variable = "reward_"..map:get_id().."_"..(optional.rewards_placed+1)
-		if game:get_value(save_variable) == nil then
+		if not game:get_value(save_variable) then
 			chest_details.treasure_savegame_variable = save_variable
 			game:set_value(save_variable, false)
-		elseif game:get_value(save_variable) ~= nil then
+		else
 			chest_details.treasure_savegame_variable = save_variable
 		end
 	end
 	if  chest_details.treasure_name == "heart_container" then
 		local save_variable = "heart_"..map:get_id()
-		if game:get_value(save_variable) == nil then
+		if not game:get_value(save_variable) then
 			chest_details.treasure_savegame_variable = save_variable
 			game:set_value(save_variable, false)
-		elseif game:get_value(save_variable) ~= nil then
+		else
 			chest_details.treasure_savegame_variable = save_variable
 		end
 	end

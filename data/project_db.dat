@@ -1,13 +1,13 @@
 map{ id = "4", description = "Boss" }
-map{ id = "1", description = "Forest" }
-map{ id = "3", description = "Cave" }
+map{ id = "1a", description = "Forest_a" }
+map{ id = "3a", description = "Cave_a" }
 map{ id = "0", description = "Tutorial" }
 map{ id = "10", description = "Example" }
 map{ id = "5", description = "Questhubs" }
 map{ id = "6", description = "House" }
 map{ id = "7", description = "Witch hut" }
 map{ id = "9", description = "ForestTest" }
-map{ id = "2", description = "Swamp" }
+map{ id = "2a", description = "Swamp_a" }
 map{ id = "12", description = "Shop_Light" }
 map{ id = "13", description = "Shop_Dark" }
 map{ id = "14", description = "Shop_Cave" }
@@ -15,6 +15,10 @@ map{ id = "11", description = "Shop_tutorial" }
 map{ id = "15", description = "TEST" }
 map{ id = "16", description = "TEST2" }
 map{ id = "17", description = "TEST3" }
+map{ id = "18", description = "TRYOUT" }
+map{ id = "1b", description = "Forest_b" }
+map{ id = "2b", description = "Swamp_b" }
+map{ id = "3b", description = "Cave_b" }
 
 tileset{ id = "1", description = "Light World" }
 tileset{ id = "13", description = "Dark World" }
@@ -237,6 +241,7 @@ sprite{ id = "entities/outside_door_2", description = "Closed Mine Door" }
 sprite{ id = "entities/normal_bed", description = "Normal Bed" }
 sprite{ id = "entities/gray_switch", description = "Switch (gray)" }
 sprite{ id = "entities/normal_sign", description = "Normal Sign" }
+sprite{ id = "enemies/cactus", description = "Enemy: Cactus" }
 
 music{ id = "agahnim", description = "Agahnim theme" }
 music{ id = "beginning", description = "Beginning" }
@@ -487,8 +492,10 @@ enemy{ id = "ganon", description = "Ganon" }
 enemy{ id = "fire_bat", description = "Fire bat" }
 enemy{ id = "red_projectile", description = "Red Projectile" }
 enemy{ id = "fireball_statue", description = "Fireball Statue" }
+enemy{ id = "cactus", description = "Cactus" }
 
 entity{ id = "fireball_statue", description = "Fireball Statue" }
+entity{ id = "pike_detect", description = "Pike detect" }
 
 language{ id = "en", description = "English" }
 

@@ -123,7 +123,8 @@ function maze_gen.area_to_pos ( area )
 	return pos_list
 end 
 
-function maze_gen.initialize_maze( maze, area, wall_width, corridor_width )
+function maze_gen.initialize_maze( maze, area, wall_width, corridor_width, initial_wall_value )
+	initial_wall_value = initial_wall_value or false
 	wall_width = wall_width or room.wall_width
 	corridor_width = corridor_width or room.corridor_width
 	area = area or room
@@ -134,7 +135,7 @@ function maze_gen.initialize_maze( maze, area, wall_width, corridor_width )
 	for x=1,x_amount do
 		maze[x]={}
 		for y=1, y_amount do
-			maze[x][y] = {[1]=false, [2]=false, [3]=false, [0]=false, visited = false} 
+			maze[x][y] = {[1]=initial_wall_value, [2]=initial_wall_value, [3]=initial_wall_value, [0]=initial_wall_value, visited = false} 
 		end
 	end
 end
@@ -158,7 +159,7 @@ end
 function maze_gen.open_unvisited( maze )
 	local unvisited = maze_gen.get_not_visited( maze )
 	for _, u in ipairs(unvisited) do
-		local neighbors = maze_gen.get_neighbors(maze, u, true)
+		local neighbors = maze_gen.get_neighbors(maze, u)
 		for _, n in ipairs(neighbors) do
 			maze_gen.open_path(maze, {n.from_pos, n.pos})
 		end
@@ -185,16 +186,25 @@ function maze_gen.open_exits( maze, exit_areas, extra_width, area, wall_width, c
 		local selected_y_min = num_util.clamp(math.ceil(y1)-extra_width, 1, #maze[1])
 		local selected_y_max = num_util.clamp(math.ceil(y2)+extra_width, 1, #maze[1])
 		
-		local direction 
+		local direction = v.direction or nil
 		-- direction (number): between 0 (East of the room) and 3 (South of the room).
-		if v.y2 <= area.y1 and v.x1 < area.x2 and v.x2 > area.x1 then direction = 1 end
-		if v.y1 >= area.y2 and v.x1 < area.x2 and v.x2 > area.x1 then direction = 3 end
-		if v.x2 <= area.x1 and v.y1 < area.y2 and v.y2 > area.y1 then direction = 2 end
-		if v.x1 >= area.x2 and v.y1 < area.y2 and v.y2 > area.y1 then direction = 0 end
+		if direction == 0 then selected_x_max=#maze;selected_x_min=#maze 
+		elseif direction == 1 then selected_y_max=1;selected_y_min=1 
+		elseif direction == 2 then selected_x_max=1;selected_x_min=1 
+		elseif direction == 3 then selected_y_max=#maze[1];selected_y_min=#maze[1] 
+		else 
+			if v.y2 <= area.y1 and v.x1 < area.x2 and v.x2 > area.x1 then direction = 1 end
+			if v.y1 >= area.y2 and v.x1 < area.x2 and v.x2 > area.x1 then direction = 3 end
+			if v.x2 <= area.x1 and v.y1 < area.y2 and v.y2 > area.y1 then direction = 2 end
+			if v.x1 >= area.x2 and v.y1 < area.y2 and v.y2 > area.y1 then direction = 0 end
+		end
+
 		-- create an entrance/exit area spanning from the min to the max of the exit
 		local exit_nodes = {}
-		for x=selected_x_min, selected_x_max do
-			for y=selected_y_min, selected_y_max do
+		log.debug("xmin:"..selected_x_min..", xmax:"..selected_x_max..", ymin:"..selected_y_min..", ymax:"..selected_y_max)
+		log.debug("maze_x:"..#maze..", maze_y:"..#maze[1])
+		for x=selected_x_min, selected_x_max, 1 do
+			for y=selected_y_min, selected_y_max, 1 do
 				maze[x][y][direction] = false
 				maze[x][y].visited = true
 				table.insert(exit_nodes, {x=x, y=y})
@@ -793,19 +803,24 @@ end
 ------------------------------------------------------------------------------------------------------------------------------
 
 -- http://wiki.roblox.com/index.php?title=Recursive_Backtracker
-function maze_gen.standard_recursive_maze( maze, exits )
+function maze_gen.standard_recursive_maze( maze, exits, alternate_probabilities)
 	-- Create a table of cells, starting with just one random one
 	local Cells = {table_util.random(exits[1])}
 	maze[Cells[1].x][Cells[1].y].visited = true
 	for i=2, #exits, 1 do
 		for _,exit_pos in ipairs(exits[i]) do
-			local unvisited = maze_gen.get_neighbors(maze, exit_pos, true)
-			if #unvisited > 0  then
-				local nb = table_util.random(unvisited)
-				maze[exit_pos.x][exit_pos.y][nb.wall_to]=false
-	            maze[nb.pos.x][nb.pos.y][nb.wall_from]=false
-				break
+			local neighbors = maze_gen.get_neighbors(maze, exit_pos, true)
+			table_util.shuffleTable( neighbors )
+			local nb
+			for _,nb_to_test in ipairs(neighbors) do
+				if #maze_gen.get_neighbors(maze, nb_to_test.pos, true) > 0 then
+					nb = nb_to_test
+					break
+				end
 			end
+			maze[exit_pos.x][exit_pos.y][nb.wall_to]=false
+            maze[nb.pos.x][nb.pos.y][nb.wall_from]=false
+			break
 		end
 	end
 	repeat
@@ -816,7 +831,25 @@ function maze_gen.standard_recursive_maze( maze, exits )
 	     local unvisited = maze_gen.get_neighbors(maze, CurCell, true)
 	     if #unvisited > 0 then
 	          -- ...and select a random one.
-	          local next_node = unvisited[math.random(#unvisited)]
+	          local next_node
+	          if alternate_probabilities then
+	          	local total_probability = 0
+	          	for _,unv in ipairs(unvisited) do
+	          		total_probability = total_probability + alternate_probabilities[unv.wall_to]
+	          	end
+	          	local sum = 0
+	          	local random = math.random(total_probability)
+	          	for _,unv in ipairs(unvisited) do
+	          		sum = sum + alternate_probabilities[unv.wall_to]
+	          		if random <= sum then
+	          			next_node = unv
+	          			break
+	          		end
+	          	end
+	          else
+	          	next_node = unvisited[math.random(#unvisited)]
+	          end
+	           
 	          -- Then carve a path to it by deleting the wall between them
 	          maze[CurCell.x][CurCell.y][next_node.wall_to]=false
 	          maze[next_node.pos.x][next_node.pos.y][next_node.wall_from]=false
@@ -867,9 +900,12 @@ function maze_gen.convert_maze_to_area_list( maze, area, corridor_width, wall_wi
 	-- standard 8x8 patterns
 	local max_x=#maze
 	local max_y=#maze[1]
+	area = area or room
+	wall_width = wall_width or room.wall_width
+	corridor_width = corridor_width or room.corridor_width
 	local area_list = {}
 	-- if at least one wall is connected to the post then create it
-	if maze[1][1][1] or maze[1][1][4] then
+	if maze[1][1][1] or maze[1][1][2] then
 		table.insert(area_list, {area={x1=area.x1, y1=area.y1, x2=area.x1+wall_width.x, y2=area.y1+wall_width.y}, pattern="maze_post"})
 	end
 	-- direction (number): between 0 (East of the room) and 3 (South of the room).
@@ -914,7 +950,7 @@ function maze_gen.convert_maze_to_area_list( maze, area, corridor_width, wall_wi
 										 	   }, pattern="maze_post"} end
 		end
 	end
-	return area_list, prop_list
+	return area_list
 end
 
 
@@ -1070,8 +1106,6 @@ function maze_gen.create_teleport_junction( maze, correct_path, branches, nr_of_
 	if not extra_branch_found then correct_dest = maze_gen.teleport_dest( maze, correct_path[selected_spot+1] ) end
 	incorrect_dest = maze_gen.teleport_dest( maze, correct_path[selected_spot] )
 	-- add teleports to the end of the branches whereever there is space, add a destination to the beginning of the path
-	--TODO
-	--
 end
 
 
@@ -1109,7 +1143,6 @@ function maze_gen.create_pike_trap( maze, branches, nr_pikes )
 		if straight_length <= 2 then
 			maze[branch[straight_length].x][branch[straight_length].y].prop = "pike_detect"
 		end
-		--TODO
 		-- if length is large then a detect might have more effect
 		-- if there are two branches at a single node then we can use an auto pike that is in the same direction as the correct path
 	end
@@ -1130,79 +1163,318 @@ end
 
 -- Creating the puzzle
 function maze_gen.make( parameters )
-	local p = parameters
+	local p = parameters -- {darkness=true, fireball_statues=0, bubbles=0, pikes=false, pits=false}
 	maze_gen.generate_maze_puzzle( p.area, p.areanumber, p.area_details, 
-								   p.exit_areas, p.exclusion, p.darkness, 
-								   p.fireball_statues, p.difficulty )
+								   p.exit_areas, p.exclusion, parameters )
 end
 
-function maze_gen.generate_maze_puzzle( area, areanumber, area_details, exit_areas, exclusion, darkness, fireball_statues, difficulty )
+function maze_gen.generate_maze_puzzle( area, areanumber, area_details, exit_areas, exclusion, parameters )
 	-- after opening up the exits create a normal maze afterwards
 	local map = area_details.map
 	if not map:get_entity("maze_sensor_"..areanumber) then
 		explore.puzzle_encountered()
 		-- initialize
-		local sensor = placement.place_sensor( area, "maze_sensor_"..areanumber )
-		sensor.on_activated = function () puzzle_logger.start_recording("maze", areanumber, difficulty) end
-		sensor.on_left = function () puzzle_logger.stop_recording()	end
 		maze_gen.set_map( map )
 		local cw, ww = {x=16, y=16}, {x=8, y=8}
 		maze_gen.set_room( area, cw, ww, "maze_room"..areanumber )
 		local maze, exits = maze_gen.generate_maze( area, exit_areas, exclusion)
 		-- pick spots in the corners of the maze for fireball_statues
 		local possible_locations = {hor={}, ver={}}
-		for i=1, fireball_statues, 1 do
-			table.insert(possible_locations.hor, {x=math.ceil((#maze/(fireball_statues+1))*i), y=math.ceil(#maze[1]/2)})
-			table.insert(possible_locations.ver, {x=math.ceil(#maze/2), y=math.ceil((#maze[1]/(fireball_statues+1))*i)})
+		for i=1, parameters.fireball_statues, 1 do
+			table.insert(possible_locations.hor, {x=math.ceil((#maze/(parameters.fireball_statues+1))*i), y=math.ceil(#maze[1]/2)})
+			table.insert(possible_locations.ver, {x=math.ceil(#maze/2), y=math.ceil((#maze[1]/(parameters.fireball_statues+1))*i)})
 		end
 		local use_this_list = nil
 		if area.x2-area.x1 > area.y2-area.y1 then use_this_list = possible_locations.hor
 		else use_this_list = possible_locations.ver end
-		local fb_statue_entity_list = {}
-		for i=1, fireball_statues, 1 do
+		local fireball_statue_positions = {}
+		
+		for i=1, parameters.fireball_statues, 1 do
 			local pos = use_this_list[i]
 			log.debug(pos)
 			local new_fireball_area = maze_gen.pos_to_area( pos )
-			local entity = map:create_custom_entity({name="fireball_statue", direction=0, 
-													layer=0, x=new_fireball_area.x1+8, y=new_fireball_area.y1+13, 
-													model="fireball_statue"})
-			table.insert(fb_statue_entity_list, entity)
+			map:create_custom_entity({name="maze_enemy_"..areanumber.."_1", direction=0, 
+										layer=0, x=new_fireball_area.x1+8, y=new_fireball_area.y1+13, 
+										model="fireball_statue"})
+			table.insert(fireball_statue_positions, {x=new_fireball_area.x1+8, y=new_fireball_area.y1+13})
 			maze[pos.x][pos.y].visited = true
 		end
+
 		-- create maze
 		--maze_gen.standard_recursive_maze( maze, exits )
+		log.debug("setting up maze"..os.clock())
 		maze_gen.prims_algorithm(maze, exits)
+		maze_gen.place_walls_on_exits(exits, map)
+		log.debug("collecting branches"..os.clock())
+		local branches = maze_gen.collect_all_branches(maze, exits)
+		log.debug("filling maze"..os.clock())
+		local bubble_positions = {}
+		local pike_positions = {}
+		local pit_areas = {}
+		-- pikes
+		if parameters.pikes then pike_positions = maze_gen.place_pikes(branches, map, areanumber) end
+		-- pits
+		if parameters.pits then pit_areas = maze_gen.place_pits(branches, area_details, map, areanumber) end
+		-- bubbles
+		if parameters.bubbles >= 1 then bubble_positions = maze_gen.place_bubbles(maze, exits, map, branches, parameters.bubbles, areanumber) end
+
+
 		local area_list, prop_list = maze_gen.convert_maze_to_area_list( maze, area, cw, ww )
 		for _,v in ipairs(area_list) do
-			placement.place_tile(v.area, lookup.tiles[v.pattern][area_details.tileset_id], "maze", 0)
+			placement.place_tile(v.area, lookup.tiles[v.pattern][area_details.tileset_id], "constructed_maze_"..areanumber.."_1", 0)
 		end
+		local furthest_sensor
+		local distance = 0
 		for i, exit in ipairs(exit_areas) do
 			local area_to_use = area_util.expand_line( exit, 16 )
+			-- place walls that block enemies
 			local exit_sensor = placement.place_sensor( area_to_use, "maze_"..areanumber.."_exit_"..i, 0 )
 			if i > 1 then 
-				exit_sensor.on_activated = 
-				function () 
-					puzzle_logger.complete_puzzle() 
+				local dist = area_util.distance(exit_areas[1], exit_areas[i])
+				if dist > distance then 
+					furthest_sensor = exit_sensor
+					distance = dist
 				end
 			end
 		end
+		furthest_sensor.on_activated = 
+			function () 
+				puzzle_logger.complete_puzzle() 
+			end
+
+		local sensor
+		if area_details.outside then 
+			sensor = placement.place_sensor( area_util.resize_area(area, {-48, -48, 48, 48}), "maze_sensor_"..areanumber )
+		else
+			sensor = placement.place_sensor( area_util.resize_area(area, {-16, -16, 16, 16}), "maze_sensor_"..areanumber )
+		end
+		sensor.on_activated = function () 
+			puzzle_logger.start_recording("maze", areanumber, parameters.difficulty) 
+			local hero = map:get_hero()
+			local hero_x, hero_y, layer = hero:get_position()
+			--hero:save_solid_ground(hero_x, hero_y, layer)
+			if not map:has_entity("maze_enemy_"..areanumber.."_1") then
+				maze_gen.reinstate_enemies(bubble_positions, pike_positions, fireball_statue_positions, areanumber)
+				maze_gen.reinstate_maze(area_list, area_details, areanumber, pit_areas)
+			end
+		end
+		sensor.on_left = function () 
+			puzzle_logger.stop_recording()	
+			--map:get_hero():reset_solid_ground()
+			for entity in map:get_entities("maze_enemy_"..areanumber.."_") do
+				sol.timer.stop_all(entity)
+				entity:remove()
+			end
+			for entity in map:get_entities("constructed_maze_"..areanumber.."_") do
+				entity:remove()
+			end
+		end
 		-- place darkness sensor if darkness
-		if darkness then maze_gen.make_dark_room(area, area_details, areanumber) end
+		if parameters.darkness then maze_gen.make_dark_room(area, area_details, areanumber) end
 	end
+end
+
+function maze_gen.reinstate_enemies(bubble_positions, pike_positions, fireball_statue_positions, areanumber)
+	for _,coordinate in ipairs(bubble_positions) do
+		map:create_enemy{name="maze_enemy_"..areanumber.."_1",layer=0, x=coordinate.x, y=coordinate.y, direction=0, breed="bubble"}
+	end
+	for _,coordinate in ipairs(pike_positions) do
+		map:create_enemy{name="maze_enemy_"..areanumber.."_1" ,layer=0, x=coordinate.x, y=coordinate.y, direction=coordinate.direction, breed="pike_detect"}
+		-- map:create_custom_entity({name="maze_enemy_"..areanumber.."_1", direction=0, 
+		-- 								layer=0, x=coordinate.x, y=coordinate.y,
+		-- 								model="pike_detect"})
+	end
+	for _,coordinate in ipairs(fireball_statue_positions) do
+		map:create_custom_entity({name="maze_enemy_"..areanumber.."_1", direction=0, 
+										layer=0, x=coordinate.x, y=coordinate.y, 
+										model="fireball_statue"})
+	end
+end
+
+function maze_gen.reinstate_maze( area_list, area_details, areanumber, pit_areas)
+	for _,v in ipairs(area_list) do
+		placement.place_tile(v.area, lookup.tiles[v.pattern][area_details.tileset_id], "constructed_maze_"..areanumber.."_1", 0)
+	end
+
+	for _,area in ipairs(pit_areas) do
+		if area_details.outside then 
+			placement.place_tile(area, 825, "constructed_maze_"..areanumber.."_1", 0)
+		else
+			placement.place_tile(area, 340, "constructed_maze_"..areanumber.."_1", 0)
+		end
+	end
+end
+
+function maze_gen.place_bubbles(maze, exits, map, branches, amount, areanumber)
+	local amount_left = amount
+	local bubble_positions = {}
+	for i=2, #exits, 1 do
+		for _,exit_position in ipairs(exits[i]) do
+			local connected_nodes = maze_gen.get_connected_nodes( exit_position, maze )
+			for _,node in ipairs(connected_nodes) do
+				if not maze_gen.list_contains_position(exits[i], node) then
+					local area = maze_gen.pos_to_area(node)
+					table.insert(bubble_positions, {x=area.x1+8,y=area.y1+8})
+					map:create_enemy{name="maze_enemy_"..areanumber.."_1",layer=0, x=area.x1+8, y=area.y1+8, direction=0, breed="bubble"}
+					amount_left = amount_left -1
+					if amount_left == 0 then break end
+				end
+			end
+			if amount_left == 0 then break end
+		end
+	end
+	if amount_left >= 1 then
+		for i=amount_left, 1, -1 do
+			local random_branch = branches[math.random(#branches)]
+			local area = maze_gen.pos_to_area(random_branch[#random_branch])
+			table.insert(bubble_positions, {x=area.x1+8,y=area.y1+8})
+			map:create_enemy{name="maze_enemy_"..areanumber.."_1",layer=0, x=area.x1+8, y=area.y1+8, direction=0, breed="bubble"}
+		end
+	end
+	return bubble_positions
+end
+
+function maze_gen.place_pikes(branches, map, areanumber)
+	local pike_positions = {}
+	for i=#branches, 1, -1 do
+		local branch = branches[i]
+
+		if #branch > 1 then 
+			local area = maze_gen.pos_to_area(branch[1])
+			local direction
+			if branch[2].y > branch[1].y then direction = 3 end
+			if branch[2].y < branch[1].y then direction = 1 end
+			if branch[2].x > branch[1].x then direction = 0 end
+			if branch[2].x < branch[1].x then direction = 2 end
+
+			table.insert(pike_positions, {x=area.x1+8,y=area.y1+13, direction=direction})
+			-- map:create_custom_entity({name="maze_enemy_"..areanumber.."_1", direction=0, 
+			-- 							layer=0, x=area.x1+8, y=area.y1+13, 
+			-- 							model="pike_detect"})
+			map:create_enemy{name="maze_enemy_"..areanumber.."_1" ,layer=0, x=area.x1+8, y=area.y1+13, direction=direction, breed="pike_detect"}
+			table.remove(branches, i)
+		end
+	end
+	return pike_positions
+end
+
+function maze_gen.place_pits(branches, area_details, map, areanumber)
+	local pit_areas = {}
+	for _,branch in ipairs(branches) do
+		local area = maze_gen.pos_to_area(branch[1])
+		if area_details.outside then 
+			placement.place_tile(area, 825, "constructed_maze_"..areanumber.."_1", 0)
+		else
+			placement.place_tile(area, 340, "constructed_maze_"..areanumber.."_1", 0)
+		end
+		table.insert(pit_areas, area)
+	end
+	return pit_areas
+end
+
+function maze_gen.place_walls_on_exits(exits, map)
+	for _,exit_list in ipairs(exits) do
+		for _,exit_pos in ipairs(exit_list) do
+			local exit_area = maze_gen.pos_to_area( exit_pos )
+			map:create_wall{layer=0, x=exit_area.x1, y=exit_area.y1, 
+							width=exit_area.x2-exit_area.x1, height=exit_area.y2-exit_area.y1,
+							stops_enemies=true}
+		end
+	end
+	
+end
+
+function maze_gen.collect_all_branches(maze, exits)
+	local branches = {}
+	local branch_nr = 0
+	for x=1,#maze do
+		for y=1,#maze[1] do
+			local position = {x=x, y=y}
+			if maze_gen.is_an_exit(position, exits) then
+				--skip
+			else
+				local connected_nodes = maze_gen.get_connected_nodes( position, maze)
+				if #connected_nodes == 1 then
+					branch_nr = branch_nr+1
+					branches[branch_nr] = {}
+					table.insert(branches[branch_nr], position)
+					local last_node = position
+					connected_nodes = maze_gen.get_connected_nodes( connected_nodes[1], maze )
+
+					while #connected_nodes <= 2 and #branches[branch_nr] < 3 do
+						for _,node in ipairs(connected_nodes) do
+							if not maze_gen.positions_are_equal(node, last_node) then
+								table.insert(branches[branch_nr], node )
+								last_node = node
+								connected_nodes = maze_gen.get_connected_nodes( node, maze )
+								break
+							end
+						end
+					end
+				end
+			end
+		end
+	end
+	return branches
+end
+
+function maze_gen.positions_are_equal(pos1, pos2)
+	return pos1.x==pos2.x and pos1.y==pos2.y
+end
+
+function maze_gen.get_connected_nodes( position, maze)
+	-- check every direction for open walls
+	local connected_nodes = {}
+	for _,direction in pairs({east=0, north=1, west=2, south=3}) do
+		if not maze[position.x][position.y][direction] then 
+			local new_position = maze_gen.next_position(position, direction)
+			if maze_gen.valid(new_position, maze) then 
+				table.insert(connected_nodes, new_position)
+			end
+		end
+	end
+	return connected_nodes
+end
+
+function maze_gen.is_an_exit(position, exits)
+	for _,exit_list in ipairs(exits) do
+		if maze_gen.list_contains_position(exit_list, position) then return true end
+	end
+	return false
+end
+
+function maze_gen.valid(position, maze)
+	return position.x > 0 and position.y > 0 and position.x <= #maze and position.y <= #maze[1] 
+end
+
+function maze_gen.list_contains_position(list, position)
+	for _,v in ipairs(list) do
+		if v.x == position.x and v.y == position.y then return true end
+	end
+	return false
+end
+
+function maze_gen.next_position(position, direction)
+	local new_position = {x=0, y=0}
+	if direction == 0 then return {x=position.x+1, y=position.y}
+	elseif direction == 1 then return {x=position.x, y=position.y-1}
+	elseif direction == 2 then return {x=position.x-1, y=position.y}
+	elseif direction == 3 then return {x=position.x, y=position.y+1} end
+	return new_position
 end
 
 function maze_gen.make_dark_room(area, area_details, areanumber)
 	local outside_sensor = map:get_entity("areasensor_outside_"..areanumber.."_type_"..area_details[areanumber].area_type)
 	local width, height = outside_sensor:get_size()
 	local x, y, layer = outside_sensor:get_position()
-	local room_sensor = map:create_sensor({layer=layer, x=x, y=y, width=width+16, height=height+24})
+	local room_sensor = map:create_sensor({layer=layer, x=x, y=y, width=width+24, height=height+24})
 	room_sensor.on_activated = 
 		function() 
-			local map=map; map:set_light(0) 
+			map:create_darkness()
 		end
-	room_sensor.on_left = 
-		function() 
-			local map=map; map:set_light(1) 
+	room_sensor.on_activated_repeat = 
+		function()
+			map:create_darkness()
 		end
 end
 

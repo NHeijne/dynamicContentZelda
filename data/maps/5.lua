@@ -397,7 +397,7 @@ something...
 	else
 		if not village_logger.log.village_logged then
 			village_logger.log.rupees = village_logger.log.rupees+game:get_money()
-			village_logger.village_exit_time = os.clock()
+			village_logger.log.village_exit_time = os.clock()
 			village_logger.log.village_logged = true
 			village_logger.copy_log()
 			village_logger.to_file( game, "before" )

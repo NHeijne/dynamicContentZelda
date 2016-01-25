@@ -136,7 +136,7 @@ function el.entered_area( areanumber ) -- branches or main
 		log_helper.time_end = os.clock()
 		if log_helper.main_path == true then
 			el.incr( "total_time_spent_main", log_helper.time_end-log_helper.time_start )
-		elseif log_helper.main_path == false then
+		elseif not log_helper.main_path then
 			el.incr( "total_time_spent_optional", log_helper.time_end-log_helper.time_start )
 		end
 	end
@@ -149,7 +149,7 @@ function el.finished_level( )
 	log_helper.time_end = os.clock()
 	if log_helper.main_path == true then
 		el.incr( "total_time_spent_main", log_helper.time_end-log_helper.time_start )
-	elseif log_helper.main_path == false then
+	elseif not log_helper.main_path then
 		el.incr( "total_time_spent_optional", log_helper.time_end-log_helper.time_start )
 	end
 	-- calculate the percentages
@@ -162,9 +162,8 @@ function el.finished_level( )
 	l.fights_to_puzzle_encounter_ratio=l.total_fights_encountered/l.total_puzzles_encountered
 	l.total_time_spent_other=l.total_time_spent-(l.total_time_spent_fighting+l.total_time_spent_puzzling)
 
-	for i=1,10 do
+	for i=1,l.rewards_available-1 do
 		local savegame_var = game:get_value("reward_"..l.map_id.."_"..i)
-		if savegame_var == nil then break end
 		if savegame_var == true then 
 			l.rewards_retrieved = l.rewards_retrieved + 1 
 		end

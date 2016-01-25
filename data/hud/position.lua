@@ -2,6 +2,13 @@
 
 local hud_position = {}
 
+local last_clock = os.clock()
+local current_fps = 0
+local max_frames = 30
+local at_frame = 0
+local frames_time = {}
+
+
 function hud_position:new(game)
 
   local object = {}
@@ -22,33 +29,24 @@ function hud_position:initialize(game)
     font = "white_digits",
     horizontal_alignment = "left",
   }
-  self.x, self.y, self.layer = self.hero:get_position()
-  self.digits_text:set_text(self.x..", "..self.y..", "..self.layer)
-
-  self:check()
-  self:rebuild_surface()
+  --self.x, self.y, self.layer = self.hero:get_position()
+  self.digits_text:set_text(current_fps)
 end
 
--- Checks whether the view displays the correct info
--- and updates it if necessary.
-function hud_position:check()
-
-  -- Redraw the surface only if something has changed. 
-  self.x, self.y, self.layer = self.hero:get_position() 
-  self:rebuild_surface()
-
-  -- Schedule the next check.
-  sol.timer.start(self.game, 20, function()
-    self:check()
-  end)
-end
-
-function hud_position:rebuild_surface()
+function hud_position:update()
+  local time = os.clock()
+  local measurement = time - last_clock
+  last_clock = time
+  at_frame = (at_frame%max_frames)+1
+  if frames_time[at_frame] ~= nil then current_fps = current_fps - (1/frames_time[at_frame]) * (1/max_frames) end
+  frames_time[at_frame] = measurement
+  current_fps = current_fps + (1/frames_time[at_frame]) * (1/max_frames)
 
   self.surface:clear()
 
   -- Max magic.
-  self.digits_text:set_text(self.x.." "..self.y.." "..self.layer)
+  --self.digits_text:set_text(self.x.." "..self.y.." "..self.layer)
+  self.digits_text:set_text(current_fps)
   self.digits_text:draw(self.surface, 16, 5)
 end
 
@@ -69,6 +67,7 @@ function hud_position:on_draw(dst_surface)
   end
 
   self.surface:draw(dst_surface, x, y)
+  self:update()
 end
 
 return hud_position

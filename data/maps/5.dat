@@ -9956,7 +9956,7 @@ teletransporter{
   y = 560,
   width = 16,
   height = 16,
-  destination_map = "3",
+  destination_map = "3a",
 }
 
 teletransporter{

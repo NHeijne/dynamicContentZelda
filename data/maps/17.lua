@@ -1,4 +1,5 @@
 local map = ...
+game = map:get_game()
 
 local sign_a_message=[[
 

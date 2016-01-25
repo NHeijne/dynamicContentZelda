@@ -1,16 +1,17 @@
 properties{
   x = 0,
   y = 0,
-  width = 12000,
-  height = 12000,
-  tileset = "13",
-  music = "dark_world",
+  width = 6000,
+  height = 6000,
+  tileset = "3",
+  music = "cave",
 }
 
 destination{
   layer = 0,
   x = 8,
   y = 13,
+  name = "standard",
   direction = 3,
   default = true,
 }

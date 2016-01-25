@@ -14,7 +14,9 @@ function enemy:on_created()
   self:set_size(8, 8)
   self:set_origin(4, 4)
   self:set_can_hurt_hero_running(true)
+  self:set_obstacle_behavior("flying")
   self:set_invincible()
+  self:set_optimization_distance(400)
 end
 
 -- The enemy was stopped for some reason and should restart.

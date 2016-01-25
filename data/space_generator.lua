@@ -1000,7 +1000,7 @@ function space_gen.generate_simple_space( area_details, given_map )
 	-- we then place openings that connect with each other
 	maze_gen.set_map( map )
 	if area_details.outside then maze_gen.set_room( {x1=128, y1=128, x2=width-128, y2=height-128}, {x=224, y=224}, {x=112, y=160} )
-							else maze_gen.set_room( {x1=128, y1=128, x2=width-128, y2=height-128}, {x=256, y=176}, 32*2 ) end
+							else maze_gen.set_room( {x1=128, y1=128, x2=width-128, y2=height-128}, {x=256, y=256}, 32*2 ) end
 	local areas = maze_gen.generate_rooms( area_details )
 	log.debug("returned areas from maze_gen")
 	log.debug(areas)

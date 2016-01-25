@@ -46,6 +46,10 @@ function vl.copy_log()
 end
 
 function vl.to_file( game, suffix )
+	-- name, npcs_talked_to, options_taken, total_options, % options_taken, % npcs talked to, 
+	-- cure brewer, cure witch, apples gotten, rupees, bottle_found, filled_bottle, 
+	-- bush_area_visited, woods_exit_visited, plaza_visited, brewer_area_visited
+	-- time_spent_in_village
 	local npc_order = {	"witch", 
 						"mom", "dad", "brother",
 						"lefttwin", "righttwin", "glassesguy", "oldwoman", "oldguyleft", "oldguyright", 
@@ -83,9 +87,12 @@ function vl.to_file( game, suffix )
 	if logbd.cure_brewer then 
 		table.insert(data_to_write, 1)
 		table.insert(data_to_write, 0)
-	else
+	elseif logbd.cure_witch then
 		table.insert(data_to_write, 0)
 		table.insert(data_to_write, 1)
+	else 
+		table.insert(data_to_write, 0)
+		table.insert(data_to_write, 0)
 	end
 	-- apples
 	table.insert(data_to_write, logbd.apples)
@@ -93,7 +100,7 @@ function vl.to_file( game, suffix )
 	table.insert(data_to_write, logbd.rupees)
 	-- found_bottle
 	-- filled_bottle
-	if logbd.found_bottle then
+	if game:get_value("bottle_1") then
 		table.insert(data_to_write, 1)
 		if logbd.filled_bottle then 
 			table.insert(data_to_write, 1)
@@ -106,7 +113,8 @@ function vl.to_file( game, suffix )
 	end
 	-- areas visited
 	for index,name in ipairs(area_order) do
-		if logbd.areas_visited[name] then table.insert(data_to_write, 1) end
+		if logbd.areas_visited[name] then table.insert(data_to_write, 1)
+	    else  table.insert(data_to_write, 0) end
 	end
 	-- time spent in village
 	table.insert(data_to_write, logbd.village_exit_time-logbd.start_time)
@@ -119,6 +127,7 @@ function vl.writeTableToFile (dataTable, file)
 		f:write(v)
 		if k ~= #dataTable then f:write(",")
 		else f:write("\n") end
+		f:flush()
 	end
 	f:flush(); f:close()
 end

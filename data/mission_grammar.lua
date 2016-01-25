@@ -128,17 +128,35 @@ mission_grammar.grammar = {
 -- all new nodes are placed at the end of the table
 mission_grammar.produced_graph = {}
 
-function mission_grammar.create_standard_graph_for_testing( branch_length )
+function mission_grammar.create_standard_graph_for_testing( params )
+	local main_length = params.main_length or 6
+	local optional_length = params.optional_length or 4
+	local branch_length = params.branch_length or 1
 	local nodes = {[1]="start"}
 	local edges = {}
 	local non_terminals = {}
 	local n, e, nt, starting_number
+	local next_eq
+	local next_bar
 
-	local next_eq = table.remove(mission_grammar.planned_items, 1)
-	local next_bar = table_util.random(mission_grammar.key_barrier_lookup.EQ[next_eq])
+	if #mission_grammar.planned_items > 0 then 
+		next_eq = table.remove(mission_grammar.planned_items, 1)
+		next_bar = table_util.random(mission_grammar.key_barrier_lookup.EQ[next_eq])
+	end
 
 	starting_number = #nodes+1
-	n, e, nt = mission_grammar.create_new_task_sequence( starting_number, {"F", "P", "F", "C","B:"..next_bar, "P", "F", "P", "goal"})
+	local main_sequence = {}
+	local add_fight = true
+	for i=1,main_length do
+		if add_fight then table.insert(main_sequence, "F"); add_fight = false
+		else table.insert(main_sequence, "P") end
+		if i == math.ceil(main_length/2) and next_eq then 
+			table.insert(main_sequence, "C");table.insert(main_sequence, "B:"..next_bar)
+		end
+	end
+	table.insert(main_sequence, "goal")
+	--n, e, nt = mission_grammar.create_new_task_sequence( starting_number, {"F", "P", "F", "C","B:"..next_bar, "P", "F", "P", "goal"})
+	n, e, nt = mission_grammar.create_new_task_sequence( starting_number, main_sequence)
 	nodes = table_util.union(nodes, n)
 	edges = table_util.union(edges, e)
 	table_util.add_table_to_table(nt, non_terminals)
@@ -147,13 +165,18 @@ function mission_grammar.create_standard_graph_for_testing( branch_length )
 
 	eq_nr = #nodes+1
 	nodes[eq_nr] = "EQ:"..next_eq
-	edges[5][eq_nr]="undir_fw"
-	edges[eq_nr]= { [5]="undir_bk" }
+	edges[math.ceil(main_length/2)+2][eq_nr]="undir_fw"
+	edges[eq_nr]= { [math.ceil(main_length/2)+2]="undir_bk" }
 
 
 	-- starting on the optional path
 	starting_number = #nodes+1
-	n, e, nt_BTS = mission_grammar.create_new_task_sequence( starting_number, {"BT","BT","BT","BT"} ) 
+	local optional_sequence = {}
+	for i=1,optional_length do
+		table.insert(optional_sequence, "BT")
+	end
+	n, e, nt_BTS = mission_grammar.create_new_task_sequence( starting_number, optional_sequence ) 
+	--n, e, nt_BTS = mission_grammar.create_new_task_sequence( starting_number, {"BT","BT","BT","BT"} ) 
 	nodes = table_util.union(nodes, n)
 	edges = table_util.union(edges, e)
 	table_util.add_table_to_table(nt_BTS, non_terminals)
@@ -161,7 +184,8 @@ function mission_grammar.create_standard_graph_for_testing( branch_length )
 	log.debug(nt)
 
 	-- connecting optional path with main path with next bar in between
-	mission_grammar.insert_symbol_between (4, starting_number, "B:"..next_bar, nodes, edges)
+	if next_eq then mission_grammar.insert_symbol_between (math.ceil(main_length/2)+1, starting_number, "B:"..next_bar, nodes, edges)
+	else mission_grammar.insert_symbol_between (math.ceil(main_length/2)+1, starting_number, "B:"..table_util.random(mission_grammar.available_barriers), nodes, edges) end
 
 	local branch_symbol_list = {"C", "R:rupees"}
 	for i=1, branch_length, 1 do
@@ -169,7 +193,7 @@ function mission_grammar.create_standard_graph_for_testing( branch_length )
 	end
 
 	for index,node_nr in ipairs(nt_BTS) do
-		if index == #nt_BTS then branch_symbol_list[#branch_symbol_list] = "R:heart_container" end
+		if index == #nt_BTS and params.add_heart then branch_symbol_list[#branch_symbol_list] = "R:heart_container" end
 		starting_number = #nodes+1
 		n, e, nt = mission_grammar.create_new_task_sequence( starting_number, branch_symbol_list )
 		nodes = table_util.union(nodes, n)
@@ -278,6 +302,7 @@ function mission_grammar.produce_graph( params)
 	log.debug(params)
 	local params_clone = table_util.copy(params)
 	mission_grammar.initialize_graph( params_clone.length )
+	mission_grammar.add_branches( params )
 	mission_grammar.assign_fights_and_puzzles( params )
 	return params_clone
 end
@@ -293,7 +318,7 @@ function mission_grammar.produce_standard_testing_graph( params)
 		graph.nodes[3]= "BOSS"
 		graph.edges= {[1]={[3]="undir_fw"}, [2]={[3]="undir_bk"}, [3]={[1]="undir_bk", [2]="undir_fw"} }
 	elseif params.mission_type=="normal" then
-		mission_grammar.create_standard_graph_for_testing( params_clone.branch_length )
+		mission_grammar.create_standard_graph_for_testing( params_clone )
 		mission_grammar.add_old_barriers( params_clone )
 		mission_grammar.assign_branch_tasks( params_clone )
 	else 
@@ -704,7 +729,6 @@ function mission_grammar.add_main_path_info( area_details, areanumber )
 			end
 		end
 	end
-	area_details[areanumber].main=false
 	return false
 end
 

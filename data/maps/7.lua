@@ -28,7 +28,7 @@ which grows at the
 other side of the mines
 to the east.
 If you bring me that
-flower and 15 rupees
+flower and 50 rupees
 I can make some
 Medicine for you.
 ]]
@@ -84,7 +84,7 @@ Go get that flower!
 Hehehe...
 ]]
 
-local cure_price = 15
+local cure_price = 50
 
 local function potion_buying(shop_item)
 

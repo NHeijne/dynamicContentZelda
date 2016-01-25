@@ -373,28 +373,81 @@ lookup.props =
 }
 
 
-lookup.sign_to=[[
-
+lookup.sign_to_0=[[
      To the mines
-     
+         --->
+]]
+lookup.sign_to_1=[[
+     To the mines
+          ^
+          |
+]]
+lookup.sign_to_2=[[
+     To the mines
+        <---
+]]
+lookup.sign_to_3=[[
+     To the mines
+          |
+          v
 ]]
 
-lookup.sign_from=[[
+lookup.sign_from_0=[[
 
     To the village
-     
+         --->
+]]
+lookup.sign_from_1=[[
+    To the village
+          ^
+          |
+]]
+lookup.sign_from_2=[[
+    To the village
+        <---
+]]
+lookup.sign_from_3=[[
+    To the village
+          |
+          v
 ]]
 
-lookup.hint_stone_to=[[
-
-     To the exit
-     
+lookup.hint_stone_to_0=[[
+To the mine back exit
+         --->
+]]
+lookup.hint_stone_to_1=[[
+To the mine back exit
+          ^
+          |
+]]
+lookup.hint_stone_to_2=[[
+To the mine back exit
+        <---
+]]
+lookup.hint_stone_to_3=[[
+To the mine back exit
+          |
+          v
 ]]
 
-lookup.hint_stone_from=[[
-
-   To the entrance
-     
+lookup.hint_stone_from_0=[[
+To the mine entrance
+         --->
+]]
+lookup.hint_stone_from_1=[[
+To the mine entrance
+          ^
+          |
+]]
+lookup.hint_stone_from_2=[[
+To the mine entrance
+        <---
+]]
+lookup.hint_stone_from_3=[[
+To the mine entrance
+          |
+          v
 ]]
 
 return lookup

@@ -693,7 +693,7 @@ teletransporter{
   y = 80,
   width = 16,
   height = 48,
-  destination_map = "2",
+  destination_map = "2a",
 }
 
 destination{

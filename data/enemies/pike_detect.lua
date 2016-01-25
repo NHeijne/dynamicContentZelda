@@ -2,59 +2,62 @@ local enemy = ...
 
 -- Pike that moves when the hero is close.
 
+-- local current_timer = nil
+--local cactus = false
+local time_till_unpause = 0.5
+local last_clock = 0
+local map, hero
 local state = "stopped"  -- "stopped", "moving", "going_back" or "paused".
 local initial_xy = {}
 local activation_distance = 64
 
-local hero_found = false
-
-function enemy:on_created()
-
-  self:set_life(1)
-  self:set_damage(4)
-  self:create_sprite("enemies/pike_detect")
-  self:set_size(16, 16)
-  self:set_origin(8, 13)
-  self:set_can_hurt_hero_running(true)
-  self:set_invincible()
-  self:set_attack_consequence("sword", "protected")
-  self:set_attack_consequence("thrown_item", "protected")
-  self:set_attack_consequence("arrow", "protected")
-  self:set_attack_consequence("hookshot", "protected")
-  self:set_attack_consequence("boomerang", "protected")
-
-  initial_xy.x, initial_xy.y = self:get_position()
-end
+-- function enemy:on_removed()
+--   sol.timer.stop_all(self)
+-- end
 
 function enemy:on_update()
+  if time_till_unpause > 0 then 
+    local time = os.clock()
+    time_till_unpause = time_till_unpause- (time - last_clock)
+    last_clock=time
+  end
+  local distance = self:get_distance(hero)
+  if distance <= 64 and time_till_unpause <= 0 and state == "stopped" then self:attack()  end
+  -- if current_timer == nil then
+  --   current_timer = sol.timer.start(self, 500, function()
+  --                         self:check()
+  --                         if self:get_distance(hero) > 100
+  --                         return true
+  --                       end)
+  -- end
+end
 
-  local hero = self:get_map():get_entity("hero")
-  if state == "stopped" and self:get_distance(hero) <= 192 then
-    -- Check whether the hero is close.
+function enemy:check()
+  local distance = self:get_distance(hero)
+  if state == "stopped" and distance <= 64 then self:attack() end
+  -- if not cactus then self:create_sprite("enemies/cactus"); cactus = true
+  -- else self:create_sprite("enemies/pike_detect"); cactus = false end
+end
+
+function enemy:attack()
+
     local x, y = self:get_position()
     local hero_x, hero_y = hero:get_position()
     local dx, dy = hero_x - x, hero_y - y
 
-    if not hero_found and math.abs(dx) < activation_distance and math.abs(dy) < 16 then
+    if math.abs(dx) <= activation_distance and math.abs(dy) < 16 then
       if dx > 0 then
-	self:go(0)
+	       self:go(0)
       else
-	self:go(2)
+	       self:go(2)
       end
-    elseif not hero_found and math.abs(dy) < activation_distance and math.abs(dx) < 16 then
+    elseif math.abs(dy) <= activation_distance and math.abs(dx) < 16 then
       if dy > 0 then
-	self:go(3)
+	       self:go(3)
       else
-	self:go(1)
+	       self:go(1)
       end
     end
-    if (math.abs(dx) < activation_distance and math.abs(dy) < 16) or 
-	  (math.abs(dx) < 16 and math.abs(dy) < activation_distance) then
-	  hero_found = true
-    else
-	  hero_found = false
-    end
-  end
 end
 
 function enemy:go(direction4)
@@ -107,20 +110,37 @@ function enemy:go_back()
     state = "going_back"
 
     local m = sol.movement.create("target")
-    m:set_speed(32)
+    m:set_speed(24)
     m:set_target(initial_xy.x, initial_xy.y)
     m:set_smooth(false)
+    m.on_finished = function() self:unpause() end
     m:start(self)
-    sol.audio.play_sound("sword_tapping")
-
-  elseif state == "going_back" then
-
-    state = "paused"
-    sol.timer.start(self, 500, function() self:unpause() end)
+    --sol.audio.play_sound("sword_tapping")
   end
 end
 
 function enemy:unpause()
+  time_till_unpause = 0.5
   state = "stopped"
 end
 
+
+function enemy:on_created()
+
+  self:set_life(1)
+  self:set_damage(2)
+  self:create_sprite("enemies/pike_detect")
+  self:set_size(16, 16)
+  self:set_origin(8, 13)
+  self:set_can_hurt_hero_running(true)
+  self:set_invincible()
+  self:set_attack_consequence("sword", "protected")
+  self:set_attack_consequence("thrown_item", "protected")
+  self:set_attack_consequence("arrow", "protected")
+  self:set_attack_consequence("hookshot", "protected")
+  self:set_attack_consequence("boomerang", "protected")
+  --self:set_optimization_distance(100)
+  map = self:get_map()
+  hero = map:get_entity("hero")
+  initial_xy.x, initial_xy.y = self:get_position()
+end

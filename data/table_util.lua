@@ -198,8 +198,11 @@ function table_util.choose_random_key(probabilities)
 end
 
 function table_util.tbl_contains_tbl( tbl1, tbl2 )
+  -- for every key, value pair in tbl2
   for k,v in pairs(tbl2) do
+    -- we check if we're looking for a table
     if "table" == type(v) and "table" == type(tbl1[k]) then
+      -- if so we check if that table contains 
       if not table_util.tbl_contains_tbl( tbl1[k], v ) then return false end
     elseif v ~= tbl1[k] then
       return false

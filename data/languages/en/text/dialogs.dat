@@ -81,9 +81,9 @@ dialog{
   icon = 3,
   skip = "all",
   text = [[
-Shoot Arrows to
-defeat tough
-enemies.
+An arrow will slay
+most enemies with 
+one shot.
 ]]
 }
 
@@ -1750,7 +1750,9 @@ with the cursor on
 the bombs.$0
 You can also lift up
 any placed bomb and
-throw it.$0
+throw it...
+which causes it to 
+explode on impact.$0
 ]]
 }
 --------------------
@@ -1854,7 +1856,7 @@ Shield!$0
 
 You can defend
 yourself from enemy
-attacks!
+projectile attacks!
 ]]
 }
 --------------------
@@ -4110,9 +4112,7 @@ dialog{
   id = "lyriann_shop.apples",
   next = "_unknown",
   text = [[
-Three freshly picked
-apples from this
-morning!
+Three fresh Apples.
 Each apple restores a
 Heart.
 ]]

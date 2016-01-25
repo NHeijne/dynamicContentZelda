@@ -58,8 +58,8 @@ function pl.update_total_log( current_puzzle_log )
 	local cl = current_puzzle_log
 	local tl = pl.log
 	local puzzle_type = cl.puzzle_type
-	tl.total_time = tl.total_time + (cl.time_end - cl.time_start)
-	tl[puzzle_type.."_total_time"] = tl[puzzle_type.."_total_time"] + (cl.time_end - cl.time_start)
+	tl.total_time = tl.total_time + cl.total_time
+	tl[puzzle_type.."_total_time"] = tl[puzzle_type.."_total_time"] + cl.total_time
 	tl[puzzle_type.."_puzzles"] = tl[puzzle_type.."_puzzles"] +1
 	if puzzle_type == "sokoban" then
 		if cl.quit then	tl.sokoban_quits = tl.sokoban_quits +1 end
@@ -85,6 +85,7 @@ function pl.start_recording( puzzle_type, areanumber, difficulty )
 			difficulty=difficulty,
 			time_start=os.clock(),
 			time_end=0,
+			total_time=0,
 			retries=0,
 			got_hurt=0,
 			puzzle_type=puzzle_type,
@@ -151,6 +152,7 @@ end
 function pl.stop_recording()
 	local cl = pl.current_puzzle_log[pl.current_areanumber]
 	cl.time_end = os.clock()
+	cl.total_time = cl.time_end - cl.time_start
 	cl.total_vfm_time = cl.total_vfm_time + cl.vfm_time
 	cl.started_recording = false
 	function hero:on_state_changed(state)
@@ -162,10 +164,10 @@ function pl.current_log_to_data( current_puzzle_log )
 	local cl = current_puzzle_log
 	local data ={}
 	table.insert(data, game:get_player_name()) 		-- name
-	table.insert(data, map:get_id()) 		-- map_id
+	table.insert(data, map:get_id()) 				-- map_id
 	table.insert(data, cl.puzzle_type) 				-- puzzle_type
 	table.insert(data, cl.difficulty) 				-- difficulty 1-5
-	table.insert(data, cl.time_end - cl.time_start) -- time spent
+	table.insert(data, cl.total_time) 				-- time spent
 	table.insert(data, cl.retries) 					-- retries
 	table.insert(data, cl.got_hurt) 				-- got_hurt
 	table.insert(data, cl.deaths) 					-- deaths

@@ -10,6 +10,8 @@ local num_util 		= require("num_util")
 
 local pg ={}
 pg.static_difficulty = false
+pg.puzzle_difficulty = 0
+
 pg.pike_room_min_difficulty = 1
 pg.pike_room_max_difficulty = 1
 pg.sokoban_min_difficulty = 1
@@ -22,20 +24,13 @@ pg.time_requirements = {["maze"]=30, ["sokoban"]=90, ["pike_room"]=20}
 pg.areanumbers_filled = {}
 
 function pg.get_static_difficulty(map_id, puzzle_type)
-	local difficulty
-	if map_id == 0 then difficulty=1
-	elseif map_id == 1 then difficulty= 2
-	elseif map_id == 2 then	difficulty= 3
-	elseif map_id == 3 then difficulty= 4 end
+	local difficulty = pg.puzzle_difficulty
 
-	if puzzle_type == "maze" then difficulty = difficulty+1
-	elseif puzzle_type == "pike_room" then difficulty = difficulty+1 
-	elseif puzzle_type == "sokoban" then 
-		difficulty = difficulty-1
-		if difficulty == 0 then difficulty = 1 end
-		if difficulty > 3 then difficulty = 3 end
+	if puzzle_type == "maze" then difficulty = difficulty-1
+	elseif puzzle_type == "pike_room" then difficulty = difficulty-2 
+	elseif puzzle_type == "sokoban" then difficulty = difficulty-2
 	end
-	
+	if difficulty <= 0 then difficulty = 1 end
 	return difficulty
 end
 
@@ -67,7 +62,7 @@ function pg.create_puzzle( selection_type, area, areanumber, exit_areas, exclusi
 		difficulty = params.difficulty or pg.get_static_difficulty(map_id, puzzle_type)
 	else
 		difficulty = pg[puzzle_type.."_min_difficulty"]
-		if game:get_life() > 16 then difficulty = pg[puzzle_type.."_max_difficulty"] end
+		--if game:get_life() > 16 then difficulty = pg[puzzle_type.."_max_difficulty"] end
 	end
 	-- determine parameters to be used
 	local parameters = pg.get_parameters( puzzle_type, difficulty )
@@ -80,16 +75,20 @@ end
 
 function pg.interpret_log( completed_puzzle_log )
 	local cl = completed_puzzle_log
-	if cl.deaths > 0 or cl.quit or ( cl.got_hurt > 4 and cl.time_end-cl.time_start > pg.time_requirements[cl.puzzle_type]*cl.difficulty )  then
+	local time_requirement = pg.time_requirements[cl.puzzle_type]
+	if cl.puzzle_type == "pike_room" then time_requirement = pg.time_requirements[cl.puzzle_type] * ((cl.difficulty+1)/2) end
+
+	if cl.deaths > 0 or cl.quit or cl.got_hurt > 6 or cl.total_time > time_requirement*1.5  then
 		if cl.deaths > 0 or cl.quit then 
 			pg.decrease_min_max_difficulty( cl.puzzle_type )
 		end
 		pg.decrease_min_max_difficulty( cl.puzzle_type )
 	else
-		if cl.time_end-cl.time_start <= pg.time_requirements[cl.puzzle_type] then 
+		if cl.total_time <= pg.time_requirements[cl.puzzle_type] then 
 		  	pg.increase_min_max_difficulty( cl.puzzle_type )
+		elseif cl.total_time <= pg.time_requirements[cl.puzzle_type]*1.5 and cl.got_hurt <= 4 then
+			pg.increase_min_max_difficulty( cl.puzzle_type )
 		end
-		pg.increase_min_max_difficulty( cl.puzzle_type )
 	end
 end
 
@@ -119,10 +118,13 @@ function pg.get_parameters( puzzle_type, difficulty )
 end
 
 function pg.get_maze_parameters( difficulty )
-	parameters = {darkness=false, fireball_statues=0}
-	if difficulty >=2 then parameters.darkness = true end
-	if difficulty >=3 then parameters.fireball_statues = difficulty-2 end
+	parameters = {darkness=true, fireball_statues=0, bubbles=0, pikes=false, pits=false}
 	parameters.difficulty = difficulty
+	parameters.fireball_statues = difficulty-1
+	parameters.bubbles = difficulty-1
+	if difficulty <= 1 then	parameters.bubbles = 0 end
+	if difficulty >= 2 then parameters.pits = true end
+	if difficulty >= 4 then parameters.pikes = true end
 	return parameters
 end
 
@@ -132,23 +134,16 @@ end
 
 function pg.get_pike_room_parameters( difficulty )
 	local parameters = {}
-	local choices = {	
-						[-2]={{32, 1, 3}},
-						[-1]={{40, 1, 3},{32, 1, 4}},
-						[0]={{48, 1, 3}, {40, 1, 4}, {32, 1, 5}, {24, 0.5, 4}},
-						[1]={{56, 1, 3}, {48, 1, 4}, {32, 0.5, 3}, {24, 0.5, 2}},
-						[2]={{56, 1, 4}, {48, 1, 5}, {32, 0.5, 6}, {24, 0.5, 7}},
-						movement={{"random",4}, {"circle",3}, {"back/forth",2}}}
-	local current_difficulty = 0
-	local movement
-	repeat
-		movement = table_util.random(choices.movement)
-	until difficulty - movement[2] >= -2 and difficulty - movement[2] <= 2
-	local selected_option = table_util.random(choices[difficulty-movement[2]])
-	parameters.speed = 		selected_option[1]
-	parameters.width = 		selected_option[2]
-	parameters.intersections = {x=selected_option[3], y=selected_option[3]}
-	parameters.movement = 	movement[1]
+	-- speed = 24, 32, 40, 48, 56
+	-- width = 2 or 4
+	local movement_option=table_util.random({
+		{"circle", 0}, 
+		{"back/forth", 0}, 
+		{"side_to_side", 0}
+		})
+	parameters.speed = 		48
+	parameters.width = 		4-(difficulty-1)*0.5
+	parameters.movement = 	movement_option[1]
 	parameters.difficulty = difficulty
 	return parameters
 end
