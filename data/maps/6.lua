@@ -158,7 +158,13 @@ local function step_away_from_door(mom)
 end
 
 function map:on_started(destination)
-	village_logger.start_time = os.clock()
+	if #village_logger.log == 0 then
+		village_logger.start_new_log()
+		village_logger.log.start_time = os.clock()
+		if game:get_value("shed_key") then
+			village_logger.log.entered_village_from_save=1
+		end
+	end
 	if destination == start_position then
 		sol.audio.play_music("beginning")
 		if not game:get_value("shed_key") then
@@ -265,20 +271,37 @@ Norbert Heijne
 Arjen Swellengrebel$0$0
 Thanks For Playing!
 Don't forget to send us
-the log files! :)
+the log files! :)$0
+]]
+
+local credits2 = [[
+The logs are under
+C:\Users\<username>\
+.solarus\dynamicZelda$0
+Please mail every file
+in that folder to
+dynamicZelda@gmail.com$0
+Repeat the info?
+Yes
+No
 ]]
 
 
 function game_over()
-	village_logger.copy_log()
 	village_logger.to_file( game, "after" )
 	sol.audio.play_music("fanfare")
-	game:start_dialog("test.variable", credits, function()
-		    game:set_hud_enabled(false)
-		    game:set_pause_allowed(false)
-		    sol.timer.start(5000, function()
-		      hero:set_visible(false)
-		      sol.main.reset()
-		    end)
-      end)
+	game:start_dialog("test.variable", credits, function() 
+		game:start_dialog("test.question_repeat_on_1", credits2, function(answer)
+			if answer == 1 then
+				-- skip
+			else
+			    game:set_hud_enabled(false)
+			    game:set_pause_allowed(false)
+			    sol.timer.start(5000, function()
+			      hero:set_visible(false)
+			      sol.main.reset()
+			    end)
+			end
+	    end)
+	end)
 end

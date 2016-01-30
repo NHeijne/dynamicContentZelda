@@ -33,6 +33,11 @@ font{
 }
 
 font{
+  id = "alttp2",
+  file = "text/alttp2.png",
+}
+
+font{
   id = "green_digits",
   file = "text/green_digits.png",
 }

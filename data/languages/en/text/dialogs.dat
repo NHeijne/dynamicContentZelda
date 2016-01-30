@@ -6678,6 +6678,22 @@ dialog{
   text = [[$v]]
 }
 
+dialog{
+  id = "test.question_repeat_on_1",
+  icon = -1,
+  question=true,
+  next = "test.question_repeat_on_1",
+  text = [[$v]]
+}
+
+dialog{
+  id = "test.question_repeat_on_2",
+  icon = -1,
+  question=true,
+  next2 = "test.question_repeat_on_2",
+  text = [[$v]]
+}
+
 -- ****** Full specification of dialog properties ******
 
 -- We describe here the meaning of each dialog property.

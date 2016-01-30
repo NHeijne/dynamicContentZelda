@@ -12,6 +12,7 @@ function savegame_menu:on_started()
   self.cloud_img = sol.surface.create("menus/selection_menu_cloud.png")
   self.save_container_img = sol.surface.create("menus/selection_menu_save_container.png")
   self.option_container_img = sol.surface.create("menus/selection_menu_option_container.png")
+  self.title_img = sol.surface.create("menus/title.png")
   self.option1_text = sol.text_surface.create()
   self.option2_text = sol.text_surface.create()
   self.title_text = sol.text_surface.create{
@@ -173,6 +174,8 @@ function savegame_menu:on_draw(dst_surface)
   -- Phase-specific draw method.
   local method_name = "draw_phase_" .. self.phase
   self[method_name](self)
+
+  self.title_img:draw(self.surface, 40, 10)
 
   -- The menu makes 320*240 pixels, but dst_surface may be larger.
   local width, height = dst_surface:get_size()

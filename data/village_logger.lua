@@ -2,10 +2,10 @@ local table_util = require("table_util")
 
 local vl = {}
 
-vl.log = {
+vl.new_log = {
 	-- personal settings
 	name=game:get_player_name(),
-
+	time_stamp=0,
 	start_time = 0,
 	village_exit_time=0,
 	cure_brewer=false,
@@ -15,6 +15,7 @@ vl.log = {
 	filled_bottle=false,
 	rupees = 0,
 	village_logged=false,
+	entered_village_from_save=0,
 	areas_visited={ bush_area=false, woods_exit=false, plaza=false, brewer_area=false},
 	NPC={
 			-- witch area
@@ -39,10 +40,11 @@ vl.log = {
 		}
 }
 
-vl.log_before_dungeons ={}
+vl.log = {}
 
-function vl.copy_log()
-	vl.log_before_dungeons = table_util.copy(vl.log)
+function vl.start_new_log()
+	vl.log = table_util.copy(vl.new_log)
+	vl.log.time_stamp = os.date()
 end
 
 function vl.to_file( game, suffix )
@@ -57,9 +59,10 @@ function vl.to_file( game, suffix )
 	local area_order = {"bush_area", "woods_exit", "plaza", "brewer_area"}
 	-- the csv will contain data in this order:
 	local data_to_write={}	
-	local logbd = vl.log_before_dungeons
+	local logbd = vl.log
 	-- Player name
 	table.insert(data_to_write, logbd.name)
+	table.insert(data_to_write, logbd.time_stamp)
 	-- # NPCs talked to
 	-- NPCs options explored, options_available
 	-- fraction of options explored of the talked to npcs
@@ -118,6 +121,7 @@ function vl.to_file( game, suffix )
 	end
 	-- time spent in village
 	table.insert(data_to_write, logbd.village_exit_time-logbd.start_time)
+	table.insert(data_to_write, logbd.entered_village_from_save)
 	vl.writeTableToFile(data_to_write, "village_log_"..suffix.."_dungeon.csv")
 end
 

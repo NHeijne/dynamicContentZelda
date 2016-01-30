@@ -50,7 +50,7 @@ function pl.complete_puzzle()
 		pl.update_total_log( cl )
 		puzzle_gen.interpret_log( cl )
 		pl.current_log_to_data( cl )
-		explore.puzzle_finished ( cl.time_end-cl.time_start ) 
+		explore.puzzle_finished ( cl.total_time ) 
 	end
 end
 
@@ -95,6 +95,7 @@ function pl.start_recording( puzzle_type, areanumber, difficulty )
 			deaths=0,
 			vfm_time=0,
 			total_vfm_time=0,
+			difficulty_difference=0
 		}
 		cl = pl.current_puzzle_log[areanumber]
 	elseif cl.completed or cl.quit then 
@@ -103,7 +104,6 @@ function pl.start_recording( puzzle_type, areanumber, difficulty )
 		cl.started_recording = true
 		cl.died = false
 		cl.time_start=os.clock()
-		cl.vfm_time = 0
 	end
 	
 	function hero:on_state_changed(state)
@@ -117,6 +117,30 @@ function pl.start_recording( puzzle_type, areanumber, difficulty )
 		end
 		return false
 	end
+end
+
+function pl.below_difficulty_setting()
+	local cl = pl.current_puzzle_log[pl.current_areanumber]
+	cl.difficulty_difference = -1
+end
+
+function pl.above_difficulty_setting()
+	local cl = pl.current_puzzle_log[pl.current_areanumber]
+	cl.difficulty_difference = 1
+end
+
+function pl.over_time_limit()
+	local cl = pl.current_puzzle_log[pl.current_areanumber]
+	if pl.get_current_time_spent() > 90 then
+		return true
+	end
+	return false
+end
+
+function pl.get_current_time_spent()
+	local cl = pl.current_puzzle_log[pl.current_areanumber]
+	if cl and not cl.started_recording then return 0 end
+	return cl.total_time + (os.clock() - cl.time_start)
 end
 
 function pl.pressed_quit()
@@ -149,10 +173,18 @@ function pl.made_first_move()
 	end
 end
 
+function pl.can_reset_puzzle()
+	local cl = pl.current_puzzle_log[pl.current_areanumber]
+	if cl and cl.vfm_time ~= 0 then
+		return true
+	end
+	return false
+end
+
 function pl.stop_recording()
 	local cl = pl.current_puzzle_log[pl.current_areanumber]
 	cl.time_end = os.clock()
-	cl.total_time = cl.time_end - cl.time_start
+	cl.total_time = cl.total_time + cl.time_end - cl.time_start
 	cl.total_vfm_time = cl.total_vfm_time + cl.vfm_time
 	cl.started_recording = false
 	function hero:on_state_changed(state)
@@ -171,8 +203,8 @@ function pl.current_log_to_data( current_puzzle_log )
 	table.insert(data, cl.retries) 					-- retries
 	table.insert(data, cl.got_hurt) 				-- got_hurt
 	table.insert(data, cl.deaths) 					-- deaths
-	table.insert(data, cl.quit) 					-- quit
-	table.insert(data, cl.completed) 				-- completed
+	table.insert(data, (cl.quit and 1 or 0)) 					-- quit
+	table.insert(data, (cl.completed and 1 or 0)) 				-- completed
 	table.insert(data, cl.total_vfm_time/(cl.retries+1)) -- average vfm_time
 	pl.writeTableToFile (data, "individual_puzzles.csv") 
 end

@@ -20,11 +20,27 @@ local light_manager 	= require("maps/lib/light_manager")
 local content = {}
 
 function content.start_test(given_map, params, end_destination)
-	local static_difficulty = params.static_difficulty or true
+	-- Initialize the pseudo random number generator
+	local seed = 
+			tonumber(tostring(os.time()):reverse():sub(1,6)) -- good random seeds
+	log.debug("random seed = " .. seed)
+	math.randomseed( seed )
+	math.random(); math.random(); math.random()
+	-- done. :-)
 
-	fight_generator.static_difficulty = params.static_difficulty
+
+	if game:get_value("static_difficulty") == nil then
+		local random_nr = math.random(100)
+		if random_nr >= 50 then 
+			 game:set_value("static_difficulty", true)
+		else game:set_value("static_difficulty", false) end
+	end
+	--game:set_value("static_difficulty", false)
+	--local static_difficulty = params.static_difficulty or true
+	local static_difficulty = game:get_value("static_difficulty")
+	fight_generator.static_difficulty = static_difficulty
 	fight_generator.fight_difficulty = params.fight_difficulty
-	puzzle_gen.static_difficulty = params.static_difficulty
+	puzzle_gen.static_difficulty = static_difficulty
 	puzzle_gen.puzzle_difficulty = params.puzzle_difficulty
 	
 	map = given_map
@@ -50,13 +66,6 @@ function content.start_test(given_map, params, end_destination)
 	log.debug(tic)
 
 	log.debug("end test")
-	-- Initialize the pseudo random number generator
-	local seed = 
-			tonumber(tostring(os.time()):reverse():sub(1,6)) -- good random seeds
-	log.debug("random seed = " .. seed)
-	math.randomseed( seed )
-	math.random(); math.random(); math.random()
-	-- done. :-)
 
 	local tileset_id = tonumber(map:get_tileset())
 	local outside = false
@@ -86,6 +95,9 @@ function content.start_test(given_map, params, end_destination)
     game:set_pause_allowed(true)
     game:set_dialog_style("box")
     light_manager.enable_light_features(map)
+
+    explore.start_recording( content.area_details, params )
+	puzzle_logger.init_logs()
 
     --map:set_tileset("1") needs to be set before the map loads
     --content.areas = space_gen.generate_space(content.area_details, map)
@@ -134,6 +146,7 @@ function content.start_test(given_map, params, end_destination)
 				placement.place_chest(equipment, large_area)
 			else
 				local reward =  split_contains[2]
+				if reward == "heart_container" then explore.log.heart_available = 1 end
 				local large_area = area_util.get_largest_area(a.open_areas)
 				placement.place_chest(reward, large_area, {["rewards_placed"]=rewards_placed})
 				rewards_placed = rewards_placed +1
@@ -167,8 +180,6 @@ function content.start_test(given_map, params, end_destination)
 	log.debug("content.areas")
 	log.debug(content.areas)
 
-	explore.start_recording( content.area_details, params )
-	puzzle_logger.init_logs()
 	map.on_finished = 
 		function()
 			explore.finished_level( )

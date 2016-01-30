@@ -13,6 +13,7 @@ function item:on_using()
 		if self:get_map():has_entity("start_here") then
 			sol.audio.play_sound("warp")
 			self:get_map():get_entity("hero"):teleport(map:get_id(), "start_here")
+			self:get_map():open_doors("door_normal_area_")
 		else sol.audio.play_sound("wrong")
 		end
 		used_last_time = os.clock()

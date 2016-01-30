@@ -22,6 +22,7 @@ local breedDifficulties = {	["minillosaur_egg_fixed"]	= 1,
 
 fight_generator.static_difficulty = false
 fight_generator.fight_difficulty = 0
+fight_generator.fighting = false
 
 -- This line of code is the only thing this project is really about. I'm actually kind of amazed.
 function makeDifficultyPrediction(room)
@@ -62,22 +63,23 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 		
 			sensor.on_activated = 
 				function()
-					
+					fight_generator.fighting = true
 					explore.fight_encountered( )
 					starttime = os.clock()
 					local game = map:get_game()
 					local hero = map:get_hero()
 					function hero:on_state_changed(state)
-						local f = sol.file.open("userExperience.txt","a+"); f:write(state .. "-hero\n"); f:flush(); f:close()
-						if state == "hurt" and game:get_life() <= 2 and game:get_life() > 0 then
-							-- player is dying now, log the room.
-							local game = map:get_game()
-							local f = sol.file.open("userExperience.txt","a+"); f:write(game:get_life() .. "-endlife\n"); f:flush(); f:close()
-							local f = sol.file.open("userExperience.txt","a+"); f:write(os.time() .. "-endtime\n"); f:flush(); f:close()
-							local f = sol.file.open("userExperience.txt","a+"); f:write("diedin-thefight\n"); f:flush(); f:close()
-							analyseGameplaySoFar(map)
+						if fight_generator.fighting then
+							local f = sol.file.open("userExperience.txt","a+"); f:write(state .. "-hero\n"); f:flush(); f:close()
+							if state == "hurt" and game:get_life() <= 2 and game:get_life() > 0 then
+								-- player is dying now, log the room.
+								local game = map:get_game()
+								local f = sol.file.open("userExperience.txt","a+"); f:write(game:get_life() .. "-endlife\n"); f:flush(); f:close()
+								local f = sol.file.open("userExperience.txt","a+"); f:write(os.time() .. "-endtime\n"); f:flush(); f:close()
+								local f = sol.file.open("userExperience.txt","a+"); f:write("diedin-thefight\n"); f:flush(); f:close()
+								analyseGameplaySoFar(map)
+							end
 						end
-						return false
 					end
 					
 					map:open_doors("door_normal_area_")
@@ -131,6 +133,8 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 							theEnemyIJustMade:set_life(everyEnemyHasHealth)
 							theEnemyIJustMade:set_damage(everyEnemyDealsDamage)
 							theEnemyIJustMade:set_treasure("random")
+						else 
+							sol.audio.play_music("boss")
 						end
 						local f = sol.file.open("userExperience.txt","a+") 
 						f:write(theEnemyIJustMade:get_breed() .. "-spawned\n")
@@ -148,6 +152,7 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 								f:write(theEnemyIJustMade:get_breed() .. "-waskilled\n")
 								f:flush(); f:close()
 								explore.fight_finished( os.clock()-starttime )
+								sol.audio.play_music("victory", false)
 								
 								map:open_doors("door_normal_area_".. split_table[3])
 								difficultyOfFights = difficultyOfFights + 1
@@ -156,7 +161,7 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 								local f = sol.file.open("userExperience.txt","a+"); f:write(game:get_life() .. "-endlife\n"); f:flush(); f:close()
 								local f = sol.file.open("userExperience.txt","a+"); f:write(os.time() .. "-endtime\n"); f:flush(); f:close()
 								local f = sol.file.open("userExperience.txt","a+"); f:write("finished-thefight\n"); f:flush(); f:close()
-								hero.on_state_changed = nil
+								fight_generator.fighting = false
 								analyseGameplaySoFar(map)
 								return false
 							end
@@ -176,7 +181,7 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 									local f = sol.file.open("userExperience.txt","a+"); f:write(game:get_life() .. "-endlife\n"); f:flush(); f:close()
 									local f = sol.file.open("userExperience.txt","a+"); f:write(os.time() .. "-endtime\n"); f:flush(); f:close()
 									local f = sol.file.open("userExperience.txt","a+"); f:write("finished-thefight\n"); f:flush(); f:close()
-									hero.on_state_changed = nil
+									fight_generator.fighting = false
 									analyseGameplaySoFar(map)
 								end
 								return false
@@ -195,7 +200,7 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 						local f = sol.file.open("userExperience.txt","a+"); f:write(game:get_life() .. "-endlife\n"); f:flush(); f:close()
 						local f = sol.file.open("userExperience.txt","a+"); f:write(os.time() .. "-endtime\n"); f:flush(); f:close()
 						local f = sol.file.open("userExperience.txt","a+"); f:write("finished-thefight\n"); f:flush(); f:close()
-						hero.on_state_changed = nil
+						fight_generator.fighting = false
 						analyseGameplaySoFar(map)
 						
 					end
@@ -212,7 +217,7 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 						local f = sol.file.open("userExperience.txt","a+"); f:write(game:get_life() .. "-endlife\n"); f:flush(); f:close()
 						local f = sol.file.open("userExperience.txt","a+"); f:write(os.time() .. "-endtime\n"); f:flush(); f:close()
 						local f = sol.file.open("userExperience.txt","a+"); f:write("ranawayfrom-thefight\n"); f:flush(); f:close()
-						hero.on_state_changed = nil
+						fight_generator.fighting = false
 						analyseGameplaySoFar(map)
 					end
 				end
@@ -319,7 +324,7 @@ function logTheRoom (room)
 	
 	-- name,mapID,egg,snap_dragon,hardhat,knight,papillosaur,startLife,hasBow,hasMirror,hasFairyBottle,hasGlove,hasGlove2,hasBomb,pitfalls,spikes,inside,surface
 	fightRoomData[#fightRoomData+1] = game:get_player_name()
-	fightRoomData[#fightRoomData+1] = tonumber(map:get_id())
+	fightRoomData[#fightRoomData+1] = map:get_id()
 	fightRoomData[#fightRoomData+1] = room.monsterTypes.minillosaur_egg_fixed or 0
 	fightRoomData[#fightRoomData+1] = room.monsterTypes.snap_dragon or 0
 	fightRoomData[#fightRoomData+1] = room.monsterTypes.blue_hardhat_beetle or 0

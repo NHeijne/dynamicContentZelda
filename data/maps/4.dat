@@ -4,7 +4,7 @@ properties{
   width = 2000,
   height = 2000,
   tileset = "3",
-  music = "boss",
+  music = "cave",
 }
 
 destination{

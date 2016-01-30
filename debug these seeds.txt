@@ -1,5 +1,0 @@
-274616 -- weird exit placement in forest
-918988, 694043 -- selected_nb in maze_gen produces error
-711143 -- probably maze generation doesn't fit somewhere in the caves
-134322 -- two hardhats spawned on grass in a southern dungeon room
-841532 -- no exit in the forest!

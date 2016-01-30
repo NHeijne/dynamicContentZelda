@@ -5,7 +5,10 @@ q.questionnaire_done = false
 q.questions_start=[[
 Please answer some
 questions about the
-previous area...
+last segment...
+i.e. the areas between
+the last shop spot or
+village and here.
 Note that your answers 
 do not affect gameplay
 whatsoever...

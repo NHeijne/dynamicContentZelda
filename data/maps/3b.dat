@@ -7,3 +7,11 @@ properties{
   music = "cave",
 }
 
+destination{
+  layer = 0,
+  x = 8,
+  y = 13,
+  direction = 3,
+  default = true,
+}
+

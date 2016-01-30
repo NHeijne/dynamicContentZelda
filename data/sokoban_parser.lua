@@ -8,7 +8,6 @@ local num_util 			= require("num_util")
 
 local sp = {}
 
-
 --arranged by ID as to avoid using duplicates in the same game
 sp.sokoban_problems = false
 
@@ -179,19 +178,24 @@ function sp.place_sokoban_puzzle( map, area_list, puzzle_area, areanumber, diffi
 	sp.puzzles_created[next_index] = area_list
 	local sensor = placement.place_sensor( puzzle_area, "sokoban_sensor_"..areanumber )
 	sensor.on_activated = function () puzzle_logger.start_recording("sokoban", areanumber, difficulty) end
-	sensor.on_left = function () puzzle_logger.stop_recording()	end
+	sensor.on_left = function () puzzle_logger.stop_recording(); map.message = nil	end
 	sensor.on_activated_repeat =
 		function()
-			if sol.input.is_key_pressed("q") then
+			if sol.input.is_key_pressed("q") and puzzle_logger.over_time_limit() then
 				log.debug("pressed_quit")
 				local index = next_index
-				if puzzle_logger.pressed_quit() then sp.remove_sokoban( index, map ) end
+				if puzzle_logger.pressed_quit() then sp.remove_sokoban( index, map ); map.message = nil end
+			end
+			if puzzle_logger.over_time_limit() then
+				-- show message
+				map.message = "Optional: Press Q to quit puzzle"
 			end
 		end
 	reset_switch.on_activated = 
 		function() 
-			puzzle_logger.start_recording("sokoban", areanumber)
-			puzzle_logger.retry()
+			if puzzle_logger.can_reset_puzzle() then
+				puzzle_logger.retry()
+			end
 			local index = next_index
 			local map = map
 			for sokoban_object in map:get_entities("sokoban_"..index) do
@@ -304,19 +308,30 @@ function sp.create_sokoban_puzzle( difficulty, area, areanumber, area_details, e
 end
 
 function sp.put_in_sokoban_puzzle( area, difficulty, maze, maze_entrance, corridor_width, wall_width )
+	local original_difficulty = difficulty
 	local difficulty = difficulty
 	local problem
 	local tried_once_before = false
 	repeat
 		problem = sp.get_random_sized_sokoban_puzzle( difficulty )
 		if not problem then
-			difficulty = difficulty - 1
+
+			if tried_once_before then difficulty = difficulty + 1
+			else difficulty = difficulty - 1 end
+
 			if difficulty == 0 and not tried_once_before then 
-				difficulty = 2
+				difficulty = original_difficulty + 1
 				tried_once_before = true
 			end
+
 		end
-	until problem
+	until problem or difficulty == 6
+	if difficulty == 6 then return {entrance={x=1, y=1}, exit={x=2, y=1}}, {x1=area.x1, y1=area.y1, x2=area.x1+2*16, y2=area.y1+16} end
+	if difficulty < original_difficulty then puzzle_logger.below_difficulty_setting()
+	elseif difficulty > original_difficulty then puzzle_logger.above_difficulty_setting()
+	end
+
+
 	local puzzle = sp.get_corrected_puzzle_table( problem, maze_entrance.direction )
 	local ww, cw = wall_width, corridor_width
 	local size_x, size_y = #puzzle[1], #puzzle

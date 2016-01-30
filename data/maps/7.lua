@@ -86,6 +86,18 @@ Hehehe...
 
 local cure_price = 50
 
+
+function map:on_started(destination)
+	if #village_logger.log == 0 then
+		village_logger.start_new_log()
+		village_logger.log.start_time = os.clock()
+		if game:get_value("shed_key") then
+			village_logger.log.entered_village_from_save=1
+		end
+	end
+end
+
+
 local function potion_buying(shop_item)
 
   if game:get_first_empty_bottle() == nil then

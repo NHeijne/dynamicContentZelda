@@ -10,11 +10,12 @@ el.new_log = {
 	name=game:get_player_name(),
 
 	-- generation settings
+	static_difficulty=0,
 	map_id=0,
 	branch_length=0,
 	fights=0,
 	puzzles=0,
-	outside=true, 
+	outside=0, 
 	mission_type=0,
 	fights_to_puzzle_rooms_ratio=0,
 
@@ -26,7 +27,8 @@ el.new_log = {
 
 	rewards_available=0,
 	rewards_retrieved=0,
-	heart_retrieved= false,
+	heart_available=0,
+	heart_retrieved=0,
 	perc_rewards_retrieved=0,
 
 	total_time_spent=0,
@@ -48,6 +50,7 @@ el.new_log = {
 
 el.log_order = {
 	"name", -- DONE 
+	"static_difficulty",
 	"map_id", -- DONE
 	"branch_length", -- DONE 
 	"fights", -- DONE 
@@ -61,6 +64,7 @@ el.log_order = {
 	"perc_unique_rooms_visited", -- DONE 
 	"rewards_available", -- DONE
 	"rewards_retrieved", -- DONE
+	"heart_available",
 	"heart_retrieved",
 	"perc_rewards_retrieved", -- DONE
 	"total_time_spent", -- DONE 
@@ -79,13 +83,15 @@ el.log_order = {
 	"fights_to_puzzle_encounter_ratio" -- DONE
 }
 
-local log_helper = {
+local new_log_helper = {
 	time_start_of_level=0,
 	time_start=0,
 	time_end=0,
 	areanumbers_visited={},
 	main_path=true
 }
+
+local log_helper = {}
 
 el.area_details = nil
 
@@ -95,10 +101,12 @@ end
 
 function el.start_recording( area_details, parameters )
 	el.area_details = area_details
+	log_helper = table_util.copy(new_log_helper)
 	el.copy_new_log()
 	el.log.map_id = map:get_id()
+	el.log.static_difficulty = game:get_value("static_difficulty") and 1 or 0
 	el.log.branch_length = parameters.branch_length
-	el.log.outside = parameters.outside
+	el.log.outside = parameters.outside and 1 or 0
 	el.log.mission_type = parameters.mission_type
 	el.log.total_rooms = #area_details + 2
 	for i,details in ipairs(area_details) do
@@ -162,14 +170,14 @@ function el.finished_level( )
 	l.fights_to_puzzle_encounter_ratio=l.total_fights_encountered/l.total_puzzles_encountered
 	l.total_time_spent_other=l.total_time_spent-(l.total_time_spent_fighting+l.total_time_spent_puzzling)
 
-	for i=1,l.rewards_available-1 do
+	for i=1,l.rewards_available do
 		local savegame_var = game:get_value("reward_"..l.map_id.."_"..i)
 		if savegame_var == true then 
 			l.rewards_retrieved = l.rewards_retrieved + 1 
 		end
 	end
 	if game:get_value("heart_"..l.map_id) == true then
-		l.heart_retrieved = true
+		l.heart_retrieved = 1
 		l.rewards_retrieved = l.rewards_retrieved + 1 
 	end
 	if l.rewards_available > 0 then

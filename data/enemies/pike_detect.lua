@@ -70,52 +70,58 @@ function enemy:go(direction4)
   }
 
   -- Check that we can make the move.
-  local index = direction4 + 1
+  --local index = direction4 + 1
   --if not self:test_obstacles(dxy[index].x * 2, dxy[index].y * 2) then
-
+    local dir8 = direction4*2 
+    local opp_dir = (dir8 + 4) % 8
     state = "moving"
-
-    local x, y = self:get_position()
-    local angle = direction4 * math.pi / 2
-    local m = sol.movement.create("straight")
+    self:stop_movement()
+    local m = sol.movement.create("path")
     m:set_speed(80)
-    m:set_angle(angle)
-    m:set_max_distance(64)
-    m:set_smooth(false)
+    m:set_path{dir8, dir8, dir8, dir8, dir8, dir8, dir8, dir8}
+    m.on_finished = function() self:go_back(opp_dir) end
+    m.on_obstacle_reached = function() self:go_back(opp_dir) end
     m:start(self)
   --end
 end
 
-function enemy:on_obstacle_reached()
+-- function enemy:on_obstacle_reached()
 
-  self:go_back()
-end
+--   self:go_back()
+-- end
 
-function enemy:on_movement_finished()
+-- function enemy:on_movement_finished()
 
-  self:go_back()
-end
+--   self:go_back()
+-- end
 
-function enemy:on_collision_enemy(other_enemy, other_sprite, my_sprite)
+-- function enemy:on_collision_enemy(other_enemy, other_sprite, my_sprite)
 
-  if string.find(other_enemy:get_breed(),"pike") and state == "moving" then
-    self:go_back()
-  end
-end
+--   if string.find(other_enemy:get_breed(),"pike") and state == "moving" then
+--     self:go_back()
+--   end
+-- end
 
-function enemy:go_back()
+function enemy:go_back(dir8)
 
   if state == "moving" then
 
     state = "going_back"
-
-    local m = sol.movement.create("target")
+    self:stop_movement()
+    local m = sol.movement.create("path")
     m:set_speed(24)
-    m:set_target(initial_xy.x, initial_xy.y)
-    m:set_smooth(false)
+    local current_xy = {}
+    current_xy.x, current_xy.y = self:get_position()
+    local distance = math.abs(current_xy.x - initial_xy.x) + math.abs(current_xy.y - initial_xy.y)
+    local path = {}
+    for i=1,math.ceil(distance/8) do
+      table.insert(path, dir8)
+    end
+    m:set_path(path)
     m.on_finished = function() self:unpause() end
+    m.on_obstacle_reached = function() self:unpause() end
     m:start(self)
-    --sol.audio.play_sound("sword_tapping")
+    sol.audio.play_sound("sword_tapping")
   end
 end
 

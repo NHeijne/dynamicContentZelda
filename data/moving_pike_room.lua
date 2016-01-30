@@ -82,8 +82,9 @@ function pr.create_pike_room( areanumber, area_details, area, exit_areas, speed,
 			local floor_w, floor_h = old_floor:get_size()
 			old_floor:remove()
 			floor = map:create_dynamic_tile{name="room_floor_"..areanumber, layer=0, 
-											x=area.x1+8, y=area.y1+8, width=area.x2-area.x1-16, height=area.y2-area.y1-16, 
+											x=area.x1, y=area.y1, width=area.x2-area.x1-16, height=area.y2-area.y1-16, 
 											pattern=311, enabled_at_start=true}
+			floor.initial_pos={x=area.x1, y=area.y1}
 			floor:bring_to_back()
 			local walls, corners = area_util.create_walls( area, 16 )
 			for _, wall_area in pairs(walls) do
@@ -98,6 +99,7 @@ function pr.create_pike_room( areanumber, area_details, area, exit_areas, speed,
 			end
 		else
 			floor = map:get_entity("room_floor_"..areanumber)
+			floor.initial_pos={x=area.x1-8, y=area.y1-8}
 		end
 
 		local room_sensor 
@@ -162,18 +164,19 @@ function pr.create_pike_room( areanumber, area_details, area, exit_areas, speed,
 			else direction = 0 end
 		else direction =  math.random(0, 3)*2
 		end
-		local x, y, layer = floor:get_position()
+		--local x, y, layer = floor:get_position()
+		local pos = floor.initial_pos
 		local stream = map:create_stream{name="stream_area_"..areanumber, 
 					  layer=0, x=area.x1, y=area.y1, 
 					  direction=direction, speed=speed}
 
 		floor:set_optimization_distance(600)
-		floor.position, floor.direction, floor.speed, floor.times_till_change, floor.stream = {x=x, y=y}, direction, speed, 4, stream
+		floor.position, floor.direction, floor.speed, floor.times_till_change, floor.stream = {x=pos.x, y=pos.y}, direction, speed, 4, stream
 		local x_offset, y_offset = 0, 0
-		if 		floor.direction == 0 then x_offset = -8; y_offset =  8 
-		elseif 	floor.direction == 2 then x_offset = -8; y_offset =  8
-		elseif 	floor.direction == 4 then x_offset =  8; y_offset = -8
-		elseif 	floor.direction == 6 then x_offset =  8; y_offset = -8 end
+		if 		floor.direction == 0 then x_offset = 0; y_offset =  0 
+		elseif 	floor.direction == 2 then x_offset = 0; y_offset =  16
+		elseif 	floor.direction == 4 then x_offset =  16; y_offset = 0
+		elseif 	floor.direction == 6 then x_offset =  0; y_offset = 0 end
 		floor:set_position(floor.position.x+x_offset, floor.position.y+y_offset, 0)
 		pr.move_recurrent( floor, movement )
 
@@ -200,8 +203,8 @@ function pr.create_pike_room( areanumber, area_details, area, exit_areas, speed,
 			end
 		local furthest_sensor
 		local distance = 0
-		for i, exit in ipairs(exit_areas) do
-			local area_to_use = area_util.expand_line( exit, 16 )
+		for i, exit in ipairs(exits) do
+			local area_to_use = maze_gen.nodes_to_area(exit[1], exit[#exit])
 			local exit_sensor = placement.place_sensor( area_to_use, "pikeroom_"..areanumber.."_exit_"..i, 0 )
 			if i > 1 then 
 				local dist = area_util.distance(exit_areas[1], exit_areas[i])
@@ -249,12 +252,13 @@ function pr.move_recurrent( obj, movement_type )
 			else
 				obj.times_till_change = obj.times_till_change -1
 			end
+
 			local x_offset, y_offset = 0, 0
-			if 		obj.direction == 0 then x_offset = -8; y_offset =  8 
-			elseif 	obj.direction == 2 then x_offset = -8; y_offset =  8
-			elseif 	obj.direction == 4 then x_offset =  8; y_offset = -8
-			elseif 	obj.direction == 6 then x_offset =  8; y_offset = -8 end
-			obj:set_position(obj.position.x+x_offset, obj.position.y+y_offset, 0)
+			if 		obj.direction == 0 then x_offset = 0; y_offset =  0 
+			elseif 	obj.direction == 2 then x_offset = 0; y_offset =  16
+			elseif 	obj.direction == 4 then x_offset =  16; y_offset = 0
+			elseif 	obj.direction == 6 then x_offset =  0; y_offset = 0 end
+			obj:set_position(obj.initial_pos.x+x_offset, obj.initial_pos.y+y_offset, 0)
 			pr.move_recurrent( obj, movement_type  )
 		end
 	m:start(obj)

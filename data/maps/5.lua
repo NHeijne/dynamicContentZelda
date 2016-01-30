@@ -239,6 +239,16 @@ keep the bottle.
 ]]
 -----------------------
 
+function map:on_started(destination)
+	if #village_logger.log == 0 then
+		village_logger.start_new_log()
+		village_logger.log.start_time = os.clock()
+		if game:get_value("shed_key") then
+			village_logger.log.entered_village_from_save=1
+		end
+	end
+end
+
 function lefttwin:on_interaction()
 	village_logger.log.NPC.lefttwin.talked = true
 	village_logger.log.NPC.lefttwin.options_explored[1] = true
@@ -376,6 +386,7 @@ something...
 ]])
 	else
 		quest_block_b:set_enabled(false)
+		village_logger.start_new_log()
 	end
 end
 
@@ -399,7 +410,6 @@ something...
 			village_logger.log.rupees = village_logger.log.rupees+game:get_money()
 			village_logger.log.village_exit_time = os.clock()
 			village_logger.log.village_logged = true
-			village_logger.copy_log()
 			village_logger.to_file( game, "before" )
 		end
 		quest_block_a:set_enabled(false)

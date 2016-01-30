@@ -78,16 +78,17 @@ function submenu:set_caption(text_key)
     if text == nil then 
       self.caption_text_1:set_text(nil)
       self.caption_text_2:set_text(nil)
-    end
-    local line1, line2 = text:match("([^$]+)%$(.*)")
-    if line1 == nil then
-      -- Only one line.
-      self.caption_text_1:set_text(text)
-      self.caption_text_2:set_text(nil)
     else
-      -- Two lines.
-      self.caption_text_1:set_text(line1)
-      self.caption_text_2:set_text(line2)
+      local line1, line2 = text:match("([^$]+)%$(.*)")
+      if line1 == nil then
+        -- Only one line.
+        self.caption_text_1:set_text(text)
+        self.caption_text_2:set_text(nil)
+      else
+        -- Two lines.
+        self.caption_text_1:set_text(line1)
+        self.caption_text_2:set_text(line2)
+      end
     end
   end
 end

@@ -163,10 +163,12 @@ function mission_grammar.create_standard_graph_for_testing( params )
 	edges[1] = {[starting_number]="undir_fw"}
 	edges[starting_number][1]="undir_bk"
 
-	eq_nr = #nodes+1
-	nodes[eq_nr] = "EQ:"..next_eq
-	edges[math.ceil(main_length/2)+2][eq_nr]="undir_fw"
-	edges[eq_nr]= { [math.ceil(main_length/2)+2]="undir_bk" }
+	if next_eq then
+		eq_nr = #nodes+1
+		nodes[eq_nr] = "EQ:"..next_eq
+		edges[math.ceil(main_length/2)+2][eq_nr]="undir_fw"
+		edges[eq_nr]= { [math.ceil(main_length/2)+2]="undir_bk" }
+	end
 
 
 	-- starting on the optional path

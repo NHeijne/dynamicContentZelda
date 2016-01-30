@@ -84,7 +84,13 @@ function maze_gen.close_path( maze, path )
 	end
 end
 
-function maze_gen.nodes_to_area( topleft_pos, bottomright_pos, without_surrounding_walls )
+function maze_gen.nodes_to_area( pos1, pos2, without_surrounding_walls )
+	local topleft_pos, bottomright_pos
+	if pos1.x <= pos2.x and pos1.y <= pos2.y then
+		topleft_pos, bottomright_pos = pos1, pos2
+	else
+		topleft_pos, bottomright_pos = pos2, pos1
+	end
 	local cw = room.corridor_width
 	local ww = room.wall_width
 	local eww = {x=0, y=0}
@@ -1223,20 +1229,26 @@ function maze_gen.generate_maze_puzzle( area, areanumber, area_details, exit_are
 		for _,v in ipairs(area_list) do
 			placement.place_tile(v.area, lookup.tiles[v.pattern][area_details.tileset_id], "constructed_maze_"..areanumber.."_1", 0)
 		end
-		local furthest_sensor
+		local furthest_sensor_area
 		local distance = 0
-		for i, exit in ipairs(exit_areas) do
-			local area_to_use = area_util.expand_line( exit, 16 )
+		for i, exit in ipairs(exits) do
+			local area_to_use = maze_gen.nodes_to_area(exit[1], exit[#exit])
 			-- place walls that block enemies
 			local exit_sensor = placement.place_sensor( area_to_use, "maze_"..areanumber.."_exit_"..i, 0 )
+			local x, y = (area_to_use.x2+area_to_use.x1)/2, (area_to_use.y2+area_to_use.y1)/2
+			exit_sensor.on_activated = function() 
+					local x, y = x, y
+					hero:save_solid_ground(x, y, 0)
+				end
 			if i > 1 then 
 				local dist = area_util.distance(exit_areas[1], exit_areas[i])
 				if dist > distance then 
-					furthest_sensor = exit_sensor
+					furthest_sensor_area = area_to_use
 					distance = dist
 				end
 			end
 		end
+		local furthest_sensor = placement.place_sensor( furthest_sensor_area, "maze_"..areanumber.."_puzzle_complete", 0 )
 		furthest_sensor.on_activated = 
 			function () 
 				puzzle_logger.complete_puzzle() 
@@ -1250,9 +1262,7 @@ function maze_gen.generate_maze_puzzle( area, areanumber, area_details, exit_are
 		end
 		sensor.on_activated = function () 
 			puzzle_logger.start_recording("maze", areanumber, parameters.difficulty) 
-			local hero = map:get_hero()
-			local hero_x, hero_y, layer = hero:get_position()
-			--hero:save_solid_ground(hero_x, hero_y, layer)
+			
 			if not map:has_entity("maze_enemy_"..areanumber.."_1") then
 				maze_gen.reinstate_enemies(bubble_positions, pike_positions, fireball_statue_positions, areanumber)
 				maze_gen.reinstate_maze(area_list, area_details, areanumber, pit_areas)
@@ -1260,7 +1270,7 @@ function maze_gen.generate_maze_puzzle( area, areanumber, area_details, exit_are
 		end
 		sensor.on_left = function () 
 			puzzle_logger.stop_recording()	
-			--map:get_hero():reset_solid_ground()
+			map:get_hero():reset_solid_ground()
 			for entity in map:get_entities("maze_enemy_"..areanumber.."_") do
 				sol.timer.stop_all(entity)
 				entity:remove()
@@ -1308,21 +1318,21 @@ end
 function maze_gen.place_bubbles(maze, exits, map, branches, amount, areanumber)
 	local amount_left = amount
 	local bubble_positions = {}
-	for i=2, #exits, 1 do
-		for _,exit_position in ipairs(exits[i]) do
-			local connected_nodes = maze_gen.get_connected_nodes( exit_position, maze )
-			for _,node in ipairs(connected_nodes) do
-				if not maze_gen.list_contains_position(exits[i], node) then
-					local area = maze_gen.pos_to_area(node)
-					table.insert(bubble_positions, {x=area.x1+8,y=area.y1+8})
-					map:create_enemy{name="maze_enemy_"..areanumber.."_1",layer=0, x=area.x1+8, y=area.y1+8, direction=0, breed="bubble"}
-					amount_left = amount_left -1
-					if amount_left == 0 then break end
-				end
-			end
-			if amount_left == 0 then break end
-		end
-	end
+	-- for i=2, #exits, 1 do
+	-- 	for _,exit_position in ipairs(exits[i]) do
+	-- 		local connected_nodes = maze_gen.get_connected_nodes( exit_position, maze )
+	-- 		for _,node in ipairs(connected_nodes) do
+	-- 			if not maze_gen.list_contains_position(exits[i], node) then
+	-- 				local area = maze_gen.pos_to_area(node)
+	-- 				table.insert(bubble_positions, {x=area.x1+8,y=area.y1+8})
+	-- 				map:create_enemy{name="maze_enemy_"..areanumber.."_1",layer=0, x=area.x1+8, y=area.y1+8, direction=0, breed="bubble"}
+	-- 				amount_left = amount_left -1
+	-- 				if amount_left == 0 then break end
+	-- 			end
+	-- 		end
+	-- 		if amount_left == 0 then break end
+	-- 	end
+	-- end
 	if amount_left >= 1 then
 		for i=amount_left, 1, -1 do
 			local random_branch = branches[math.random(#branches)]

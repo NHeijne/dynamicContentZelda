@@ -23,7 +23,7 @@ pg.puzzles_instantiated = {["maze"]=0, ["sokoban"]=0, ["pike_room"]=0}
 pg.time_requirements = {["maze"]=30, ["sokoban"]=90, ["pike_room"]=20}
 pg.areanumbers_filled = {}
 
-function pg.get_static_difficulty(map_id, puzzle_type)
+function pg.get_static_difficulty(puzzle_type)
 	local difficulty = pg.puzzle_difficulty
 
 	if puzzle_type == "maze" then difficulty = difficulty-1
@@ -35,7 +35,7 @@ function pg.get_static_difficulty(map_id, puzzle_type)
 end
 
 function pg.create_puzzle( selection_type, area, areanumber, exit_areas, exclusion, area_details, params )
-	local map_id = tonumber(map:get_id())
+	local map_id = map:get_id()
 	pg.areanumbers_filled[map_id] = pg.areanumbers_filled[map_id] or {}
 	if not pg.areanumbers_filled[map_id][areanumber] then pg.areanumbers_filled[map_id][areanumber] = true 
 	else return end
@@ -58,8 +58,8 @@ function pg.create_puzzle( selection_type, area, areanumber, exit_areas, exclusi
 
 	-- determine difficulty to be used
 	local difficulty=0
-	if pg.static_difficulty then
-		difficulty = params.difficulty or pg.get_static_difficulty(map_id, puzzle_type)
+	if pg.static_difficulty == true then
+		difficulty = pg.get_static_difficulty(puzzle_type)
 	else
 		difficulty = pg[puzzle_type.."_min_difficulty"]
 		--if game:get_life() > 16 then difficulty = pg[puzzle_type.."_max_difficulty"] end
@@ -79,14 +79,17 @@ function pg.interpret_log( completed_puzzle_log )
 	if cl.puzzle_type == "pike_room" then time_requirement = pg.time_requirements[cl.puzzle_type] * ((cl.difficulty+1)/2) end
 
 	if cl.deaths > 0 or cl.quit or cl.got_hurt > 6 or cl.total_time > time_requirement*1.5  then
-		if cl.deaths > 0 or cl.quit then 
+		if cl.difficulty_difference <= 0 then
+			if cl.deaths > 0 or cl.quit or cl.got_hurt > 8 then 
+				pg.decrease_min_max_difficulty( cl.puzzle_type )
+			end
 			pg.decrease_min_max_difficulty( cl.puzzle_type )
 		end
-		pg.decrease_min_max_difficulty( cl.puzzle_type )
-	else
-		if cl.total_time <= pg.time_requirements[cl.puzzle_type] then 
+	elseif cl.difficulty_difference >= 0 then
+		if cl.total_time <= pg.time_requirements[cl.puzzle_type] and cl.got_hurt <= 4 then 
 		  	pg.increase_min_max_difficulty( cl.puzzle_type )
-		elseif cl.total_time <= pg.time_requirements[cl.puzzle_type]*1.5 and cl.got_hurt <= 4 then
+		end
+		if cl.total_time <= pg.time_requirements[cl.puzzle_type]*1.5 and cl.got_hurt <= 2 then
 			pg.increase_min_max_difficulty( cl.puzzle_type )
 		end
 	end

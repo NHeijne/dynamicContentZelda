@@ -27,6 +27,8 @@ local dark_surfaces = {
 }
 local black = {0, 0, 0}
 
+local keep_it_black = false
+
 function light_manager.enable_light_features(map)
   map.draw_these_effects = map.draw_these_effects or {}
   map.darkness = false
@@ -38,9 +40,22 @@ function light_manager.enable_light_features(map)
     map.lightcounter = 0.25
   end
 
+  map:get_game().on_draw = function(game, dst_surface) 
+  		local hero_state = game:get_hero():get_state()
+  		if hero_state == "falling" and map.darkness then
+  			keep_it_black = true
+  		elseif keep_it_black and hero_state == "free" then
+  			keep_it_black = false
+  		end
+  		if (map.darkness and game:is_paused()) or keep_it_black then
+  			dst_surface:fill_color(black)
+  		end
+	end
+
+
   map.draw_these_effects.light = function(map, dst_surface)
     if map.last_clock == -1 then map.last_clock = os.clock() end
-    map.lightcounter = map.lightcounter-(os.clock()-map.last_clock)
+    if not map:get_game():is_paused() and not map:get_hero().moving_to_solid_ground then map.lightcounter = map.lightcounter-(os.clock()-map.last_clock) end
     map.last_clock = os.clock()
 
     local screen_width, screen_height = dst_surface:get_size()
