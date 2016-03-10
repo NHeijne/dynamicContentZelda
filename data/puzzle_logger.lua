@@ -25,6 +25,7 @@ pl.log_template = {
 
 	maze_total_time=0,
 	maze_got_hurt=0,
+	maze_falls=0,
 	maze_deaths=0,
 	maze_puzzles=0,
 	maze_completed=0,
@@ -69,6 +70,7 @@ function pl.update_total_log( current_puzzle_log )
 		tl[cl.puzzle_type.."_deaths"] = tl[cl.puzzle_type.."_deaths"] + cl.deaths
 		tl.pike_room_got_hurt = tl.pike_room_got_hurt + cl.got_hurt
 	elseif puzzle_type == "maze" then
+		tl.maze_falls = tl.maze_falls + cl.falls
 		tl[cl.puzzle_type.."_deaths"] = tl[cl.puzzle_type.."_deaths"] + cl.deaths
 		tl.maze_got_hurt = tl.maze_got_hurt + cl.got_hurt
 	end
@@ -92,7 +94,9 @@ function pl.start_recording( puzzle_type, areanumber, difficulty )
 			quit=false,
 			completed=false,
 			died=false,
+			fell=false,
 			deaths=0,
+			falls=0,
 			vfm_time=0,
 			total_vfm_time=0,
 			difficulty_difference=0
@@ -107,6 +111,9 @@ function pl.start_recording( puzzle_type, areanumber, difficulty )
 	end
 	
 	function hero:on_state_changed(state)
+		if state ~= "free" then
+			cl.fell = false
+		end
 		if state == "hurt" then 
 			cl.got_hurt = cl.got_hurt +1
 			if game:get_life() <= 2 and game:get_life() > 0 and not cl.died then
@@ -114,6 +121,10 @@ function pl.start_recording( puzzle_type, areanumber, difficulty )
 				cl.died = true
 				cl.deaths = cl.deaths +1
 			end
+		end
+		if state == "falling" then
+			cl.fell = true
+			cl.falls = cl.falls + 1
 		end
 		return false
 	end
@@ -183,10 +194,12 @@ end
 
 function pl.stop_recording()
 	local cl = pl.current_puzzle_log[pl.current_areanumber]
-	cl.time_end = os.clock()
-	cl.total_time = cl.total_time + cl.time_end - cl.time_start
-	cl.total_vfm_time = cl.total_vfm_time + cl.vfm_time
-	cl.started_recording = false
+	if cl.started_recording then
+		cl.time_end = os.clock()
+		cl.total_time = cl.total_time + cl.time_end - cl.time_start
+		cl.total_vfm_time = cl.total_vfm_time + cl.vfm_time
+		cl.started_recording = false
+	end
 	function hero:on_state_changed(state)
 		return false
 	end
@@ -195,23 +208,26 @@ end
 function pl.current_log_to_data( current_puzzle_log )
 	local cl = current_puzzle_log
 	local data ={}
-	table.insert(data, game:get_player_name()) 		-- name
+	-- name, map_id, puzzle_type, difficulty, time_spent, retries, got_hurt, falls, deaths, quit, completed, average_vfm_time
+	table.insert(data, game:get_player_name()) 		-- name, 
 	table.insert(data, map:get_id()) 				-- map_id
 	table.insert(data, cl.puzzle_type) 				-- puzzle_type
 	table.insert(data, cl.difficulty) 				-- difficulty 1-5
-	table.insert(data, cl.total_time) 				-- time spent
+	table.insert(data, cl.total_time) 				-- time_spent
 	table.insert(data, cl.retries) 					-- retries
 	table.insert(data, cl.got_hurt) 				-- got_hurt
+	table.insert(data, cl.falls) 				-- got_hurt
 	table.insert(data, cl.deaths) 					-- deaths
 	table.insert(data, (cl.quit and 1 or 0)) 					-- quit
 	table.insert(data, (cl.completed and 1 or 0)) 				-- completed
-	table.insert(data, cl.total_vfm_time/(cl.retries+1)) -- average vfm_time
+	table.insert(data, cl.total_vfm_time/(cl.retries+1)) -- average_vfm_time
 	pl.writeTableToFile (data, "individual_puzzles.csv") 
 end
 
 function pl.log_to_data( )
 	local l = pl.log
 	local data ={}
+	-- name, map_id, total_time, sokoban_total_time, sokoban_retries, sokoban_quits, sokoban_puzzles, sokoban_vfm, pike_room_total_time, pike_room_got_hurt, pike_room_deaths, pike_room_puzzles, maze_total_time, maze_got_hurt, maze_falls, maze_deaths, maze_puzzles
 	table.insert(data, game:get_player_name()) 	-- name
  	table.insert(data, map:get_id())
 	table.insert(data, l.total_time) 			-- total_time
@@ -226,6 +242,7 @@ function pl.log_to_data( )
 	table.insert(data, l.pike_room_puzzles) 	-- pike_room_puzzles
 	table.insert(data, l.maze_total_time) 		-- maze_total_time
 	table.insert(data, l.maze_got_hurt) 		-- maze_got_hurt
+	table.insert(data, l.maze_falls)
 	table.insert(data, l.maze_deaths) 			-- maze_deaths
 	table.insert(data, l.maze_puzzles) 			-- maze_puzzles
 	pl.writeTableToFile (data, "all_puzzles.csv") 

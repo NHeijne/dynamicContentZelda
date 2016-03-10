@@ -18,7 +18,10 @@ local white = {255, 255, 255}
 function item:on_using()
 	local game = self:get_game()
 	local map = self:get_map()
+	local hero = map:get_hero()
+	hero:unfreeze()
 	if can_use then
+		map.draw_these_effects = map.draw_these_effects or {}
 		map.draw_these_effects.magic_aoe = map.draw_these_effects.magic_aoe or function(map, dst_surface)
 				if map.magic_aoe_surface then
 					local hero_x, hero_y = hero:get_position()
@@ -30,13 +33,19 @@ function item:on_using()
 				end
 			end
 
+		map.on_draw =
+		function (map, dst_surface)
+			for _,func in pairs(map.draw_these_effects) do
+				func(map, dst_surface)
+			end
+		end
 
 		local magic_needed = 24
 		if game:get_magic() >= magic_needed then
 			local f = sol.file.open("userExperience.txt","a+"); f:write("mirror-used\n"); f:flush(); f:close()
 			sol.audio.play_sound("magic_bar")
 			game:remove_magic(magic_needed)
-			local hero_x, hero_y = hero:get_position()
+			local hero_x, hero_y = map:get_hero():get_position()
 			local c_entity = map:create_npc{ direction=0, x=hero_x, y=hero_y-24, layer=2, subtype=0, sprite="entities/items" }
 			c_entity:get_sprite():set_animation("magic_aoe")
 			-- light up the screen, take example from light manager
@@ -73,7 +82,7 @@ function item:on_using()
 			sol.audio.play_sound("wrong")	
 		end
 	end
-	hero:unfreeze()
+
 end
 
 

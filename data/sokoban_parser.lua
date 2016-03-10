@@ -301,9 +301,20 @@ function sp.create_sokoban_puzzle( difficulty, area, areanumber, area_details, e
 		end
 		local convergence_pos = exits[1][#exits[1]]
 		maze_gen.create_initial_paths( maze, exits, convergence_pos )
+		if not area_details.outside then
+			sp.make_room_at_exits(maze, exits)
+		end
 		local prop_area_list = maze_gen.maze_to_square_areas( maze, false )
 		local open_area_list = maze_gen.maze_to_square_areas( maze, true )
 		sp.place_props( prop_area_list, area_details.outside, puzzle_area )
+	end
+end
+
+function sp.make_room_at_exits(maze, exits)
+	for i=2, #exits do
+		local topleft = {x=exits[i][1].x-2, y=exits[i][1].y-2}
+		local bottomright = {x=exits[i][#exits[i]].x+2, y=exits[i][#exits[i]].y+2 }
+		maze_gen.open_up_area( maze, topleft, bottomright )
 	end
 end
 

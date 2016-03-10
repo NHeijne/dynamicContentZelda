@@ -6,6 +6,10 @@ local num_util 			= require("num_util")
 el.log = {}
 
 el.new_log = {
+	-- name, static_difficulty, map_id, branch_length, fights, puzzles, outside, mission_type, fights_to_puzzle_rooms_ratio, total_rooms, rooms_visited, unique_rooms_visited, perc_unique_rooms_visited
+	-- rewards_available, rewards_retrieved, heart_available, heart_retrieved, perc_rewards_retrieved, total_time_spent, total_time_spent_optional, total_time_spent_main, perc_total_time_spent_optional, perc_total_time_spent_main
+	-- total_fights_encountered, total_fights_finished, total_time_spent_fighting, total_puzzles_encountered, total_puzzles_finished, total_time_spent_puzzling, fights_to_puzzle_time_ratio, total_time_spent_other, fights_to_puzzle_encounter_ratio
+
 	-- personal settings
 	name=game:get_player_name(),
 

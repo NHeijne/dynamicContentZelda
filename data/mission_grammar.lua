@@ -149,7 +149,7 @@ function mission_grammar.create_standard_graph_for_testing( params )
 	local add_fight = true
 	for i=1,main_length do
 		if add_fight then table.insert(main_sequence, "F"); add_fight = false
-		else table.insert(main_sequence, "P") end
+		else table.insert(main_sequence, "P"); add_fight = true end
 		if i == math.ceil(main_length/2) and next_eq then 
 			table.insert(main_sequence, "C");table.insert(main_sequence, "B:"..next_bar)
 		end
@@ -305,6 +305,7 @@ function mission_grammar.produce_graph( params)
 	local params_clone = table_util.copy(params)
 	mission_grammar.initialize_graph( params_clone.length )
 	mission_grammar.add_branches( params )
+	mission_grammar.add_old_barriers( params_clone )
 	mission_grammar.assign_fights_and_puzzles( params )
 	return params_clone
 end

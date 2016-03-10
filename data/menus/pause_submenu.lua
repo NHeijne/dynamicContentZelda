@@ -174,6 +174,7 @@ function submenu:on_command_pressed(command)
         -- After "Do you want to save?".
         self.save_dialog_state = 2
         if self.save_dialog_choice == 0 then
+          if village_logger then village_logger.pickle_log() end
           self.game:save()
           sol.audio.play_sound("piece_of_heart")
         else

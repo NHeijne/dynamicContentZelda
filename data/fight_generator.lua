@@ -50,6 +50,8 @@ local roomDifficulties = {{makeDifficultyPrediction(emptyRoom)}}
 
 local enemyTried = 1 -- To initialize the training data, we need to try every enemy.
 
+local last_areanumber_triggered = -1
+
 function fight_generator.add_effects_to_sensors (map, areas, area_details)
 	sensorSide = "areasensor_inside_"
 	if area_details.outside then sensorSide = "areasensor_outside_" end
@@ -63,7 +65,8 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 		
 			sensor.on_activated = 
 				function()
-					fight_generator.fighting = true
+					if last_areanumber_triggered == split_table[3] then return false end
+					last_areanumber_triggered = split_table[3]					
 					explore.fight_encountered( )
 					starttime = os.clock()
 					local game = map:get_game()
@@ -207,9 +210,11 @@ function fight_generator.add_effects_to_sensors (map, areas, area_details)
 					return false
 					
 				end
-				
-			sensor.on_left = 
+
+			local outside_sensor = map:get_entity("areasensor_outside_"..split_table[3].."_type_"..split_table[5])
+			outside_sensor.on_left = 
 				function()
+					last_areanumber_triggered = -1
 					if map:has_entities("generatedEnemy") then
 						difficultyOfFights = difficultyOfFights + 1
 						if difficultyOfFights > highestDifficulty then difficultyOfFights = lowestDifficulty end

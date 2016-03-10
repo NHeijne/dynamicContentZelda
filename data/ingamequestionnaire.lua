@@ -69,6 +69,7 @@ function q.init(map)
   end
 
   function map:on_finished()
+    -- name, map_nr, exploration, puzzles, puzzlepreference, fights, overalexperience
     q.questionnaire_done = false
     local f = sol.file.open("levelquestionnaire.csv","a+")
     f:write(tostring(game:get_player_name())..",")

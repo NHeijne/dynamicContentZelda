@@ -21,6 +21,8 @@ local content = {}
 
 function content.start_test(given_map, params, end_destination)
 	-- Initialize the pseudo random number generator
+	log.verbose = false
+	--log.debug_log_reset()
 	local seed = 
 			tonumber(tostring(os.time()):reverse():sub(1,6)) -- good random seeds
 	log.debug("random seed = " .. seed)
@@ -46,9 +48,6 @@ function content.start_test(given_map, params, end_destination)
 	map = given_map
 	game = map:get_game()
 	hero = map:get_hero()
-
-	log.verbose = false
-	log.debug_log_reset()
 	hero:freeze()
 	--if not game:get_value("sword__1") then hero:start_treasure("sword", 1, "sword__1") end
 		
@@ -677,7 +676,17 @@ function content.create_simple_barriers( area_details, opening, direction, arean
 				-- create destructible and doors (weak_blocks)
 				-- determine direction and the area
 				-- place destructibles in front of the transition or inside the transition
-				placement.tile_destructible( object_details, opening , barrier_type, {} )
+				if not area_details.outside and area_details[areanumber].area_type == "P" then
+					local adjusted_area
+					if direction == 1 or direction == 3 then 
+						adjusted_area = area_util.resize_area(opening, {0, 8, 0, -8})
+					else
+						adjusted_area = area_util.resize_area(opening, {8, 0, -8, 0})
+					end
+					placement.tile_destructible( object_details, adjusted_area , barrier_type, {} )
+				else
+					placement.tile_destructible( object_details, opening , barrier_type, {} )
+				end
 			end
 		end
 

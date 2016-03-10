@@ -4,7 +4,7 @@ log.verbose = true
 
 function log.debug_log_reset()
 	local f = sol.file.open("debuglog","w")
-	f:write("")
+	f:write("New Log started")
 	f:flush()
 	f:close()
 end

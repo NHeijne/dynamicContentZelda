@@ -76,20 +76,21 @@ end
 function pg.interpret_log( completed_puzzle_log )
 	local cl = completed_puzzle_log
 	local time_requirement = pg.time_requirements[cl.puzzle_type]
+	local hurt = cl.got_hurt + cl.falls
 	if cl.puzzle_type == "pike_room" then time_requirement = pg.time_requirements[cl.puzzle_type] * ((cl.difficulty+1)/2) end
 
-	if cl.deaths > 0 or cl.quit or cl.got_hurt > 6 or cl.total_time > time_requirement*1.5  then
+	if cl.deaths > 0 or cl.quit or hurt > 6 or cl.total_time > time_requirement*1.5  then
 		if cl.difficulty_difference <= 0 then
-			if cl.deaths > 0 or cl.quit or cl.got_hurt > 8 then 
+			if cl.deaths > 0 or cl.quit or hurt > 8 then 
 				pg.decrease_min_max_difficulty( cl.puzzle_type )
 			end
 			pg.decrease_min_max_difficulty( cl.puzzle_type )
 		end
 	elseif cl.difficulty_difference >= 0 then
-		if cl.total_time <= pg.time_requirements[cl.puzzle_type] and cl.got_hurt <= 4 then 
+		if cl.total_time <= time_requirement and hurt <= 4 then 
 		  	pg.increase_min_max_difficulty( cl.puzzle_type )
 		end
-		if cl.total_time <= pg.time_requirements[cl.puzzle_type]*1.5 and cl.got_hurt <= 2 then
+		if cl.total_time <= time_requirement*1.5 and hurt <= 2 then
 			pg.increase_min_max_difficulty( cl.puzzle_type )
 		end
 	end

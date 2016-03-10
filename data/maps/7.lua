@@ -88,8 +88,8 @@ local cure_price = 50
 
 
 function map:on_started(destination)
-	if #village_logger.log == 0 then
-		village_logger.start_new_log()
+	if next(village_logger.log) == nil then
+		village_logger.unpickle_log()
 		village_logger.log.start_time = os.clock()
 		if game:get_value("shed_key") then
 			village_logger.log.entered_village_from_save=1

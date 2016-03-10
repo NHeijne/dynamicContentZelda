@@ -158,10 +158,11 @@ local function step_away_from_door(mom)
 end
 
 function map:on_started(destination)
-	if #village_logger.log == 0 then
+	if next(village_logger.log) == nil then
 		village_logger.start_new_log()
 		village_logger.log.start_time = os.clock()
 		if game:get_value("shed_key") then
+			village_logger.unpickle_log()
 			village_logger.log.entered_village_from_save=1
 		end
 	end
@@ -272,6 +273,9 @@ Arjen Swellengrebel$0$0
 Thanks For Playing!
 Don't forget to send us
 the log files! :)$0
+And visit the website
+again to finish the 
+last part!$0
 ]]
 
 local credits2 = [[
@@ -281,6 +285,9 @@ C:\Users\<username>\
 Please mail every file
 in that folder to
 dynamicZelda@gmail.com$0
+And visit the website
+again to finish the 
+last part!$0
 Repeat the info?
 Yes
 No

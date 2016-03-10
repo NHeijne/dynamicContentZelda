@@ -24,6 +24,7 @@ function pr.create_pike_room( areanumber, area_details, area, exit_areas, speed,
 		if area_details.outside then
 			breed = "cactus"
 		end
+		local original_area = table_util.copy(area)
 		-- set the room to appropriate width 16 as wall width
 		-- for outside : either {x=560(35*16), y=224(14*16)} or {x=224(14*16), y=608(38*16)}
 		-- for inside : either {x=576(36*16), y=256(16*16)} or {x=256(16*16), y=576(36*16)}
@@ -99,7 +100,7 @@ function pr.create_pike_room( areanumber, area_details, area, exit_areas, speed,
 			end
 		else
 			floor = map:get_entity("room_floor_"..areanumber)
-			floor.initial_pos={x=area.x1-8, y=area.y1-8}
+			floor.initial_pos={x=original_area.x1-8, y=original_area.y1-8}
 		end
 
 		local room_sensor 

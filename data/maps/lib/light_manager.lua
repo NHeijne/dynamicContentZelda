@@ -42,7 +42,7 @@ function light_manager.enable_light_features(map)
 
   map:get_game().on_draw = function(game, dst_surface) 
   		local hero_state = game:get_hero():get_state()
-  		if hero_state == "falling" and map.darkness then
+  		if hero_state == "falling" and map.darkness and keep_it_black == false then
   			keep_it_black = true
   		elseif keep_it_black and hero_state == "free" then
   			keep_it_black = false
