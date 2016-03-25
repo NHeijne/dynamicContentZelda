@@ -61,10 +61,7 @@ function item:on_obtaining(variant, savegame_variable)
 	local first_empty_bottle = self:get_game():get_first_empty_bottle()
 	if first_empty_bottle == nil then
 	  -- No empty bottle.
-	  self:get_game():start_dialog("found_fairy.no_empty_bottle", function()
-	    self:get_game():add_life(7 * 4)
-	  end)
-	  sol.audio.play_sound("wrong")
+	  self:get_game():add_life(7 * 4)
 	else
 	  -- Okay, empty bottle.
 	  first_empty_bottle:set_variant(6)

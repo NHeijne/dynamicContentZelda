@@ -170,7 +170,7 @@ function game_over_menu:on_command_pressed(command)
 
     state = "finished"
     sol.audio.play_sound("danger")
-
+    local map = game:get_map()
     if cursor_position == 0 then
       -- Save and continue.
       game:save()
@@ -178,6 +178,10 @@ function game_over_menu:on_command_pressed(command)
       game:set_hud_enabled(true)
       game:set_life(game:get_max_life())
       hero:teleport(map:get_id(), "_default", "immediate")
+      if map:has_entities("door_normal_area_") then
+        map:open_doors("door_normal_area_")
+      end
+      for enemy in map:get_entities("generatedEnemy") do enemy:remove() end
       game:stop_game_over()
       sol.audio.play_music(music)
       sol.menu.stop(self)
@@ -191,6 +195,10 @@ function game_over_menu:on_command_pressed(command)
       game:set_hud_enabled(true)
       game:set_life(game:get_max_life())
       hero:teleport(map:get_id(), "_default", "immediate")
+      if map:has_entities("door_normal_area_") then
+        map:open_doors("door_normal_area_")
+      end
+      for enemy in map:get_entities("generatedEnemy") do enemy:remove() end
       game:stop_game_over()
       sol.audio.play_music(music)
       sol.menu.stop(self)

@@ -158,6 +158,7 @@ local function step_away_from_door(mom)
 end
 
 function map:on_started(destination)
+	game:save()
 	if next(village_logger.log) == nil then
 		village_logger.start_new_log()
 		village_logger.log.start_time = os.clock()

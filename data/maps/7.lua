@@ -88,6 +88,7 @@ local cure_price = 50
 
 
 function map:on_started(destination)
+	game:save()
 	if next(village_logger.log) == nil then
 		village_logger.unpickle_log()
 		village_logger.log.start_time = os.clock()
