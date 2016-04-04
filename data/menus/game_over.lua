@@ -85,6 +85,7 @@ function game_over_menu:on_started()
             game:add_life(7 * 4)  -- Restore 7 hearts.
             sol.timer.start(self, 1000, function()
               state = "resume_game"
+			  game:set_hud_enabled(true)
               sol.audio.play_music(music)
               game:stop_game_over()
               sol.menu.stop(self)
@@ -92,6 +93,10 @@ function game_over_menu:on_started()
           end)
         else
           -- No fairy: game over.
+          if fight_generator then 
+			fight_generator.areastatus = {} 
+			for enemy in map:get_entities("generatedEnemy") do enemy:remove() end
+		  end
           state = "menu"
           sol.audio.play_music("game_over")
           fairy_sprite:set_xy(76, 112)  -- Cursor.

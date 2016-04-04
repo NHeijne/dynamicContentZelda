@@ -404,7 +404,7 @@ _#___#
 _##R##
 
 Level_16_1
-Difficulty_4
+Difficulty_3
 'MINICOSMOS_33'
 _##R#R##
 _#__#__##
@@ -415,7 +415,7 @@ _#__#__##
 ####
 
 Level_16_2
-Difficulty_5
+Difficulty_4
 'MINICOSMOS_34'
 _##R####
 ##__#__#

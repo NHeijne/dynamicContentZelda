@@ -1009,7 +1009,7 @@ function savegame_menu:set_initial_values(savegame)
 
   savegame:set_starting_location("6", "start_position")
   savegame:set_value("player_name", self.player_name)
-
+  savegame:set_value("saveslot", self.cursor_position)
   -- Initially give 3 hearts, the first tunic and the first wallet.
   savegame:set_max_life(24)
   savegame:set_life(savegame:get_max_life())

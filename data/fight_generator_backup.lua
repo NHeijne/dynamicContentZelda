@@ -13,7 +13,7 @@ local everyEnemyDealsDamage = 2
 local everyEnemyHasHealth = 3
 local baseStress = 1.3787
 local startLifeDifficulty = 0
-local monsterAmountDifficulty = 0
+local monsterAmountDifficulty = 0.2
 local baseDifficulty = 0
 local breedDifficulties = {	["minillosaur_egg_fixed"]	= 1,
 							["snap_dragon"]				= 1,
@@ -52,15 +52,15 @@ function fight_generator.make_static_fight(map, spawnAreas)
 	local enemiesInFight = {}
 	local difficulty = 0
 	if map_id == 0 or fight_generator.difficulty == 2 then
-		local options = { {1, 1, 1, 1}, {4, 4}, {2, 2, 2} }
+		local options = { {1, 1, 1, 1}, {4, 4}, {2, 2, 2}, {3, 3}}
 		breedSelections = table_util.random(options)
 		difficulty = 2
 	elseif map_id == 1 or fight_generator.difficulty == 3 then
-		local options = {{1, 1, 1, 1, 1, 1}, {4, 4, 4}, {2, 2, 2, 2, 2}}
+		local options = {{1, 1, 1, 1, 1, 1}, {4, 4, 4}, {2, 2, 2, 2, 2}, {3, 3, 3}}
 		breedSelections = table_util.random(options)
 		difficulty = 3
 	elseif map_id == 2 or fight_generator.difficulty == 4 then
-		local options = {{1, 1, 1, 1, 1, 1, 1, 1}, {2, 2, 2, 2, 2, 2}, {4, 4, 4, 4}}
+		local options = {{1, 1, 1, 1, 1, 1, 1, 1}, {2, 2, 2, 2, 2, 2}, {4, 4, 4, 4}, {3, 3, 3, 3}}
 		breedSelections = table_util.random(options)
 		difficulty = 4
 	elseif map_id == 3 or fight_generator.difficulty == 5 then

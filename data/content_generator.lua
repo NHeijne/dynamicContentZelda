@@ -6,11 +6,11 @@ lookup 				= lookup or require("data_lookup")
 log 				= log or require("log")
 explore 			= explore or require("exploration_log")
 puzzle_logger 		= puzzle_logger or require("puzzle_logger")
+fight_generator 	= fight_generator or require("fight_generator")
 
 local mission_grammar 	= require("mission_grammar")
 local space_gen 		= require("space_generator")
 local lookup 			= require("data_lookup")
-local fight_generator 	= require("fight_generator")
 
 local table_util 		= require("table_util")
 local area_util 		= require("area_util")
@@ -27,13 +27,13 @@ function content.start_test(given_map, params, end_destination)
 			tonumber(tostring(os.time()):reverse():sub(1,6)) -- good random seeds
 	log.debug("random seed = " .. seed)
 	math.randomseed( seed )
-	math.random(); math.random(); math.random()
+	math.random(); math.random(); math.random(); math.random(); math.random(); math.random()
 	-- done. :-)
 
 
 	if game:get_value("static_difficulty") == nil then
-		local random_nr = math.random(100)
-		if random_nr >= 50 then 
+		local random_nr = math.random(1000)
+		if random_nr >= 500 then 
 			 game:set_value("static_difficulty", true)
 		else game:set_value("static_difficulty", false) end
 	end
@@ -117,6 +117,9 @@ function content.start_test(given_map, params, end_destination)
 	end
 	-- adding effects
 	fight_generator.add_effects_to_sensors(map, content.areas, content.area_details)
+	fight_generator.areastatus = {}
+	fight_generator.importWeights()
+	if (params.monsteroffset ~= nil) then fight_generator.set_monsterAmountDifficulty( params.monsteroffset ) end
 
 	log.debug("filling in area types")
 	log.debug("exclusion_areas")
