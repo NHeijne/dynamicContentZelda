@@ -12,12 +12,12 @@ local pg ={}
 pg.static_difficulty = false
 pg.puzzle_difficulty = 0
 
-pg.pike_room_min_difficulty = 1
-pg.pike_room_max_difficulty = 1
-pg.sokoban_min_difficulty = 1
-pg.sokoban_max_difficulty = 1
-pg.maze_min_difficulty = 1
-pg.maze_max_difficulty = 1
+pg.pike_room_min_difficulty = game:get_value("pike_room_min_difficulty") or 1
+pg.pike_room_max_difficulty = game:get_value("pike_room_max_difficulty") or 1
+pg.sokoban_min_difficulty = game:get_value("sokoban_min_difficulty") or 1
+pg.sokoban_max_difficulty = game:get_value("sokoban_max_difficulty") or 1
+pg.maze_min_difficulty = game:get_value("maze_min_difficulty") or 1
+pg.maze_max_difficulty = game:get_value("maze_max_difficulty") or 1
 
 pg.puzzles_instantiated = {["maze"]=0, ["sokoban"]=0, ["pike_room"]=0}
 pg.time_requirements = {["maze"]=30, ["sokoban"]=90, ["pike_room"]=20}
@@ -104,6 +104,8 @@ function pg.increase_min_max_difficulty( puzzle_type )
 	else
 		pg[puzzle_type.."_min_difficulty"] = pg[puzzle_type.."_min_difficulty"] +1
 	end
+	game:set_value(puzzle_type.."_min_difficulty", pg[puzzle_type.."_min_difficulty"])
+	game:set_value(puzzle_type.."_max_difficulty", pg[puzzle_type.."_max_difficulty"])
 end
 
 function pg.decrease_min_max_difficulty( puzzle_type )
@@ -114,6 +116,8 @@ function pg.decrease_min_max_difficulty( puzzle_type )
 	else
 		pg[puzzle_type.."_max_difficulty"] = pg[puzzle_type.."_max_difficulty"] -1
 	end
+	game:set_value(puzzle_type.."_min_difficulty", pg[puzzle_type.."_min_difficulty"])
+	game:set_value(puzzle_type.."_max_difficulty", pg[puzzle_type.."_max_difficulty"])
 end
 
 

@@ -294,7 +294,7 @@ function sp.create_sokoban_puzzle( difficulty, area, areanumber, area_details, e
 		local cw, ww = {x=16, y=16}, {x=0, y=0}
 		maze_gen.set_room( area, cw, ww, "sokoban_room"..areanumber )
 		local maze, exits = maze_gen.generate_maze( area, exit_areas, exclusion)
-		local area_list, puzzle_area = sp.put_in_sokoban_puzzle( area, difficulty, maze, exits[1], cw, ww )
+		local area_list, puzzle_area = sp.put_in_sokoban_puzzle( area, difficulty, maze, exits[1], cw, ww, areanumber )
 		sp.place_sokoban_puzzle( map, area_list, puzzle_area, areanumber, difficulty )
 		if area_list then 
 			exits[1] = sp.connect_to_maze( area_list, maze, exits[1] ) 
@@ -318,7 +318,7 @@ function sp.make_room_at_exits(maze, exits)
 	end
 end
 
-function sp.put_in_sokoban_puzzle( area, difficulty, maze, maze_entrance, corridor_width, wall_width )
+function sp.put_in_sokoban_puzzle( area, difficulty, maze, maze_entrance, corridor_width, wall_width, areanumber )
 	local original_difficulty = difficulty
 	local difficulty = difficulty
 	local problem
@@ -338,8 +338,8 @@ function sp.put_in_sokoban_puzzle( area, difficulty, maze, maze_entrance, corrid
 		end
 	until problem or difficulty == 6
 	if difficulty == 6 then return {entrance={x=1, y=1}, exit={x=2, y=1}}, {x1=area.x1, y1=area.y1, x2=area.x1+2*16, y2=area.y1+16} end
-	if difficulty < original_difficulty then puzzle_logger.below_difficulty_setting()
-	elseif difficulty > original_difficulty then puzzle_logger.above_difficulty_setting()
+	if difficulty < original_difficulty then puzzle_logger.below_difficulty_setting("sokoban", difficulty, areanumber)
+	elseif difficulty > original_difficulty then puzzle_logger.above_difficulty_setting("sokoban", difficulty, areanumber)
 	end
 
 

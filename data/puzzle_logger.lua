@@ -76,12 +76,8 @@ function pl.update_total_log( current_puzzle_log )
 	end
 end
 
-function pl.start_recording( puzzle_type, areanumber, difficulty )
-	pl.current_areanumber = areanumber
-	local cl = pl.current_puzzle_log[areanumber]
-	if cl == nil then 
-		pl.current_puzzle_log[areanumber] = 
-		{
+function pl.get_new_current_log(puzzle_type, difficulty)
+	return 	{
 			name=game:get_player_name(),
 			started_recording = true,
 			difficulty=difficulty,
@@ -101,6 +97,13 @@ function pl.start_recording( puzzle_type, areanumber, difficulty )
 			total_vfm_time=0,
 			difficulty_difference=0
 		}
+end
+
+function pl.start_recording( puzzle_type, areanumber, difficulty )
+	pl.current_areanumber = areanumber
+	local cl = pl.current_puzzle_log[areanumber]
+	if cl == nil then 
+		pl.current_puzzle_log[areanumber] = pl.get_new_current_log(puzzle_type, difficulty)
 		cl = pl.current_puzzle_log[areanumber]
 	elseif cl.completed or cl.quit then 
 		return
@@ -130,13 +133,21 @@ function pl.start_recording( puzzle_type, areanumber, difficulty )
 	end
 end
 
-function pl.below_difficulty_setting()
-	local cl = pl.current_puzzle_log[pl.current_areanumber]
+function pl.below_difficulty_setting(puzzle_type, difficulty, areanumber)
+	local cl = pl.current_puzzle_log[areanumber]
+	if cl == nil then
+		pl.current_puzzle_log[areanumber] = pl.get_new_current_log(puzzle_type, difficulty)
+		cl = pl.current_puzzle_log[areanumber]
+	end
 	cl.difficulty_difference = -1
 end
 
-function pl.above_difficulty_setting()
-	local cl = pl.current_puzzle_log[pl.current_areanumber]
+function pl.above_difficulty_setting(puzzle_type, difficulty, areanumber)
+	local cl = pl.current_puzzle_log[areanumber]
+	if cl == nil then
+		pl.current_puzzle_log[areanumber] = pl.get_new_current_log(puzzle_type, difficulty)
+		cl = pl.current_puzzle_log[areanumber]
+	end
 	cl.difficulty_difference = 1
 end
 
